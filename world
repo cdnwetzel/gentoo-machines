@@ -2,8 +2,10 @@
 
 # System Administration
 app-admin/sudo
+app-portage/gentoolkit
 sys-apps/dmidecode
 sys-apps/i2c-tools
+sys-apps/lm-sensors
 sys-apps/pciutils
 sys-apps/usbutils
 
@@ -73,6 +75,10 @@ media-gfx/ristretto
 # Web Browsers
 www-client/firefox-bin
 www-client/google-chrome
+
+# CLI Tools
+app-misc/tmux
+sys-process/htop
 
 # Development
 dev-python/pip

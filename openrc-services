@@ -7,6 +7,7 @@ rc-update add acpid default
 rc-update add dbus default
 rc-update add display-manager default
 rc-update add elogind default
+rc-update add local default
 rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
@@ -32,8 +33,8 @@ rc-update add save-termencoding boot
 rc-update add seedrng boot
 rc-update add swap boot
 rc-update add sysctl boot
-rc-update add termencoding boot
 rc-update add systemd-tmpfiles-setup boot
+rc-update add termencoding boot
 
 # Sysinit runlevel
 rc-update add cgroups sysinit
@@ -44,3 +45,11 @@ rc-update add sysfs sysinit
 rc-update add systemd-tmpfiles-setup-dev sysinit
 rc-update add udev sysinit
 rc-update add udev-trigger sysinit
+
+# Shutdown runlevel
+rc-update add killprocs shutdown
+rc-update add mount-ro shutdown
+rc-update add savecache shutdown
+
+# Nonetwork runlevel
+rc-update add local nonetwork

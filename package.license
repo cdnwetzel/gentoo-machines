@@ -1,0 +1,4 @@
+# Gentoo package.license for Dell XPS 13 9315
+# Remote layout: /etc/portage/package.license/<per-package files>
+
+www-client/google-chrome google-chrome
