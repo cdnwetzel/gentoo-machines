@@ -68,6 +68,10 @@ A production-ready Gentoo Linux kernel configuration for the Dell XPS 13 9315 la
 - **Sensor**: OV01A10 (via intel_skl_int3472)
 - **VSC**: Intel Visual Sensing Controller (mei_vsc_hw)
 
+### Input Devices
+- **Touchpad**: VEN_0488:00 `[0488:102D]` (HID over I2C)
+- **Bus**: i2c-1 via Intel LPSS I2C Controller #1 `[8086:51e9]`
+
 ### Connectivity
 - **Thunderbolt 4**: Dual USB-C ports with DisplayPort Alt Mode
 - **USB 3.2**: Intel Alder Lake PCH xHCI `[8086:51ed]`
@@ -130,13 +134,19 @@ CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
 
 ### Hardware Inventory
 
-Use the included `harvest.sh` script to capture hardware details for kernel configuration:
+Two scripts are provided for capturing hardware details:
 
+**harvest.sh** - Comprehensive hardware inventory:
 ```bash
 sudo ./harvest.sh
 ```
+Generates `hardware_inventory.log` with PCI devices, CPU info, loaded modules, and storage layout.
 
-This generates `hardware_inventory.log` with PCI devices, CPU info, loaded modules, and storage layout.
+**deep_harvest.sh** - Focused XPS 9315 harvest:
+```bash
+sudo -E ./deep_harvest.sh
+```
+Generates `xps_harvest.log` with modprobed-db update, I2C/touchpad detection, and actual firmware in use.
 
 ### Module Tracking
 
