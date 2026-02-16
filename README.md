@@ -8,41 +8,69 @@ A production-ready Gentoo Linux kernel configuration for the Dell XPS 13 9315 la
 - **Architecture**: x86_64
 - **Compiler**: GCC 15.2.1
 
+## System Specifications
+
+### CPU
+- **Model**: 12th Gen Intel Core i5-1230U (Alder Lake)
+- **Architecture**: Hybrid P-Core/E-Core
+- **Features**: VMX, AVX2, AVX-VNNI, AES-NI, SHA-NI, Intel HWP
+
+### Motherboard
+- **Vendor**: Dell Inc.
+- **Product**: 0WWXF6 (A02)
+- **BIOS Version**: 1.35.0 (11/26/2025)
+
 ## Hardware Support
 
-### Processor
-- Intel 12th Gen Alder Lake CPU
-- Intel P-State frequency scaling
-- Intel idle driver
-
 ### Graphics
-- Intel Iris Xe (i915 module)
-- AGP Intel support
-- ACPI video/backlight control
+- **Device**: Intel Alder Lake-UP4 GT2 [Iris Xe Graphics] `[8086:46aa]`
+- **Driver**: i915
+- **Features**: AGP support, ACPI video/backlight control
 
 ### Networking
-- Intel WiFi (iwlwifi module)
-- Intel Bluetooth
+- **WiFi**: Intel Alder Lake-P PCH CNVi WiFi (AX211 160MHz 2x2) `[8086:51f0]`
+- **Driver**: iwlwifi
+- **Bluetooth**: Intel AX211 (btusb driver)
 
 ### Storage
-- NVMe SSD support (native)
+- **Controller**: Phison PS5019-E19 PCIe4 NVMe (DRAM-less) `[1987:5019]`
+- **Driver**: nvme
+- **Layout**:
+  - `/boot/efi` - 512M (vfat)
+  - `[SWAP]` - 24G
+  - `/` - 50G (ext4)
+  - `/var/tmp` - 40G (xfs)
+  - `/home` - 124G (xfs)
 
 ### Audio
-- Intel HDA audio (snd_hda_intel module)
+- **Controller**: Intel Alder Lake Smart Sound Technology `[8086:51cc]`
+- **Driver**: sof-audio-pci-intel-tgl (Sound Open Firmware)
+- **Codec**: Realtek RT715 SDCA, RT1316 SDW
 
-### Power Management
-- ACPI battery support
-- Power supply hardware monitoring
-- Intel thermal management (PCH, TCC, HFI)
-
-### Connectivity
-- USB4/Thunderbolt 4 support
-- Intel MEI (Management Engine Interface)
-- Intel LPSS (Low Power Subsystem)
+### Chipset & Platform
+| Component | Device ID | Driver |
+|-----------|-----------|--------|
+| Host Bridge | `[8086:4602]` | - |
+| Innovation Platform Framework | `[8086:461d]` | proc_thermal_pci |
+| Imaging Signal Processor | `[8086:465d]` | intel_ipu6 |
+| Thunderbolt 4 USB Controller | `[8086:461e]` | xhci_hcd |
+| Thunderbolt 4 NHI | `[8086:463e]` | thunderbolt |
+| Integrated Sensor Hub | `[8086:51fc]` | intel_ish_ipc |
+| HECI Controller (MEI) | `[8086:51e0]` | mei_me |
+| Serial IO I2C #0 | `[8086:51e8]` | intel-lpss |
+| Serial IO I2C #1 | `[8086:51e9]` | intel-lpss |
+| SMBus Controller | `[8086:51a3]` | i801_smbus |
+| SPI Controller | `[8086:51a4]` | intel-lpss |
 
 ### Camera
-- Intel IPU6 camera support (module)
-- Intel VSC (Visual Sensing Controller)
+- **ISP**: Intel Alder Lake Imaging Signal Processor `[8086:465d]`
+- **Driver**: intel_ipu6
+- **Sensor**: OV01A10 (via intel_skl_int3472)
+- **VSC**: Intel Visual Sensing Controller (mei_vsc_hw)
+
+### Connectivity
+- **Thunderbolt 4**: Dual USB-C ports with DisplayPort Alt Mode
+- **USB 3.2**: Intel Alder Lake PCH xHCI `[8086:51ed]`
 
 ## Features
 
@@ -80,6 +108,18 @@ This kernel configuration was built using the Dell XPS 13 9315 Windows drivers a
 | PPM | Intel PPM Provisioning Package | Chipset |
 
 ## Usage
+
+### Hardware Inventory
+
+Use the included `harvest.sh` script to capture hardware details for kernel configuration:
+
+```bash
+sudo ./harvest.sh
+```
+
+This generates `hardware_inventory.log` with PCI devices, CPU info, loaded modules, and storage layout.
+
+### Kernel Build
 
 ```bash
 # Copy to kernel source

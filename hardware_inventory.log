@@ -1,0 +1,222 @@
+--- GENTOO HARDWARE HARVEST START ---
+Mon Feb 16 08:37:01 AM EST 2026
+
+[1. PCI DEVICES - CORE HARDWARE]
+00:00.0 Host bridge [0600]: Intel Corporation Alder Lake Host and DRAM Controller [8086:4602] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+00:02.0 VGA compatible controller [0300]: Intel Corporation Alder Lake-UP4 GT2 [Iris Xe Graphics] [8086:46aa] (rev 0c)
+	DeviceName: Onboard - Video
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: i915
+	Kernel modules: i915
+00:04.0 Signal processing controller [1180]: Intel Corporation Alder Lake Innovation Platform Framework Processor Participant [8086:461d] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: proc_thermal_pci
+00:05.0 Multimedia controller [0480]: Intel Corporation Alder Lake Imaging Signal Processor [8086:465d] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel modules: intel_ipu6
+00:06.0 PCI bridge [0604]: Intel Corporation 12th Gen Core Processor PCI Express x4 Controller #0 [8086:464d] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: pcieport
+00:07.0 PCI bridge [0604]: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express Root Port #0 [8086:466e] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: pcieport
+00:07.1 PCI bridge [0604]: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express Root Port #1 [8086:463f] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: pcieport
+00:08.0 System peripheral [0880]: Intel Corporation 12th Gen Core Processor Gaussian & Neural Accelerator [8086:464f] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+00:0d.0 USB controller [0c03]: Intel Corporation Alder Lake-P Thunderbolt 4 USB Controller [8086:461e] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: xhci_hcd
+00:0d.2 USB controller [0c03]: Intel Corporation Alder Lake-P Thunderbolt 4 NHI #0 [8086:463e] (rev 06)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: thunderbolt
+	Kernel modules: thunderbolt
+00:12.0 Serial controller [0700]: Intel Corporation Alder Lake-P Integrated Sensor Hub [8086:51fc] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel_ish_ipc
+	Kernel modules: intel_ish_ipc
+00:14.0 USB controller [0c03]: Intel Corporation Alder Lake PCH USB 3.2 xHCI Host Controller [8086:51ed] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: xhci_hcd
+00:14.2 RAM memory [0500]: Intel Corporation Alder Lake PCH Shared SRAM [8086:51ef] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+00:14.3 Network controller [0280]: Intel Corporation Alder Lake-P PCH CNVi WiFi [8086:51f0] (rev 01)
+	Subsystem: Intel Corporation Dual Band Wi-Fi 6E(802.11ax) AX211 160MHz 2x2 [Garfield Peak] [8086:4090]
+	Kernel driver in use: iwlwifi
+	Kernel modules: iwlwifi
+00:15.0 Serial bus controller [0c80]: Intel Corporation Alder Lake PCH Serial IO I2C Controller #0 [8086:51e8] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel-lpss
+00:15.1 Serial bus controller [0c80]: Intel Corporation Alder Lake PCH Serial IO I2C Controller #1 [8086:51e9] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel-lpss
+00:16.0 Communication controller [0780]: Intel Corporation Alder Lake PCH HECI Controller [8086:51e0] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: mei_me
+00:1e.0 Communication controller [0780]: Intel Corporation Alder Lake PCH UART #0 [8086:51a8] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel-lpss
+00:1e.2 Serial bus controller [0c80]: Intel Corporation Alder Lake SPI Controller [8086:51aa] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel-lpss
+00:1e.3 Serial bus controller [0c80]: Intel Corporation Alder Lake SPI Controller [8086:51ab] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: intel-lpss
+00:1f.0 ISA bridge [0601]: Intel Corporation Alder Lake LPC Controller [8086:5187] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+00:1f.3 Multimedia audio controller [0401]: Intel Corporation Alder Lake Smart Sound Technology Audio Controller [8086:51cc] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: sof-audio-pci-intel-tgl
+	Kernel modules: snd_hda_intel, snd_sof_pci_intel_tgl
+00:1f.4 SMBus [0c05]: Intel Corporation Alder Lake PCH-P SMBus Host Controller [8086:51a3] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+	Kernel driver in use: i801_smbus
+00:1f.5 Serial bus controller [0c80]: Intel Corporation Alder Lake-P PCH SPI Controller [8086:51a4] (rev 01)
+	Subsystem: Dell Device [1028:0b14]
+01:00.0 Non-Volatile memory controller [0108]: Phison Electronics Corporation PS5019-E19 PCIe4 NVMe Controller (DRAM-less) [1987:5019] (rev 01)
+	Subsystem: Phison Electronics Corporation PS5019-E19 PCIe4 NVMe Controller (DRAM-less) [1987:5019]
+	Kernel driver in use: nvme
+
+[2. CPU DETAILS - SCHEDULER & OPTIMIZATION]
+Vendor ID:                               GenuineIntel
+Model name:                              12th Gen Intel(R) Core(TM) i5-1230U
+CPU family:                              6
+Model:                                   154
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities
+
+[3. MOTHERBOARD/DMI - CHIPSET]
+	Vendor: Dell Inc.
+	Version: 1.35.0
+	Release Date: 11/26/2025
+	Product Name: 0WWXF6
+	Version: A02
+
+[4. I2C / SERIAL BUSES - INPUT DEVICES]
+Bus Device: Synopsys DesignWare I2C adapter (i2c-0)
+Bus Device: Synopsys DesignWare I2C adapter (i2c-1)
+Bus Device: i915 gmbus tc5 (i2c-10)
+Bus Device: i915 gmbus tc6 (i2c-11)
+Bus Device: AUX A/DDI A/PHY A (i2c-12)
+Bus Device: AUX B/DDI B/PHY B (i2c-13)
+Bus Device: AUX USBC1/DDI TC1/PHY TC1 (i2c-14)
+Bus Device: AUX USBC2/DDI TC2/PHY TC2 (i2c-15)
+Bus Device: AUX USBC3/DDI TC3/PHY TC3 (i2c-16)
+Bus Device: AUX USBC4/DDI TC4/PHY TC4 (i2c-17)
+Bus Device: SMBus I801 adapter at efa0 (i2c-2)
+Bus Device: i915 gmbus dpa (i2c-3)
+Bus Device: i915 gmbus dpb (i2c-4)
+Bus Device: i915 gmbus dpc (i2c-5)
+Bus Device: i915 gmbus tc1 (i2c-6)
+Bus Device: i915 gmbus tc2 (i2c-7)
+Bus Device: i915 gmbus tc3 (i2c-8)
+Bus Device: i915 gmbus tc4 (i2c-9)
+Bus Device: VEN_0488:00 (i2c-VEN_0488:00)
+
+[5. USB DEVICES - PERIPHERALS]
+/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/1p, 480M
+/:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/2p, 20000M/x2
+/:  Bus 003.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/12p, 480M
+    |__ Port 003: Dev 002, If 0, Class=Vendor Specific Class, Driver=[none], 12M
+    |__ Port 004: Dev 003, If 0, Class=Vendor Specific Class, Driver=[none], 12M
+    |__ Port 010: Dev 004, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 010: Dev 004, If 1, Class=Wireless, Driver=btusb, 12M
+/:  Bus 004.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/4p, 10000M
+
+[6. CURRENTLY LOADED MODULES]
+Module                  Size  Used by
+snd_soc_sof_sdw        40960  4
+snd_soc_intel_hda_dsp_common    12288  1 snd_soc_sof_sdw
+snd_soc_sdw_utils      94208  1 snd_soc_sof_sdw
+snd_sof_probes         24576  0
+snd_ctl_led            24576  0
+dell_pc                12288  0
+platform_profile       12288  1 dell_pc
+snd_soc_rt715_sdca     40960  1
+snd_soc_rt1316_sdw     24576  1
+regmap_sdw_mbq         12288  1 snd_soc_rt715_sdca
+regmap_sdw             12288  2 snd_soc_rt715_sdca,snd_soc_rt1316_sdw
+snd_soc_dmic           12288  0
+snd_sof_pci_intel_tgl    12288  0
+snd_sof_pci_intel_cnl    20480  1 snd_sof_pci_intel_tgl
+snd_sof_intel_hda_generic    28672  2 snd_sof_pci_intel_tgl,snd_sof_pci_intel_cnl
+snd_soc_acpi_intel_match   114688  3 snd_sof_intel_hda_generic,snd_sof_pci_intel_tgl,snd_sof_pci_intel_cnl
+snd_soc_acpi           12288  2 snd_soc_acpi_intel_match,snd_sof_intel_hda_generic
+snd_sof_pci            16384  3 snd_sof_intel_hda_generic,snd_sof_pci_intel_tgl,snd_sof_pci_intel_cnl
+snd_sof_xtensa_dsp     16384  1 snd_sof_intel_hda_generic
+soundwire_intel        61440  3 snd_sof_intel_hda_generic
+soundwire_generic_allocation    12288  1 soundwire_intel
+soundwire_cadence      36864  1 soundwire_intel
+iwlmvm                618496  0
+snd_sof_intel_hda_common   159744  3 snd_sof_intel_hda_generic,snd_sof_pci_intel_tgl,snd_sof_pci_intel_cnl
+snd_soc_hdac_hda       20480  1 snd_sof_intel_hda_common
+snd_sof_intel_hda_mlink    32768  3 soundwire_intel,snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+snd_sof_intel_hda      16384  2 snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+snd_hda_codec_hdmi     81920  1
+mac80211             1236992  1 iwlmvm
+snd_sof               323584  6 snd_sof_pci,snd_sof_intel_hda_common,snd_sof_intel_hda_generic,snd_sof_probes,snd_sof_intel_hda,snd_sof_pci_intel_cnl
+dell_wmi               12288  0
+snd_sof_utils          12288  1 snd_sof
+dell_laptop            40960  0
+libarc4                12288  1 mac80211
+x86_pkg_temp_thermal    16384  0
+snd_hda_ext_core       32768  4 snd_sof_intel_hda_common,snd_soc_hdac_hda,snd_sof_intel_hda_mlink,snd_sof_intel_hda
+dell_wmi_sysman        49152  0
+dell_wmi_ddv           20480  0
+firmware_attributes_class    12288  1 dell_wmi_sysman
+dell_smbios            28672  3 dell_wmi,dell_pc,dell_laptop
+i915                 4165632  4
+iwlwifi               532480  1 iwlmvm
+dcdbas                 16384  1 dell_smbios
+i2c_algo_bit           12288  1 i915
+snd_hda_intel          53248  0
+snd_intel_dspcfg       20480  4 snd_hda_intel,snd_sof,snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+dell_wmi_descriptor    12288  2 dell_wmi,dell_smbios
+snd_intel_sdw_acpi     12288  2 snd_intel_dspcfg,snd_sof_intel_hda_generic
+drm_buddy              20480  1 i915
+iTCO_wdt               12288  0
+snd_hda_codec         172032  5 snd_hda_codec_hdmi,snd_hda_intel,snd_soc_intel_hda_dsp_common,snd_soc_hdac_hda,snd_sof_intel_hda
+ttm                    98304  1 i915
+watchdog               40960  1 iTCO_wdt
+cfg80211             1191936  3 iwlmvm,iwlwifi,mac80211
+intel_skl_int3472_tps68470    20480  0
+snd_hda_core          131072  8 snd_hda_codec_hdmi,snd_hda_intel,snd_hda_ext_core,snd_hda_codec,snd_soc_intel_hda_dsp_common,snd_sof_intel_hda_common,snd_soc_hdac_hda,snd_sof_intel_hda
+drm_display_helper    237568  1 i915
+thunderbolt           430080  0
+intel_ipu6             61440  0
+ipu_bridge             16384  1 intel_ipu6
+intel_pmc_core        122880  0
+mei_vsc_hw             20480  0
+intel_vsec             16384  1 intel_pmc_core
+pmt_telemetry          16384  1 intel_pmc_core
+intel_skl_int3472_discrete    20480  0
+ov01a10                20480  0
+intel_skl_int3472_common    12288  2 intel_skl_int3472_tps68470,intel_skl_int3472_discrete
+pmt_class              12288  1 pmt_telemetry
+efivarfs               24576  1
+intel_ishtp_hid        24576  0
+sha256_ssse3           32768  0
+sha1_ssse3             32768  0
+sha1_generic           12288  1 sha1_ssse3
+aesni_intel           122880  5
+crypto_simd            16384  1 aesni_intel
+cryptd                 28672  1 crypto_simd
+intel_ish_ipc          28672  0
+intel_ishtp            65536  2 intel_ishtp_hid,intel_ish_ipc
+ucsi_acpi              12288  0
+typec_ucsi             65536  1 ucsi_acpi
+
+[7. KERNEL CONFIG SUGGESTION: FIRMWARE]
+If building drivers into kernel (Y), use this list:
+No firmware detected in dmesg. Check if your current kernel is modular.
+
+[8. STORAGE - DRIVE CONTROLLER]
+NAME        FSTYPE MOUNTPOINT   SIZE
+zram0                             0B
+nvme0n1                       238.5G
+├─nvme0n1p1 vfat   /boot/efi    512M
+├─nvme0n1p2 swap   [SWAP]        24G
+├─nvme0n1p3 ext4   /             50G
+├─nvme0n1p4 xfs    /var/tmp      40G
+└─nvme0n1p5 xfs    /home        124G
