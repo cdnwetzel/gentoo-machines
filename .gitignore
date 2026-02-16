@@ -1,0 +1,44 @@
+# SSH keys and credentials
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pem
+*.key
+*.pub
+
+# WPA / WiFi credentials
+wpa_supplicant.conf
+
+# Shadow / password files
+shadow
+shadow-
+passwd-
+gshadow
+gshadow-
+
+# Shell history
+.*_history
+.bash_history
+
+# Env files with secrets
+.env
+*.env
+
+# GPG / keyring
+*.gpg
+*.asc
+secring.*
+pubring.*
+
+# SSH known hosts / authorized keys
+known_hosts
+authorized_keys
+
+# Logs that may contain sensitive info
+*.log
+
+# Temporary / editor files
+*.swp
+*.swo
+*~
+\#*\#
