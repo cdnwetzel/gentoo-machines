@@ -111,6 +111,34 @@ This kernel configuration was built using the Dell XPS 13 9315 Windows drivers a
 | Platform Framework | Intel Innovation Platform Framework Driver | Chipset |
 | PPM | Intel PPM Provisioning Package | Chipset |
 
+## Portage Configuration (make.conf)
+
+The included `make.conf` is optimized for the XPS 13 9315:
+
+```bash
+# Compiler flags - Alder Lake optimized
+COMMON_FLAGS="-march=alderlake -O2 -pipe"
+
+# 8GB RAM constraint - safe parallelism
+MAKEOPTS="-j8"
+EMERGE_DEFAULT_OPTS="--jobs=2 --load-average=8"
+
+# Video Drivers
+VIDEO_CARDS="intel iris"
+
+# USE flags optimized for XPS 13 9315
+USE="X gtk dbus elogind udisks vaapi gallium dri proprietary-codecs \
+     python ssl readline sqlite ncurses zlib lzma \
+     -systemd -pulseaudio -bluetooth -cups -doc -nls -gnome -kde"
+```
+
+Key settings:
+- `-march=alderlake` for native CPU optimization
+- Intel Iris Xe graphics with VAAPI hardware acceleration
+- elogind (no systemd)
+- Python 3.12/3.13 targets
+- GRUB EFI-64 platform
+
 ## Firmware Configuration
 
 The Dell XPS 9315 (Alder Lake) only needs a specific subset of firmware. Set this in `make menuconfig`:
