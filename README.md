@@ -107,6 +107,25 @@ This kernel configuration was built using the Dell XPS 13 9315 Windows drivers a
 | Platform Framework | Intel Innovation Platform Framework Driver | Chipset |
 | PPM | Intel PPM Provisioning Package | Chipset |
 
+## Firmware Configuration
+
+The Dell XPS 9315 (Alder Lake) only needs a specific subset of firmware. Set this in `make menuconfig`:
+
+```
+CONFIG_EXTRA_FIRMWARE="i915/adlp_dmc_ver2_16.bin i915/adlp_guc_70.bin i915/adlp_huc.bin iwlwifi-so-a0-gf-a0-89.ucode iwlwifi-so-a0-gf-a0.pnvm intel/ibt-0040-0041.sfi intel/ibt-0040-0041.ddc"
+CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
+```
+
+| Firmware | Purpose |
+|----------|---------|
+| `i915/adlp_dmc_ver2_16.bin` | Intel Alder Lake-P Display Microcontroller |
+| `i915/adlp_guc_70.bin` | Intel Alder Lake-P Graphics microController |
+| `i915/adlp_huc.bin` | Intel Alder Lake-P HEVC/H.265 microController |
+| `iwlwifi-so-a0-gf-a0-89.ucode` | Intel AX211 WiFi firmware |
+| `iwlwifi-so-a0-gf-a0.pnvm` | Intel AX211 WiFi PNVM data |
+| `intel/ibt-0040-0041.sfi` | Intel Bluetooth firmware |
+| `intel/ibt-0040-0041.ddc` | Intel Bluetooth DDC configuration |
+
 ## Usage
 
 ### Hardware Inventory
@@ -118,6 +137,15 @@ sudo ./harvest.sh
 ```
 
 This generates `hardware_inventory.log` with PCI devices, CPU info, loaded modules, and storage layout.
+
+### Module Tracking
+
+Store currently loaded modules for future kernel builds using modprobed-db:
+
+```bash
+# Force the user identity for modprobed-db
+USER=$SUDO_USER modprobed-db store
+```
 
 ### Kernel Build
 
