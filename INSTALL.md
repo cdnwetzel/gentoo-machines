@@ -1,114 +1,263 @@
 # Dell XPS 13 9315 Gentoo Installation Guide
 
-Complete installation guide from scratch for the Dell XPS 13 9315.
+Complete beginner-friendly installation guide from scratch for the Dell XPS 13 9315.
+
+## What is Gentoo?
+
+Gentoo is a source-based Linux distribution where you compile packages optimized for your specific hardware. This guide provides a pre-configured kernel and settings specifically tuned for the Dell XPS 13 9315, saving you hours of configuration.
 
 ## Prerequisites
 
-- USB drive with a live Linux distro (SystemRescue, Gentoo minimal, etc.)
-- Internet connection (WiFi or USB Ethernet adapter)
-- This repo cloned or downloaded
+- A USB drive (4GB minimum)
+- Internet connection (WiFi works, or USB Ethernet adapter)
+- 2-4 hours for installation (compiling takes time)
+- Basic comfort with the command line
 
-## 1. Boot Live Environment
+---
 
-Boot from USB and ensure you have network connectivity:
+## Part 1: Preparation
+
+### 1.1 Create a Bootable USB
+
+On any Linux/Mac/Windows system, download a live Linux ISO:
+
+- **Recommended**: [SystemRescue](https://www.system-rescue.org/Download/) - includes all tools needed
+- **Alternative**: [Gentoo Minimal Install](https://www.gentoo.org/downloads/)
+
+Create the bootable USB:
 
 ```bash
-# For WiFi (if using wpa_supplicant)
-wpa_passphrase "SSID" "password" > /etc/wpa_supplicant.conf
-wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
-dhcpcd wlan0
+# On Linux/Mac (replace sdX with your USB device)
+# WARNING: This will erase the USB drive!
+# Use 'lsblk' to identify your USB drive
+
+dd if=systemrescue-x.xx-amd64.iso of=/dev/sdX bs=4M status=progress
+sync
+```
+
+On Windows, use [Rufus](https://rufus.ie/) or [Etcher](https://etcher.io/).
+
+### 1.2 Configure BIOS
+
+Restart your XPS 9315 and press **F2** repeatedly to enter BIOS Setup.
+
+**Required changes:**
+1. **Secure Boot** → Disabled (or configure later with your own keys)
+2. **SATA Operation** → AHCI (should be default)
+3. **Boot Sequence** → Enable USB boot
+
+Press **F10** to save and exit.
+
+### 1.3 Boot from USB
+
+1. Insert your USB drive
+2. Restart and press **F12** repeatedly for boot menu
+3. Select your USB drive
+4. Choose default boot option
+
+---
+
+## Part 2: Network Setup
+
+### 2.1 Find Your Network Interface
+
+```bash
+# List all network interfaces
+ip link
+
+# You'll see something like:
+# 1: lo: <LOOPBACK>
+# 2: wlp0s20f3: <BROADCAST>  <-- This is your WiFi
+```
+
+Note your WiFi interface name (probably `wlp0s20f3` on XPS 9315, NOT `wlan0`).
+
+### 2.2 Connect to WiFi
+
+```bash
+# Replace INTERFACE with your actual interface name
+# Replace SSID and PASSWORD with your network details
+
+wpa_passphrase "YourNetworkName" "YourPassword" > /etc/wpa_supplicant.conf
+wpa_supplicant -B -i wlp0s20f3 -c /etc/wpa_supplicant.conf
+dhcpcd wlp0s20f3
 
 # Verify connectivity
 ping -c 3 gentoo.org
 ```
 
-## 2. Partition the NVMe Drive
+If using SystemRescue, you can also use `nmtui` for an easier graphical WiFi setup.
 
-The XPS 9315 has a 256GB NVMe drive. Recommended partition layout:
+---
 
-| Partition | Size | Type | Mount | Purpose |
-|-----------|------|------|-------|---------|
-| nvme0n1p1 | 512M | EFI System | /boot/efi | UEFI boot |
-| nvme0n1p2 | 24G | Linux swap | [SWAP] | Swap (3x RAM for 8GB system) |
-| nvme0n1p3 | 50G | Linux filesystem | / | Root (ext4) |
-| nvme0n1p4 | 40G | Linux filesystem | /var/tmp | Portage tmpdir (xfs) |
-| nvme0n1p5 | ~124G | Linux filesystem | /home | Home (xfs) |
+## Part 3: Disk Setup
+
+### 3.1 Understand the Partition Layout
+
+The XPS 9315 has a 256GB NVMe drive. We'll create 5 partitions:
+
+| Partition | Size | Filesystem | Mount | Why? |
+|-----------|------|------------|-------|------|
+| nvme0n1p1 | 512M | FAT32 | /boot/efi | Required for UEFI boot |
+| nvme0n1p2 | 24G | swap | [SWAP] | 3x RAM helps with compiling |
+| nvme0n1p3 | 50G | ext4 | / | Root filesystem, stable & reliable |
+| nvme0n1p4 | 40G | XFS | /var/tmp | Portage compiles here - XFS is faster |
+| nvme0n1p5 | ~124G | XFS | /home | Your files, XFS handles large files well |
+
+### 3.2 Partition the Drive
+
+**WARNING: This erases everything on the drive!**
 
 ```bash
-# Partition with fdisk or parted
+# Start fdisk
 fdisk /dev/nvme0n1
-
-# Create partitions:
-# g     - create new GPT partition table
-# n 1   - 512M, type EFI System (1)
-# n 2   - 24G, type Linux swap (19)
-# n 3   - 50G, type Linux filesystem (20)
-# n 4   - 40G, type Linux filesystem (20)
-# n 5   - remainder, type Linux filesystem (20)
-# w     - write and exit
 ```
 
-## 3. Format Partitions
+Inside fdisk, enter these commands one at a time:
+
+```
+g                    # Create new GPT partition table
+
+n                    # New partition (EFI)
+1                    # Partition number 1
+[Enter]              # Default first sector
++512M                # Size 512MB
+t                    # Change type
+1                    # Type 1 = EFI System
+
+n                    # New partition (Swap)
+2                    # Partition number 2
+[Enter]              # Default first sector
++24G                 # Size 24GB
+t                    # Change type
+2                    # Select partition 2
+19                   # Type 19 = Linux swap
+
+n                    # New partition (Root)
+3                    # Partition number 3
+[Enter]              # Default first sector
++50G                 # Size 50GB
+
+n                    # New partition (Portage tmpdir)
+4                    # Partition number 4
+[Enter]              # Default first sector
++40G                 # Size 40GB
+
+n                    # New partition (Home)
+5                    # Partition number 5
+[Enter]              # Default first sector
+[Enter]              # Use remaining space
+
+p                    # Print partition table to verify
+w                    # Write changes and exit
+```
+
+### 3.3 Format the Partitions
 
 ```bash
-# EFI partition
+# EFI partition (must be FAT32)
 mkfs.vfat -F 32 /dev/nvme0n1p1
 
 # Swap
 mkswap /dev/nvme0n1p2
 swapon /dev/nvme0n1p2
 
-# Root (ext4)
+# Root (ext4 - stable, well-tested)
 mkfs.ext4 /dev/nvme0n1p3
 
-# Portage tmpdir (xfs for compile performance)
+# Portage tmpdir (XFS - fast for many small files during compilation)
 mkfs.xfs /dev/nvme0n1p4
 
-# Home (xfs)
+# Home (XFS - fast for large files)
 mkfs.xfs /dev/nvme0n1p5
 ```
 
-## 4. Mount Filesystems
+### 3.4 Mount the Filesystems
 
 ```bash
+# Mount root first
 mount /dev/nvme0n1p3 /mnt/gentoo
-mkdir -p /mnt/gentoo/{boot/efi,home,var/tmp}
+
+# Create mount points
+mkdir -p /mnt/gentoo/boot/efi
+mkdir -p /mnt/gentoo/home
+mkdir -p /mnt/gentoo/var/tmp
+
+# Mount remaining partitions
 mount /dev/nvme0n1p1 /mnt/gentoo/boot/efi
 mount /dev/nvme0n1p4 /mnt/gentoo/var/tmp
 mount /dev/nvme0n1p5 /mnt/gentoo/home
+
+# Verify mounts
+df -h
 ```
 
-## 5. Download and Extract Stage3
+---
+
+## Part 4: Install Gentoo Base System
+
+### 4.1 Download Stage3 Tarball
 
 ```bash
 cd /mnt/gentoo
 
-# Download latest stage3 (amd64 openrc)
-wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/stage3-amd64-openrc-*.tar.xz
+# Open the Gentoo downloads page to get the current stage3 URL
+# Go to: https://www.gentoo.org/downloads/
+# Click "Stage 3" under "amd64"
+# Right-click "Stage 3 OpenRC" and copy the link
 
-# Extract
-tar xpvf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner
+# Download using the URL you copied (example - URL will be different!)
+wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/stage3-amd64-openrc-YYYYMMDDTHHMMSSZ.tar.xz
+
+# Or browse and download directly
+links https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-openrc/
 ```
 
-## 6. Copy Configuration Files
-
-Copy the files from this repo:
+### 4.2 Extract Stage3
 
 ```bash
-# make.conf
+# Extract (this takes a few minutes)
+tar xpvf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner
+
+# Verify extraction
+ls /mnt/gentoo
+# Should see: bin, boot, dev, etc, home, lib, lib64, media, mnt, opt, proc, root, run, sbin, sys, tmp, usr, var
+```
+
+### 4.3 Download This Repository
+
+```bash
+cd /mnt/gentoo/root
+
+# Install git if needed
+emerge-webrsync  # Only if git not available
+
+# Clone this repo
+git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
+cd gentoo_dell_xps9315
+```
+
+Or download as ZIP from GitHub and extract.
+
+### 4.4 Copy Configuration Files
+
+```bash
+# From inside /mnt/gentoo/root/gentoo_dell_xps9315/
+
+# Portage configuration
 cp make.conf /mnt/gentoo/etc/portage/make.conf
-
-# package.use
 cp package.use /mnt/gentoo/etc/portage/package.use
-
-# package.accept_keywords
 cp package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
 ```
 
-## 7. Chroot into New System
+---
+
+## Part 5: Enter the New System (Chroot)
+
+### 5.1 Prepare for Chroot
 
 ```bash
-# Copy DNS info
+# Copy DNS configuration so internet works inside chroot
 cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
 # Mount necessary filesystems
@@ -119,167 +268,400 @@ mount --rbind /dev /mnt/gentoo/dev
 mount --make-rslave /mnt/gentoo/dev
 mount --bind /run /mnt/gentoo/run
 mount --make-slave /mnt/gentoo/run
+```
 
-# Chroot
+### 5.2 Enter Chroot
+
+```bash
+# Enter the new system
 chroot /mnt/gentoo /bin/bash
+
+# Load environment
 source /etc/profile
 export PS1="(chroot) $PS1"
+
+# You're now "inside" your new Gentoo system!
 ```
 
-## 8. Configure Portage and Sync
+---
+
+## Part 6: Configure Portage
+
+### 6.1 Sync Package Database
 
 ```bash
-# Sync portage tree
+# Initial sync (faster)
 emerge-webrsync
+
+# Full sync
 emerge --sync
+```
 
-# Select profile
+### 6.2 Select Profile
+
+```bash
+# List available profiles
 eselect profile list
+
+# Select the base amd64 profile (find the number for default/linux/amd64/23.0)
 eselect profile set default/linux/amd64/23.0
+
+# Verify
+eselect profile show
 ```
 
-## 9. Install Base System
+### 6.3 Update System
 
 ```bash
-# Update world
+# Update everything to match our USE flags
+# This may take 30-60 minutes
 emerge --ask --verbose --update --deep --newuse @world
-
-# Install essential packages
-emerge --ask sys-kernel/gentoo-sources sys-kernel/linux-firmware \
-    sys-firmware/intel-microcode sys-firmware/sof-firmware \
-    sys-kernel/dracut sys-boot/grub sys-apps/pciutils \
-    net-misc/dhcpcd net-wireless/wpa_supplicant
 ```
 
-## 10. Configure and Build Kernel
+---
+
+## Part 7: Install Kernel and Firmware
+
+### 7.1 Install Kernel Sources and Firmware
 
 ```bash
-# Copy kernel config from this repo
-cp .config /usr/src/linux/
+emerge --ask sys-kernel/gentoo-sources \
+    sys-kernel/linux-firmware \
+    sys-firmware/intel-microcode \
+    sys-firmware/sof-firmware \
+    sys-kernel/dracut
+```
 
+### 7.2 Select Kernel
+
+```bash
+# List available kernels
+eselect kernel list
+
+# Select the kernel (usually just 1)
+eselect kernel set 1
+
+# Verify - should show symlink to linux-6.x.x-gentoo
+ls -l /usr/src/linux
+```
+
+### 7.3 Copy and Build Kernel
+
+```bash
+# Copy our pre-configured kernel config
+cp /root/gentoo_dell_xps9315/.config /usr/src/linux/
+
+# Enter kernel directory
 cd /usr/src/linux
-make oldconfig
-make -j8
-make modules_install
-make install
 
-# Generate initramfs
-dracut --kver $(ls /lib/modules/)
+# Update config for any kernel version differences
+make oldconfig
+# Press Enter to accept defaults for any new options
+
+# Build kernel (takes 15-30 minutes)
+make -j8
+
+# Install modules
+make modules_install
+
+# Install kernel
+make install
 ```
 
-## 11. Configure fstab
-
-Edit `/etc/fstab` with your partition UUIDs:
+### 7.4 Generate Initramfs
 
 ```bash
-# Get UUIDs
+# Find your kernel version
+ls /lib/modules/
+# Example output: 6.12.58-gentoo
+
+# Generate initramfs with that version
+dracut --kver 6.12.58-gentoo
+
+# Verify
+ls /boot/
+# Should see: vmlinuz-6.12.58-gentoo, initramfs-6.12.58-gentoo.img
+```
+
+---
+
+## Part 8: System Configuration
+
+### 8.1 Configure fstab
+
+```bash
+# Get your partition UUIDs
 blkid
 
-# Edit fstab (use template from repo)
+# You'll see output like:
+# /dev/nvme0n1p1: UUID="XXXX-XXXX" TYPE="vfat"
+# /dev/nvme0n1p2: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="swap"
+# etc.
+
+# Edit fstab
 nano /etc/fstab
 ```
 
-## 12. Install GRUB
+Add these lines (replace UUIDs with YOUR values from blkid):
+
+```
+# /etc/fstab - Dell XPS 9315 Gentoo
+
+# Root
+UUID=your-root-uuid    /           ext4    defaults,noatime    0 1
+
+# EFI
+UUID=your-efi-uuid     /boot/efi   vfat    defaults,noatime    0 2
+
+# Swap
+UUID=your-swap-uuid    none        swap    sw                  0 0
+
+# Portage tmpdir
+UUID=your-vartmp-uuid  /var/tmp    xfs     defaults,noatime    0 2
+
+# Home
+UUID=your-home-uuid    /home       xfs     defaults,noatime    0 2
+```
+
+Save with Ctrl+O, Enter, Ctrl+X.
+
+### 8.2 Install and Configure GRUB
 
 ```bash
-# Install GRUB for EFI
+# Install GRUB package
+emerge --ask sys-boot/grub
+
+# Install GRUB to EFI partition
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
-# Copy GRUB config from repo
-cp grub /etc/default/grub
+# Copy our GRUB config (has XPS 9315 specific settings)
+cp /root/gentoo_dell_xps9315/grub /etc/default/grub
 
-# Generate GRUB config
+# Generate GRUB configuration
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-## 13. Configure System
+### 8.3 Set Timezone and Locale
 
 ```bash
-# Set timezone
+# Set timezone (change to your timezone)
 ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
 
-# Set locale
+# Configure locale
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 eselect locale set en_US.utf8
 
+# Reload environment
+env-update && source /etc/profile
+```
+
+### 8.4 Set Hostname and Root Password
+
+```bash
 # Set hostname
 echo "xps9315" > /etc/hostname
 
-# Set root password
+# Set root password (you'll type it twice)
 passwd
 ```
 
-## 14. Install Remaining Packages
+---
 
-Install packages from world file:
+## Part 9: Install Desktop and Packages
+
+### 9.1 Install All Packages
 
 ```bash
-# Copy world file
-cp world /var/lib/portage/world
+# Copy world file (list of all packages to install)
+cp /root/gentoo_dell_xps9315/world /var/lib/portage/world
 
-# Install all packages
+# Install everything (this takes 1-2 hours)
 emerge --ask --update --deep --newuse @world
 ```
 
-## 15. Enable Services
+### 9.2 Enable Services
 
 ```bash
-# Core services
+# Essential services
 rc-update add dbus default
 rc-update add elogind default
 rc-update add NetworkManager default
 rc-update add acpid default
 rc-update add thermald default
 rc-update add tlp default
-rc-update add sshd default
 rc-update add alsasound boot
+
+# Display manager (login screen)
 rc-update add display-manager default
+
+# Optional: SSH server
+rc-update add sshd default
 ```
 
-## 16. Create User
+### 9.3 Configure LightDM (Login Screen)
 
 ```bash
-useradd -m -G wheel,audio,video,usb,input -s /bin/bash username
-passwd username
+# Edit LightDM config
+nano /etc/lightdm/lightdm.conf
+
+# Find the [Seat:*] section and set:
+greeter-session=lightdm-gtk-greeter
+user-session=xfce
+```
+
+---
+
+## Part 10: Create Your User
+
+```bash
+# Create user (replace 'yourusername' with your desired username)
+useradd -m -G wheel,audio,video,usb,input -s /bin/bash yourusername
+
+# Set password
+passwd yourusername
 
 # Enable sudo for wheel group
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 ```
 
-## 17. Reboot
+---
+
+## Part 11: Reboot into Your New System
+
+### 11.1 Exit and Unmount
 
 ```bash
+# Exit chroot
 exit
+
+# Go back to root
 cd /
+
+# Unmount everything
 umount -R /mnt/gentoo
+```
+
+### 11.2 Reboot
+
+```bash
 reboot
 ```
 
-## Post-Install
+Remove the USB drive when the system restarts.
 
-After first boot:
+---
 
-1. Connect to WiFi via NetworkManager
-2. Run `sudo ./harvest.sh` to verify hardware detection
-3. Run `sudo -E ./deep_harvest.sh` to update modprobed-db
-4. Configure display manager (LightDM) and XFCE
+## Part 12: First Boot
+
+### 12.1 Login
+
+- At the login screen, select your username
+- Enter your password
+- XFCE desktop should start
+
+### 12.2 Connect to WiFi
+
+```bash
+# Open a terminal and use NetworkManager TUI
+nmtui
+
+# Select "Activate a connection"
+# Choose your WiFi network
+# Enter password
+```
+
+Or click the network icon in the system tray.
+
+### 12.3 Verify Hardware
+
+```bash
+# Clone the repo to your home directory
+cd ~
+git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
+cd gentoo_dell_xps9315
+
+# Run hardware verification
+sudo ./harvest.sh
+
+# Check the output
+cat hardware_inventory.log
+```
+
+---
 
 ## Troubleshooting
 
-### No WiFi
-Ensure `iwlwifi` module is loaded and firmware is installed:
+### No WiFi After Reboot
+
 ```bash
-modprobe iwlwifi
+# Check if driver loaded
+lsmod | grep iwlwifi
+
+# If not, load it
+sudo modprobe iwlwifi
+
+# Check for errors
 dmesg | grep iwlwifi
 ```
 
 ### No Audio
-Check SOF firmware:
+
 ```bash
+# Check SOF firmware
 dmesg | grep sof
+
+# Verify firmware exists
 ls /lib/firmware/intel/sof/
+
+# Make sure user is in audio group
+groups yourusername
 ```
 
-### Display Issues
-If screen flickering, ensure `i915.enable_psr=0` is in GRUB_CMDLINE_LINUX.
+### Screen Flickering
+
+The GRUB config includes `i915.enable_psr=0` which should prevent this. If still occurring:
+
+```bash
+# Verify kernel parameter is set
+cat /proc/cmdline | grep psr
+```
+
+### Boot Issues
+
+If system won't boot:
+1. Boot from USB again
+2. Mount partitions (see Part 3.4)
+3. Chroot in (see Part 5)
+4. Check GRUB config and regenerate: `grub-mkconfig -o /boot/grub/grub.cfg`
+
+### Package Compilation Fails
+
+```bash
+# Check available memory
+free -h
+
+# If low on memory, reduce parallel jobs
+# Edit /etc/portage/make.conf
+MAKEOPTS="-j4"  # Instead of -j8
+```
+
+---
+
+## Congratulations!
+
+You now have a fully functional Gentoo Linux system optimized for the Dell XPS 13 9315.
+
+**Next steps:**
+- Customize XFCE to your liking
+- Install additional software with `emerge --ask packagename`
+- Keep system updated with `emerge --sync && emerge -avuDN @world`
+
+**Useful commands:**
+- `emerge --search name` - Search for packages
+- `emerge --ask package` - Install a package
+- `emerge --unmerge package` - Remove a package
+- `dispatch-conf` - Manage config file updates
+- `eselect news read` - Read Gentoo news
+
+Welcome to Gentoo!
