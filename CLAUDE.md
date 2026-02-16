@@ -81,6 +81,14 @@ tools/build-kernel-remote.sh <target> {pull|build|deploy|all}
 # Targets: xps-9315, nuc11
 ```
 
+### generate-config.sh
+AI-powered config generation for new machines using Claude CLI:
+```bash
+tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
+# Example: tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
+```
+Analyzes harvest data against a base config and generates `.config`, `make.conf`, and `HARDWARE.md`.
+
 ## Kernel Build Commands
 
 ```bash
@@ -121,8 +129,21 @@ Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 
 ## Config Generation Workflow
 
-New machine configs are derived from the closest existing config:
+New machine configs can be generated automatically or manually:
 
+### Automated (recommended)
+```bash
+# 1. Harvest on target machine (any Linux distro)
+sudo tools/harvest.sh && sudo -E tools/deep_harvest.sh
+
+# 2. Copy logs to build host, then generate config
+tools/generate-config.sh <new-machine> <closest-base> <harvest-dir>
+
+# 3. On target: resolve deps and build
+cd /usr/src/linux && make olddefconfig && make -j$(nproc)
+```
+
+### Manual
 1. Run `harvest.sh` and `deep_harvest.sh` on target (via current OS)
 2. Copy closest existing `.config` as base
 3. Enable drivers for new hardware (from harvest PCI/module list)

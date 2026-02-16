@@ -42,7 +42,8 @@ gentoo_config/
 ├── tools/
 │   ├── harvest.sh         # General-purpose hardware inventory
 │   ├── deep_harvest.sh    # Deep hardware discovery
-│   └── build-kernel-remote.sh  # Cross-compile and deploy kernels
+│   ├── build-kernel-remote.sh  # Cross-compile and deploy kernels
+│   └── generate-config.sh # AI-powered config generation (uses Claude CLI)
 ├── shared/
 │   ├── world              # Common installed package list
 │   ├── package.use        # Per-package USE flags
@@ -53,6 +54,7 @@ gentoo_config/
 ├── patches/               # Kernel patches
 │   └── ipu-bridge-fix-double-brace.patch
 ├── CLAUDE.md
+├── INSTALL.md              # General-purpose installation guide
 └── README.md
 ```
 
@@ -92,6 +94,18 @@ tools/build-kernel-remote.sh nuc11 all
 sudo tools/harvest.sh           # Basic inventory
 sudo -E tools/deep_harvest.sh   # Deep discovery with module list
 ```
+
+### Generate config for a new machine (AI-powered)
+
+```bash
+# Requires Claude CLI (claude command)
+# Analyzes harvest data against a base config to generate .config, make.conf, HARDWARE.md
+tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
+```
+
+### Full installation
+
+See **[INSTALL.md](INSTALL.md)** for the complete step-by-step guide that works on any supported machine.
 
 ## Portage Configuration
 
