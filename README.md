@@ -129,10 +129,12 @@ Kernel:  linux-6.12.58-gentoo
 | `make.conf` | Global build settings, USE flags, compiler optimization |
 | `package.use` | Per-package USE flags |
 | `package.accept_keywords` | Testing (~amd64) packages |
+| `package.license` | Per-package license acceptance |
 | `world` | Installed package list |
 | `fstab` | Filesystem mount configuration (template) |
 | `grub` | GRUB bootloader config with XPS 9315 kernel params |
 | `openrc-services` | OpenRC service enable commands |
+| `portage-env` | Portage environment overrides (e.g. low-memory build settings) |
 | `.config` | Linux kernel configuration |
 
 ### make.conf
