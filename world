@@ -1,0 +1,83 @@
+# /var/lib/portage/world - Dell XPS 13 9315 Gentoo
+
+# System Administration
+app-admin/sudo
+sys-apps/dmidecode
+sys-apps/i2c-tools
+sys-apps/pciutils
+sys-apps/usbutils
+
+# Boot & Kernel
+sys-boot/grub
+sys-firmware/intel-microcode
+sys-firmware/sof-firmware
+sys-kernel/dracut
+sys-kernel/gentoo-sources
+sys-kernel/linux-firmware
+sys-kernel/modprobed-db
+
+# Power Management
+sys-power/acpid
+sys-power/thermald
+sys-power/tlp
+sys-power/upower
+
+# Session & Auth
+sys-auth/elogind
+sys-fs/udisks
+
+# Networking
+net-misc/dhcpcd
+net-misc/networkmanager
+net-misc/openssh
+net-wireless/wireless-regdb
+net-wireless/wpa_supplicant
+
+# VPN
+net-misc/sstp-client
+net-vpn/networkmanager-sstp
+
+# Remote Desktop
+net-misc/freerdp
+net-misc/remmina
+
+# Graphics & Video
+dev-util/vulkan-tools
+media-libs/libva-intel-media-driver
+media-libs/mesa
+media-libs/vulkan-loader
+media-video/libva-utils
+x11-apps/mesa-progs
+x11-drivers/xf86-input-libinput
+x11-drivers/xf86-video-intel
+
+# Audio
+media-libs/alsa-ucm-conf
+media-sound/alsa-utils
+media-sound/pavucontrol
+media-sound/pulseaudio-daemon
+
+# XFCE Desktop
+x11-misc/lightdm
+x11-misc/lightdm-gtk-greeter
+x11-misc/xdg-utils
+xfce-base/thunar-volman
+xfce-base/xfce4-meta
+xfce-base/xfce4-power-manager
+xfce-extra/xfce4-pulseaudio-plugin
+
+# XFCE Apps
+app-editors/mousepad
+media-gfx/ristretto
+
+# Web Browsers
+www-client/firefox-bin
+www-client/google-chrome
+
+# Development
+dev-python/pip
+net-libs/nodejs
+
+# Hardware Support
+sys-apps/fwupd
+x11-apps/xev

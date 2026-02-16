@@ -1,0 +1,24 @@
+# Gentoo package.use for Dell XPS 13 9315
+
+# Browser support
+www-client/chromium-bin widevine vaapi
+www-client/google-chrome widevine
+
+# Graphics/Media
+media-libs/freetype harfbuzz
+media-libs/mesa vulkan
+media-plugins/alsa-plugins pulseaudio
+
+# Desktop
+dev-libs/libdbusmenu gtk3
+app-text/xmlto text
+
+# XPS 9315 specific
+sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
+
+# Networking
+net-libs/nodejs npm
+net-misc/remmina rdp vnc ssh
+
+# NetworkManager WiFi support
+>=net-wireless/wpa_supplicant-2.11-r4 dbus

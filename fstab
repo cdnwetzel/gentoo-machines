@@ -1,0 +1,17 @@
+# /etc/fstab - Gentoo Linux - Dell XPS 9315
+# Note: UUIDs are device-specific, update for your installation
+
+# Root (ext4)
+UUID=<your-root-uuid>       /              ext4    defaults,noatime        0 1
+
+# EFI System Partition
+UUID=<your-efi-uuid>        /boot/efi      vfat    defaults,noatime        0 2
+
+# Swap
+UUID=<your-swap-uuid>       none           swap    sw                      0 0
+
+# Portage tmpdir (xfs) - improves compile performance
+UUID=<your-vartmp-uuid>     /var/tmp       xfs     defaults,noatime        0 2
+
+# Home (xfs)
+UUID=<your-home-uuid>       /home          xfs     defaults,noatime        0 2

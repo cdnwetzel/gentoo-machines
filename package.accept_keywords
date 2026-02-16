@@ -1,0 +1,6 @@
+# Gentoo package.accept_keywords for Dell XPS 13 9315
+
+# Testing packages needed
+www-client/chromium-bin ~amd64
+net-vpn/networkmanager-sstp ~amd64
+net-misc/sstp-client ~amd64

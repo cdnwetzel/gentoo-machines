@@ -111,7 +111,26 @@ This kernel configuration was built using the Dell XPS 13 9315 Windows drivers a
 | Platform Framework | Intel Innovation Platform Framework Driver | Chipset |
 | PPM | Intel PPM Provisioning Package | Chipset |
 
-## Portage Configuration (make.conf)
+## Gentoo Profile
+
+```
+Profile: default/linux/amd64/23.0
+Kernel:  linux-6.12.58-gentoo
+```
+
+## Portage Configuration
+
+### Files Included
+
+| File | Purpose |
+|------|---------|
+| `make.conf` | Global build settings, USE flags, compiler optimization |
+| `package.use` | Per-package USE flags |
+| `package.accept_keywords` | Testing (~amd64) packages |
+| `world` | Installed package list |
+| `fstab` | Filesystem mount configuration (template) |
+
+### make.conf
 
 The included `make.conf` is optimized for the XPS 13 9315:
 
