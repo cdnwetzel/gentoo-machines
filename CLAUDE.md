@@ -18,9 +18,10 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
   surface-pro-6/    Surface Pro 6 (planned)
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, build-kernel-remote.sh
+tools/              harvest.sh, deep_harvest.sh, build-kernel-remote.sh, generate-config.sh
 shared/             Common portage files (world, package.use, etc.)
 patches/            Kernel patches
+INSTALL.md          General-purpose installation guide (any machine)
 ```
 
 ## Target Machines
