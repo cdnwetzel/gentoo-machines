@@ -1,225 +1,72 @@
-# gentoo_dell_xps9315
+# gentoo_config
 
-A production-ready Gentoo Linux kernel configuration for the Dell XPS 13 9315 laptop.
+Multi-machine Gentoo Linux kernel configurations and portage settings. Each machine has a tuned kernel `.config`, `make.conf`, and hardware documentation.
 
-**[Full Installation Guide](INSTALL.md)** - Complete step-by-step instructions from live USB to working XFCE desktop.
+## Machines
 
-## Kernel Version
+| Machine | CPU | GPU | Kernel Status | Current OS |
+|---------|-----|-----|---------------|------------|
+| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** | Gentoo |
+| [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | **Ready to build** | Ubuntu |
+| [Dell XPS 15 9510](machines/xps-9510/) | 11th Gen Intel | Intel + NVIDIA RTX 3050 Ti | Planned | Ubuntu 24.04 LTS |
+| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
+| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
+| [Surface Pro 6](machines/surface-pro-6/) | 8th Gen Intel | Intel UHD 620 | Planned | Fedora 43 |
+| [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
-- **Linux**: 6.12.58-gentoo
-- **Architecture**: x86_64
-- **Compiler**: GCC 15.2.1
+NVIDIA machines will use **proprietary nvidia-drivers**.
 
-## System Specifications
-
-### CPU
-- **Model**: 12th Gen Intel Core i5-1230U (Alder Lake)
-- **Architecture**: Hybrid P-Core/E-Core
-- **Features**: VMX, AVX2, AVX-VNNI, AES-NI, SHA-NI, Intel HWP
-
-### Motherboard
-- **Vendor**: Dell Inc.
-- **Product**: 0WWXF6 (A02)
-- **BIOS Version**: 1.35.0 (11/26/2025)
-
-## Hardware Support
-
-### Graphics
-- **Device**: Intel Alder Lake-UP4 GT2 [Iris Xe Graphics] `[8086:46aa]`
-- **Driver**: i915
-- **Features**: AGP support, ACPI video/backlight control
-
-### Networking
-- **WiFi**: Intel Alder Lake-P PCH CNVi WiFi (AX211 160MHz 2x2) `[8086:51f0]`
-- **Driver**: iwlwifi
-- **Bluetooth**: Intel AX211 (btusb driver)
-
-### Storage
-- **Controller**: Phison PS5019-E19 PCIe4 NVMe (DRAM-less) `[1987:5019]`
-- **Driver**: nvme
-- **Layout**:
-  - `/boot/efi` - 512M (vfat)
-  - `[SWAP]` - 24G
-  - `/` - 50G (ext4)
-  - `/var/tmp` - 40G (xfs)
-  - `/home` - 124G (xfs)
-
-### Audio
-- **Controller**: Intel Alder Lake Smart Sound Technology `[8086:51cc]`
-- **Driver**: sof-audio-pci-intel-tgl (Sound Open Firmware)
-- **Codec**: Realtek RT715 SDCA, RT1316 SDW
-
-### Chipset & Platform
-| Component | Device ID | Driver |
-|-----------|-----------|--------|
-| Host Bridge | `[8086:4602]` | - |
-| Innovation Platform Framework | `[8086:461d]` | proc_thermal_pci |
-| Imaging Signal Processor | `[8086:465d]` | intel_ipu6 |
-| Thunderbolt 4 USB Controller | `[8086:461e]` | xhci_hcd |
-| Thunderbolt 4 NHI | `[8086:463e]` | thunderbolt |
-| Integrated Sensor Hub | `[8086:51fc]` | intel_ish_ipc |
-| HECI Controller (MEI) | `[8086:51e0]` | mei_me |
-| Serial IO I2C #0 | `[8086:51e8]` | intel-lpss |
-| Serial IO I2C #1 | `[8086:51e9]` | intel-lpss |
-| SMBus Controller | `[8086:51a3]` | i801_smbus |
-| SPI Controller | `[8086:51a4]` | intel-lpss |
-
-### Camera
-- **ISP**: Intel Alder Lake Imaging Signal Processor `[8086:465d]`
-- **Driver**: intel_ipu6
-- **Sensor**: OV01A10 (via intel_skl_int3472)
-- **VSC**: Intel Visual Sensing Controller (mei_vsc_hw)
-
-### Input Devices
-- **Touchpad**: VEN_0488:00 `[0488:102D]` (HID over I2C)
-- **Bus**: i2c-1 via Intel LPSS I2C Controller #1 `[8086:51e9]`
-
-### Connectivity
-- **Thunderbolt 4**: Dual USB-C ports with DisplayPort Alt Mode
-- **USB 3.2**: Intel Alder Lake PCH xHCI `[8086:51ed]`
-
-## Features
-
-- SELinux enabled
-- Cgroup v2 with memory, blkio, and CPU controllers
-- Full namespace support (containers)
-- EXT4 and XFS filesystem support
-- GZIP kernel compression
-- Debug kernel enabled for development
-
-## Dell Windows Driver Reference
-
-This kernel configuration was built using the Dell XPS 13 9315 Windows drivers as reference for hardware support:
-
-| Component | Driver | Category |
-|-----------|--------|----------|
-| BIOS | Dell XPS 9315 System BIOS | BIOS |
-| Ethernet | Realtek USB GBE Ethernet Controller Driver | Docks/Stands |
-| Chipset | Intel Management Engine Components Installer | Chipset |
-| Storage | Intel Rapid Storage Technology Driver | Storage |
-| Graphics | Intel UHD/Iris Xe Graphics Driver | Video |
-| Audio | Realtek High Definition Audio Driver | Audio |
-| WiFi | Intel BE201/BE200/AX211 Wi-Fi Controller Driver | Network |
-| Bluetooth | Intel BE2xx/AX4xx/AX2xx/9xxx Bluetooth Driver | Network |
-| Fingerprint | Goodix Fingerprint Sensor Driver | Security |
-| Camera | Intel 2D Imaging/MCU/Visual Sensing Controller Driver | Camera |
-| HID | Intel HID Event Filter Driver | Input Devices |
-| Chipset | Intel Chipset Device Software | Chipset |
-| Sensors | Intel Integrated Sensor Solution Driver | Chipset |
-| Audio Enhancement | Waves MaxxAudio Pro Application | Audio |
-| Serial I/O | Intel Serial IO Driver | Chipset |
-| Power Management | Intel Processor Power Management Utility | Systems Management |
-| Dynamic Tuning | Intel Dynamic Tuning Driver | Chipset |
-| Platform Framework | Intel Innovation Platform Framework Driver | Chipset |
-| PPM | Intel PPM Provisioning Package | Chipset |
-
-## Gentoo Profile
+## Repository Layout
 
 ```
-Profile: default/linux/amd64/23.0
-Kernel:  linux-6.12.58-gentoo
+gentoo_config/
+├── machines/
+│   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - PRODUCTION
+│   │   ├── .config        # Linux kernel configuration
+│   │   ├── make.conf      # Portage build settings (-march=alderlake)
+│   │   ├── fstab          # Filesystem layout template
+│   │   ├── grub           # GRUB bootloader config
+│   │   ├── HARDWARE.md    # Hardware reference
+│   │   └── INSTALL.md     # Step-by-step installation guide
+│   ├── nuc11/             # Intel NUC11TNBi5 (Tiger Lake) - READY
+│   │   ├── .config        # Kernel config (derived from xps-9315)
+│   │   ├── make.conf      # Portage build settings (-march=tigerlake)
+│   │   └── HARDWARE.md    # Hardware reference
+│   ├── xps-9510/          # Dell XPS 15 9510 - PLANNED
+│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PLANNED
+│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PLANNED
+│   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - PLANNED
+│   ├── surface-pro-6/     # Surface Pro 6 - PLANNED
+│   └── surface-pro-9/     # Surface Pro 9 - PLANNED
+├── tools/
+│   ├── harvest.sh         # General-purpose hardware inventory
+│   ├── deep_harvest.sh    # Deep hardware discovery
+│   └── build-kernel-remote.sh  # Cross-compile and deploy kernels
+├── shared/
+│   ├── world              # Common installed package list
+│   ├── package.use        # Per-package USE flags
+│   ├── package.accept_keywords
+│   ├── package.license
+│   ├── openrc-services    # OpenRC service configuration
+│   └── portage-env        # Portage environment overrides
+├── patches/               # Kernel patches
+│   └── ipu-bridge-fix-double-brace.patch
+├── CLAUDE.md
+└── README.md
 ```
 
-## Portage Configuration
+## Quick Start
 
-### Files Included
-
-| File | Purpose |
-|------|---------|
-| `make.conf` | Global build settings, USE flags, compiler optimization |
-| `package.use` | Per-package USE flags |
-| `package.accept_keywords` | Testing (~amd64) packages |
-| `package.license` | Per-package license acceptance |
-| `world` | Installed package list |
-| `fstab` | Filesystem mount configuration (template) |
-| `grub` | GRUB bootloader config with XPS 9315 kernel params |
-| `openrc-services` | OpenRC service enable commands |
-| `portage-env` | Portage environment overrides (e.g. low-memory build settings) |
-| `.config` | Linux kernel configuration |
-
-### make.conf
-
-The included `make.conf` is optimized for the XPS 13 9315:
+### Deploy an existing config
 
 ```bash
-# Compiler flags - Alder Lake optimized
-COMMON_FLAGS="-march=alderlake -O2 -pipe"
-
-# 8GB RAM constraint - safe parallelism
-MAKEOPTS="-j8"
-EMERGE_DEFAULT_OPTS="--jobs=2 --load-average=8"
-
-# Video Drivers
-VIDEO_CARDS="intel iris"
-
-# USE flags optimized for XPS 13 9315
-USE="X gtk dbus elogind udisks vaapi gallium dri proprietary-codecs \
-     python ssl readline sqlite ncurses zlib lzma \
-     -systemd -pulseaudio -bluetooth -cups -doc -nls -gnome -kde"
-```
-
-Key settings:
-- `-march=alderlake` for native CPU optimization
-- Intel Iris Xe graphics with VAAPI hardware acceleration
-- elogind (no systemd)
-- Python 3.12/3.13 targets
-- GRUB EFI-64 platform
-
-## Firmware Configuration
-
-The Dell XPS 9315 (Alder Lake) only needs a specific subset of firmware. Set this in `make menuconfig`:
-
-```
-CONFIG_EXTRA_FIRMWARE="i915/adlp_dmc_ver2_16.bin i915/adlp_guc_70.bin i915/adlp_huc.bin iwlwifi-so-a0-gf-a0-89.ucode iwlwifi-so-a0-gf-a0.pnvm intel/ibt-0040-0041.sfi intel/ibt-0040-0041.ddc"
-CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
-```
-
-| Firmware | Purpose |
-|----------|---------|
-| `i915/adlp_dmc_ver2_16.bin` | Intel Alder Lake-P Display Microcontroller |
-| `i915/adlp_guc_70.bin` | Intel Alder Lake-P Graphics microController |
-| `i915/adlp_huc.bin` | Intel Alder Lake-P HEVC/H.265 microController |
-| `iwlwifi-so-a0-gf-a0-89.ucode` | Intel AX211 WiFi firmware |
-| `iwlwifi-so-a0-gf-a0.pnvm` | Intel AX211 WiFi PNVM data |
-| `intel/ibt-0040-0041.sfi` | Intel Bluetooth firmware |
-| `intel/ibt-0040-0041.ddc` | Intel Bluetooth DDC configuration |
-
-## Usage
-
-### Hardware Inventory
-
-Two scripts are provided for capturing hardware details:
-
-**harvest.sh** - Comprehensive hardware inventory:
-```bash
-sudo ./harvest.sh
-```
-Generates `hardware_inventory.log` with PCI devices, CPU info, loaded modules, and storage layout.
-
-**deep_harvest.sh** - Deep hardware discovery (works on any Linux system):
-```bash
-sudo -E ./deep_harvest.sh
-```
-Generates `deep_harvest.log` with modprobed-db update, I2C/touchpad detection, and actual firmware in use.
-
-### Module Tracking
-
-Store currently loaded modules for future kernel builds using modprobed-db:
-
-```bash
-# Force the user identity for modprobed-db
-USER=$SUDO_USER modprobed-db store
-```
-
-### Kernel Build
-
-```bash
-# Copy to kernel source
-cp .config /usr/src/linux/
+# Copy machine config to kernel source
+cp machines/xps-9315/.config /usr/src/linux/.config
 
 # Build
 cd /usr/src/linux
-make oldconfig
+make olddefconfig
 make -j$(nproc)
 
 # Install (as root)
@@ -227,3 +74,60 @@ make modules_install
 make install
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+
+### Cross-compile on a build host
+
+```bash
+# Build XPS kernel on a powerful machine, deploy over SSH
+tools/build-kernel-remote.sh xps-9315 all
+
+# Build NUC11 kernel
+tools/build-kernel-remote.sh nuc11 all
+```
+
+### Harvest hardware info from a new machine
+
+```bash
+# Run on the target machine (requires root)
+sudo tools/harvest.sh           # Basic inventory
+sudo -E tools/deep_harvest.sh   # Deep discovery with module list
+```
+
+## Portage Configuration
+
+Shared portage files in `shared/` work across all machines. Machine-specific settings (compiler flags, video cards) are in each machine's `make.conf`.
+
+### Common Settings
+- **Profile**: `default/linux/amd64/23.0`
+- **Init**: OpenRC (no systemd)
+- **Desktop**: XFCE with LightDM
+- **Python**: 3.12 / 3.13
+
+### Per-Machine Differences
+
+| Setting | XPS 9315 | NUC11 | Future AMD |
+|---------|----------|-------|------------|
+| `-march=` | `alderlake` | `tigerlake` | `znver3` |
+| `VIDEO_CARDS` | `intel iris` | `intel iris` | `nvidia` |
+| AVX-512 | No | Yes | No |
+| Hybrid cores | Yes | No | No |
+
+## Machine Notes
+
+### Future: XPS 9510 (Hybrid GPU)
+Intel iGPU + NVIDIA RTX 3050 Ti requires PRIME/Optimus setup with proprietary nvidia-drivers.
+
+### Future: ASRock B550 (First AMD)
+Ryzen 9 5950X with SATA SSDs. Needs `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`.
+
+### Future: Precision T5810 (Xeon Broadwell-EP)
+ECC memory, `-march=broadwell`, older PCH. Currently runs Fedora 42.
+
+### Future: Precision 7960 (Multi-GPU Xeon W)
+Most complex config: dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Currently runs RHEL 10.1.
+
+### Future: Surface Pro 6
+8th Gen Intel, requires linux-surface kernel patches. Currently runs Fedora 43.
+
+### Future: Surface Pro 9
+12th Gen Intel Alder Lake, requires linux-surface kernel patches. Currently runs Windows 11 Pro.

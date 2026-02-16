@@ -58,14 +58,19 @@ lsmod >> "$LOG_FILE"
 echo -e "\n[7. KERNEL CONFIG SUGGESTION: FIRMWARE]" >> "$LOG_FILE"
 echo "If building drivers into kernel (Y), use this list:" >> "$LOG_FILE"
 
-# Identify firmware actually loaded by the current kernel
-FW_LIST=$(dmesg | grep -i "firmware: direct-loading" | awk '{print $NF}' | sort -u | tr '\n' ' ')
+# Try dmesg first, fall back to journalctl if dmesg buffer has rotated
+FW_LIST=$(dmesg 2>/dev/null | grep -i "firmware: direct-loading" | awk '{print $NF}' | sort -u | tr '\n' ' ')
+
+if [ -z "$FW_LIST" ] && command -v journalctl &> /dev/null; then
+    FW_LIST=$(journalctl -k -b --no-pager 2>/dev/null | grep -i "firmware: direct-loading" | awk '{print $NF}' | sort -u | tr '\n' ' ')
+fi
 
 if [ -n "$FW_LIST" ]; then
     echo "CONFIG_EXTRA_FIRMWARE=\"$FW_LIST\"" | tee -a "$LOG_FILE"
     echo "CONFIG_EXTRA_FIRMWARE_DIR=\"/lib/firmware\"" | tee -a "$LOG_FILE"
 else
-    echo "No firmware detected in dmesg. Check if your current kernel is modular." >> "$LOG_FILE"
+    echo "No firmware detected via dmesg or journalctl." >> "$LOG_FILE"
+    echo "If system has been running a while, dmesg may have rotated. Try running shortly after boot." >> "$LOG_FILE"
 fi
 
 # 8. Storage Controller Check
