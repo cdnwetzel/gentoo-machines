@@ -1,0 +1,13 @@
+# /etc/default/grub - Dell XPS 9315 Gentoo
+
+GRUB_DISTRIBUTOR="Gentoo"
+
+# Kernel command line - XPS 9315 specific
+# i915.enable_psr=0 disables Panel Self Refresh (fixes display issues)
+GRUB_CMDLINE_LINUX="console=tty0 earlyprintk=efi,keep i915.enable_psr=0"
+
+# Use PARTUUID for root device
+GRUB_DISABLE_LINUX_PARTUUID=false
+
+# Theme (optional)
+GRUB_THEME="/boot/grub/themes/gentoo_glass/theme.txt"
