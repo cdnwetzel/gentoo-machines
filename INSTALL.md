@@ -248,6 +248,11 @@ Or download as ZIP from GitHub and extract.
 cp make.conf /mnt/gentoo/etc/portage/make.conf
 cp package.use /mnt/gentoo/etc/portage/package.use
 cp package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
+cp package.license /mnt/gentoo/etc/portage/package.license
+
+# Portage environment overrides (low-memory build settings)
+mkdir -p /mnt/gentoo/etc/portage/env
+cp portage-env /mnt/gentoo/etc/portage/env/low-memory.conf
 ```
 
 ---
@@ -641,8 +646,12 @@ If system won't boot:
 # Check available memory
 free -h
 
-# If low on memory, reduce parallel jobs
-# Edit /etc/portage/make.conf
+# If low on memory, use the included low-memory portage env override
+# (already copied to /etc/portage/env/low-memory.conf if you followed Part 4.4)
+# Assign it to a specific package:
+echo "category/package low-memory.conf" >> /etc/portage/package.env/low-memory
+
+# Or reduce parallel jobs globally in /etc/portage/make.conf
 MAKEOPTS="-j4"  # Instead of -j8
 ```
 
