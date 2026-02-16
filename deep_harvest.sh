@@ -1,6 +1,6 @@
 #!/bin/bash
-# Gentoo Ultimate Harvest - XPS 9315 Edition
-LOG_FILE="xps_harvest.log"
+# Gentoo Ultimate Harvest - Deep Hardware Discovery
+LOG_FILE="deep_harvest.log"
 
 [[ $EUID -ne 0 ]] && echo "Run with sudo -E" && exit 1
 
@@ -13,7 +13,7 @@ if command -v modprobed-db &> /dev/null; then
     echo "Modules: $(wc -l < /home/$SUDO_USER/.config/modprobed.db)" >> "$LOG_FILE"
 fi
 
-# 2. I2C & INPUT (The XPS Touchpad/Screen)
+# 2. I2C & INPUT (Touchpad/Touchscreen Detection)
 echo -e "\n[INPUT/I2C]" >> "$LOG_FILE"
 i2cdetect -l >> "$LOG_FILE"
 udevadm info --export-db | awk '/ID_INPUT_TOUCHPAD=1|ID_INPUT_TOUCHSCREEN=1/' RS= | grep -E "NAME=|DEVPATH=" >> "$LOG_FILE"
