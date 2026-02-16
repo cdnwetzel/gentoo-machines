@@ -2,6 +2,8 @@
 
 A production-ready Gentoo Linux kernel configuration for the Dell XPS 13 9315 laptop.
 
+**[Full Installation Guide](INSTALL.md)** - Complete step-by-step instructions from live USB to working XFCE desktop.
+
 ## Kernel Version
 
 - **Linux**: 6.12.58-gentoo
@@ -129,6 +131,9 @@ Kernel:  linux-6.12.58-gentoo
 | `package.accept_keywords` | Testing (~amd64) packages |
 | `world` | Installed package list |
 | `fstab` | Filesystem mount configuration (template) |
+| `grub` | GRUB bootloader config with XPS 9315 kernel params |
+| `openrc-services` | OpenRC service enable commands |
+| `.config` | Linux kernel configuration |
 
 ### make.conf
 
