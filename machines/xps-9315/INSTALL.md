@@ -565,7 +565,18 @@ Remove the USB drive when the system restarts.
 - Enter your password
 - XFCE desktop should start
 
-### 12.2 Connect to WiFi
+### 12.2 Restore Desktop Configuration
+
+```bash
+# Restore XFCE keyboard shortcuts (Super+Arrow tiling, app launchers, etc.)
+bash ~/gentoo_dell_xps9315/shared/xfce4-keybindings.sh
+
+# Restore XFCE panel layout (top bar + autohide bottom dock)
+bash ~/gentoo_dell_xps9315/shared/xfce4-panel.sh
+xfce4-panel --restart
+```
+
+### 12.3 Connect to WiFi
 
 ```bash
 # Open a terminal and use NetworkManager TUI
@@ -578,7 +589,7 @@ nmtui
 
 Or click the network icon in the system tray.
 
-### 12.3 Verify Hardware
+### 12.4 Verify Hardware
 
 ```bash
 # Clone the repo to your home directory

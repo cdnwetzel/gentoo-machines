@@ -595,14 +595,25 @@ dmesg | grep -i -E "(error|fail|missing|firmware)"
 dmesg | grep firmware
 ```
 
-### 12.2 Connect to WiFi
+### 12.2 Restore Desktop Configuration
+
+```bash
+# Restore XFCE keyboard shortcuts (Super+Arrow tiling, app launchers, etc.)
+bash ~/gentoo_config/shared/xfce4-keybindings.sh
+
+# Restore XFCE panel layout (top bar + autohide bottom dock)
+bash ~/gentoo_config/shared/xfce4-panel.sh
+xfce4-panel --restart
+```
+
+### 12.3 Connect to WiFi
 
 ```bash
 nmtui
 # Select "Activate a connection" → choose your network
 ```
 
-### 12.3 Verify Audio
+### 12.4 Verify Audio
 
 ```bash
 # Check if audio devices are detected

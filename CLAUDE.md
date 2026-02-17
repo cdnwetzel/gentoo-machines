@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   surface-pro-6/    Surface Pro 6 (planned)
   surface-pro-9/    Surface Pro 9 (planned)
 tools/              harvest.sh, deep_harvest.sh, build-kernel-remote.sh, generate-config.sh
-shared/             Common portage files (world, package.use, etc.)
+shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
 ```
@@ -119,6 +119,8 @@ Shared files in `shared/` apply to all machines:
 | `shared/package.license` | `/etc/portage/package.license/` |
 | `shared/openrc-services` | Reference for `rc-update` commands |
 | `shared/portage-env` | `/etc/portage/env/` |
+| `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, etc.) |
+| `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 
