@@ -119,8 +119,11 @@ Shared files in `shared/` apply to all machines:
 | `shared/package.license` | `/etc/portage/package.license/` |
 | `shared/openrc-services` | Reference for `rc-update` commands |
 | `shared/portage-env` | `/etc/portage/env/` |
+| `shared/restore-desktop.sh` | Master script: restores all XFCE config (keybindings, panels, displays) |
 | `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, etc.) |
 | `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
+| `shared/xfce4-displays.xml` | XFCE display profile (clamshell mode, AOC 34" external) |
+| `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 

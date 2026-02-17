@@ -598,12 +598,12 @@ dmesg | grep firmware
 ### 12.2 Restore Desktop Configuration
 
 ```bash
-# Restore XFCE keyboard shortcuts (Super+Arrow tiling, app launchers, etc.)
-bash ~/gentoo_config/shared/xfce4-keybindings.sh
+# Restore all XFCE settings (keybindings, panels, display profiles)
+bash ~/gentoo_config/shared/restore-desktop.sh
 
-# Restore XFCE panel layout (top bar + autohide bottom dock)
-bash ~/gentoo_config/shared/xfce4-panel.sh
-xfce4-panel --restart
+# Restore elogind config (clamshell mode lid handling)
+sudo cp ~/gentoo_config/shared/logind.conf /etc/elogind/logind.conf
+sudo rc-service elogind restart
 ```
 
 ### 12.3 Connect to WiFi
