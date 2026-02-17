@@ -601,13 +601,8 @@ dmesg | grep firmware
 # Restore all XFCE settings (keybindings, panels, display profiles, xhost)
 bash ~/gentoo_config/shared/restore-desktop.sh
 
-# Restore system configs (clamshell mode + lid toggle) — requires root
-sudo cp ~/gentoo_config/shared/logind.conf /etc/elogind/logind.conf
-sudo cp ~/gentoo_config/shared/acpi-lid.sh /etc/acpi/actions/lid.sh
-sudo chmod +x /etc/acpi/actions/lid.sh
-sudo cp ~/gentoo_config/shared/acpi-default.sh /etc/acpi/default.sh
-sudo rc-service elogind restart
-sudo rc-service acpid restart
+# Restore system configs (elogind, ACPI lid toggle, LightDM) — requires root
+sudo bash ~/gentoo_config/shared/restore-system.sh
 ```
 
 ### 12.3 Connect to WiFi

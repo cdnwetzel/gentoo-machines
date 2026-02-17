@@ -571,13 +571,8 @@ Remove the USB drive when the system restarts.
 # Restore all XFCE settings (keybindings, panels, display profiles, xhost)
 bash ~/gentoo_dell_xps9315/shared/restore-desktop.sh
 
-# Restore system configs (clamshell mode + lid toggle) — requires root
-sudo cp ~/gentoo_dell_xps9315/shared/logind.conf /etc/elogind/logind.conf
-sudo cp ~/gentoo_dell_xps9315/shared/acpi-lid.sh /etc/acpi/actions/lid.sh
-sudo chmod +x /etc/acpi/actions/lid.sh
-sudo cp ~/gentoo_dell_xps9315/shared/acpi-default.sh /etc/acpi/default.sh
-sudo rc-service elogind restart
-sudo rc-service acpid restart
+# Restore system configs (elogind, ACPI lid toggle, LightDM) — requires root
+sudo bash ~/gentoo_dell_xps9315/shared/restore-system.sh
 ```
 
 ### 12.3 Connect to WiFi
