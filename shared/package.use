@@ -20,6 +20,7 @@ sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
 # Networking
 net-libs/nodejs npm
 net-misc/remmina rdp vnc ssh
+net-vpn/networkmanager-sstp gui
 
 # NetworkManager WiFi support
 >=net-wireless/wpa_supplicant-2.11-r4 dbus

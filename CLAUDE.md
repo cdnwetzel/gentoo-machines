@@ -46,7 +46,7 @@ NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will n
 - **Kernel**: Linux 6.12.58-gentoo
 - **Architecture**: x86_64, hybrid P-Core/E-Core (Alder Lake)
 - **Compiler flags**: `-march=alderlake -O2 -pipe`
-- **Key drivers**: i915, iwlwifi (AX211), nvme, sof-audio, intel_ipu6, intel_ish
+- **Key drivers**: i915, iwlwifi (AX211), nvme, sof-audio, intel_ipu6, intel_ish, ppp (SSTP VPN)
 - **Firmware**: Embedded in kernel (i915/adlp_*, iwlwifi-so-a0-gf-a0-*, intel/ibt-0040-0041.*)
 - **Full install guide**: `machines/xps-9315/INSTALL.md`
 - **Hardware ref**: `machines/xps-9315/HARDWARE.md`

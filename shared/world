@@ -29,11 +29,13 @@ sys-auth/elogind
 sys-fs/udisks
 
 # Networking
+gnome-extra/nm-applet
 net-misc/dhcpcd
 net-misc/networkmanager
 net-misc/openssh
 net-wireless/wireless-regdb
 net-wireless/wpa_supplicant
+x11-apps/xhost
 
 # VPN
 net-misc/sstp-client
