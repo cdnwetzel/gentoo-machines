@@ -123,6 +123,8 @@ Shared files in `shared/` apply to all machines:
 | `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, etc.) |
 | `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
 | `shared/xfce4-displays.xml` | XFCE display profile (clamshell mode, AOC 34" external) |
+| `shared/acpi-lid.sh` | ACPI lid script: toggles eDP-1 on lid open/close, centered below AOC |
+| `shared/acpi-default.sh` | ACPI default handler with lid event wired to lid.sh |
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
