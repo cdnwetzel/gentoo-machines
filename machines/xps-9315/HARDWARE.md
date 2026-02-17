@@ -46,7 +46,7 @@ Notable: **No AVX-512** (fused off on Alder Lake consumer), **HFI thermal** for 
 ## Networking
 
 - **WiFi**: Intel AX211 160MHz 2x2 CNVi (`iwlwifi` driver)
-- **Bluetooth**: Intel AX211 (`btusb`/`btintel` drivers)
+- **Bluetooth**: Intel AX211 (`btusb`/`btintel` drivers) — **working**, mouse paired successfully
 - **Wired**: None built-in (USB Ethernet adapter supported)
 
 ## Storage
