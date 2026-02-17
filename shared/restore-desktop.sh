@@ -28,8 +28,15 @@ echo "Display profile copied."
 echo
 
 # Allow root to access X display (needed for ACPI lid script)
-echo "[4/4] Enabling root X access for lid toggle..."
+echo "[4/5] Enabling root X access for lid toggle..."
 xhost +local:0 2>/dev/null && echo "xhost configured." || echo "WARNING: xhost failed — install x11-apps/xhost"
+echo
+
+# Install xhost autostart so it persists across reboots
+echo "[5/5] Installing xhost autostart entry..."
+mkdir -p "${HOME}/.config/autostart"
+cp "${SCRIPT_DIR}/xhost-local.desktop" "${HOME}/.config/autostart/xhost-local.desktop"
+echo "Autostart entry installed."
 echo
 
 # Apply panel changes
