@@ -7,7 +7,7 @@ rc-update add acpid default
 rc-update add bluetooth default
 rc-update add dbus default
 rc-update add display-manager default
-rc-update add elogind default
+rc-update add elogind boot
 rc-update add local default
 rc-update add metalog default
 rc-update add netmount default

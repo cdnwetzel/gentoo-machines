@@ -3,9 +3,10 @@
 # Toggle internal display on lid open/close
 # Requires: xhost +local:0 (run once as your user in XFCE session)
 
-# Find the active X display and user
+# Find the active X display and logged-in user
 export DISPLAY=:0
-export XAUTHORITY=/home/chris/.Xauthority
+XUSER=$(who | grep '(:0)' | head -1 | awk '{print $1}')
+export XAUTHORITY="/home/${XUSER}/.Xauthority"
 
 LID_STATE=$(cat /proc/acpi/button/lid/LID0/state | awk '{print $2}')
 

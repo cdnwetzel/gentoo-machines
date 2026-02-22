@@ -42,6 +42,7 @@ net-vpn/networkmanager-sstp
 net-misc/remmina
 
 # Graphics & Video
+x11-apps/xrandr
 x11-drivers/xf86-input-libinput
 
 # Audio
@@ -50,6 +51,8 @@ media-sound/alsa-utils
 # XFCE Desktop
 x11-misc/lightdm
 xfce-base/xfce4-meta
+xfce-base/xfce4-power-manager
+xfce-extra/xfce4-taskmanager
 
 # Web Browsers
 www-client/google-chrome
