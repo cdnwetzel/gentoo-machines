@@ -1,0 +1,4 @@
+#!/bin/sh
+# Weekly fstrim for all mounted filesystems with discard support
+# Install: sudo cp shared/fstrim-weekly /etc/cron.weekly/fstrim && sudo chmod 755 /etc/cron.weekly/fstrim
+/usr/bin/fstrim -av 2>&1 | logger -t fstrim
