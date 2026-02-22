@@ -1,0 +1,4 @@
+#!/bin/sh
+# Enable Kernel Same-page Merging (KSM) at boot
+# Install to: /etc/local.d/ksm.start
+echo 1 > /sys/kernel/mm/ksm/run

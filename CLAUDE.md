@@ -121,7 +121,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/portage-env` | `/etc/portage/env/` |
 | `shared/restore-desktop.sh` | User restore: XFCE keybindings, panels, displays, xhost autostart |
 | `shared/restore-system.sh` | Root restore: elogind, ACPI lid toggle, LightDM config |
-| `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, etc.) |
+| `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, Super+Enter fullscreen, Super+Space search, etc.) |
 | `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
 | `shared/xfce4-displays.xml` | XFCE display profile (clamshell mode, AOC 34" external) |
 | `shared/acpi-lid.sh` | ACPI lid script: toggles eDP-1 on lid open/close, centered below AOC |
@@ -130,6 +130,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/lightdm.conf` | Full LightDM config with display-setup-script wired in |
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 | `shared/30-touchpad.conf` | Xorg libinput: tap-to-click, natural scroll, disable-while-typing |
+| `shared/ksm.start` | KSM enable script, installed to `/etc/local.d/ksm.start` |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 
@@ -195,6 +196,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/sysctl-performance.conf` | VM/network tuning for 32GB RAM + dual NVMe |
 | `machines/xps-9510/zram-init.conf` | 8GB zstd compressed swap config |
 | `machines/xps-9510/HARDWARE.md` | Full hardware + software environment reference |
+| `machines/xps-9510/ksm.start` | KSM enable script (also in shared/) |
 | `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
 
 ## Future Machine Notes

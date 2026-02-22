@@ -70,60 +70,39 @@ Additional work:
 - Rebuilt kernel with all three fixes, installed via `make modules_install && make install`
 - Installed `prime-run` script for NVIDIA GPU offloading
 
-## Current State
+### Phase 8: Post-Reboot Verification & Final Tweaks (Third Session)
+Verified all kernel fixes after reboot:
+- **THP**: `[always]` — confirmed
+- **MGLRU**: `0x0007` (all features) — confirmed
+- **KSM**: was `0` (disabled) — enabled via `/etc/local.d/ksm.start`, confirmed `1`
+- **i915**: DMC v2.12, GuC 70.1.1, HuC 7.9.3 loaded, no errors — confirmed
+- **zram**: 8GB zstd swap active — confirmed
+- **nvidia-smi**: working (emerge @module-rebuild done before this session)
 
-### Commits This Session
-- `abf6dfe` Add XPS 9510 production config, fix WiFi/GPU firmware loading (pre-existing, pushed)
-- `6344b3a` Add XPS 9510 post-reboot checklist (pushed)
-- `41c6e28` Fix ACPI lid script user detection, update shared packages
-- `ccec511` Enable USB-C hub support for XPS 9510 (Ethernet, SD/TF)
-- `d00b74a` Document XPS 9510 dev stack, save fstab and grub config
-- `4963252` Save final running .config after olddefconfig, add nvidia-drivers to world
-- `985d54f` Add performance tuning for XPS 9510 ML workstation
-- `2cfbe88` Update checkpoint, add tap-to-click touchpad config
-- `8df3e54` Add prime-run script for NVIDIA GPU offloading
+Additional work:
+- Added `ksm.start` to `shared/` and `machines/xps-9510/`, wired into `restore-system.sh`
+- Added **Super+Enter** → fullscreen to keybindings script
+- Added **Super+Space** → app finder search to keybindings script
+- Ran `restore-desktop.sh` and `restore-system.sh` on XPS 9510
+
+## Current State
 
 ### Machine Status
 | Machine | Status | Next Step |
 |---------|--------|-----------|
 | Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot, `emerge @module-rebuild`, verify |
+| Dell XPS 15 9510 | **Production (Gentoo) — fully verified** | Test USB-C hub, clamshell mode |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
 | Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
 | Surface Pro 6 | Placeholder | Harvest on Fedora 43 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
-### XPS 9510 Post-Reboot Verification (After Next Reboot)
-```bash
-# i915 firmware loading (should show DMC + GuC loaded, no errors)
-dmesg | grep i915 | head -10
-
-# NVIDIA driver (rebuild first: sudo emerge @module-rebuild)
-nvidia-smi
-
-# zram swap (should show /dev/zram0, 8G, zstd)
-cat /proc/swaps
-zramctl
-
-# Performance tuning
-cat /sys/kernel/mm/transparent_hugepage/enabled    # [always]
-cat /sys/kernel/mm/lru_gen/enabled                 # MGLRU active
-sysctl vm.swappiness vm.dirty_ratio                # 10, 40
-rc-status | grep -E "thermald|tlp|zram|acpid"     # all started
-
-# PRIME/Optimus test
-prime-run glxinfo | grep "OpenGL renderer"         # should show RTX 3050 Ti
-```
-
 ## Next Steps (Priority Order)
 
-1. **Reboot XPS 9510** — apply kernel fixes (i915 module, zram zstd, DRM_TTM_HELPER)
-2. **`sudo emerge @module-rebuild`** — rebuild nvidia-drivers against new kernel
-3. **Verify all three fixes** — i915 firmware, zram swap, nvidia-smi
-4. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
-5. **Test clamshell mode** — connect AOC 34" external, close lid
-6. **Install Gentoo on NUC11** — follow INSTALL.md
-7. **Harvest remaining machines** — run harvest scripts
-8. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+1. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+2. **Test clamshell mode** — connect AOC 34" external, close lid
+3. **Install Gentoo on NUC11** — follow INSTALL.md
+4. **Harvest remaining machines** — run harvest scripts
+5. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
