@@ -98,6 +98,20 @@ Notable: **Full AVX-512** support (Tiger Lake), ideal for ML inference workloads
 - **Thunderbolt 4**: Dual USB-C ports with DisplayPort Alt Mode
 - **USB 3.2 Gen 2x1**: Intel Tiger Lake-H PCH xHCI `[8086:43ed]`
 
+### USB-C Hub Support
+
+Tested with Anker 7-in-1 USB-C Hub (4K@60Hz HDMI, 85W PD, 3xUSB-A 3.0, USB-C 3.0, SD/TF):
+
+| Feature | Driver | Config |
+|---------|--------|--------|
+| HDMI (DP Alt Mode) | i915 + thunderbolt | Built-in |
+| PD pass-through | ucsi_acpi | Built-in |
+| USB-A/C 3.0 data | xhci_hcd | Built-in |
+| SD/TF card reader | usb-storage, rtsx_usb | Module |
+| USB Ethernet (RTL8153) | r8152 | Module |
+| USB Ethernet (ASIX) | ax88179_178a | Module |
+| USB Ethernet (CDC) | cdc_ether, cdc_ncm | Module |
+
 ## Platform-Specific
 
 - **Integrated Sensor Hub**: Intel ISH `[8086:43fc]` (`intel_ish_ipc`)

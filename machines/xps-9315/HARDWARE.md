@@ -87,6 +87,7 @@ Notable: **No AVX-512** (fused off on Alder Lake consumer), **HFI thermal** for 
 
 - **Thunderbolt 4**: Dual USB-C ports with DisplayPort Alt Mode
 - **USB 3.2**: Intel Alder Lake PCH xHCI `[8086:51ed]`
+- **USB-C Hub**: Tested with USB-C hub (Ethernet via RTL8153/r8152, HDMI, USB-A, PD pass-through)
 
 ## Platform-Specific
 

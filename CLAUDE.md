@@ -168,10 +168,11 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Kernel**: Linux 6.12.58-gentoo
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
-- **Key drivers**: i915 (module), nvidia 590.48 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb
+- **Key drivers**: i915 (module), nvidia 590.48 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-a0-hr-b0-*, intel/ibt-20-*)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
 - **GPU**: Hybrid Intel UHD + NVIDIA RTX 3050 Ti (PRIME/Optimus, nvidia-drivers)
+- **USB-C hubs**: Anker 7-in-1 tested (HDMI, PD, USB-A/C, SD/TF, Ethernet via r8152/ax88179/cdc_ether)
 - **Hardware ref**: `machines/xps-9510/HARDWARE.md`
 
 ## Future Machine Notes
