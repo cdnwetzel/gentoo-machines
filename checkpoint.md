@@ -81,9 +81,24 @@ Verified all kernel fixes after reboot:
 
 Additional work:
 - Added `ksm.start` to `shared/` and `machines/xps-9510/`, wired into `restore-system.sh`
-- Added **Super+Enter** → fullscreen to keybindings script
+- Added **Super+Enter** → maximize to keybindings script
 - Added **Super+Space** → app finder search to keybindings script
 - Ran `restore-desktop.sh` and `restore-system.sh` on XPS 9510
+
+### Phase 9: Hardware-Specific Kernel Optimizations (Third Session cont.)
+Tuned kernel and fstab for i7-11800H 8C/16T, 32GB RAM, dual Samsung 990 PRO NVMe:
+
+- **NR_CPUS=16** (was 64) — match actual core count, saves per-CPU memory
+- **NUMA disabled** (was enabled) — single-socket laptop, removes overhead
+- **INTEL_IDLE=y** (was disabled) — proper Tiger Lake C-state management
+- **PREEMPT=y** (was VOLUNTARY) — better desktop responsiveness under ML loads
+- **ZSWAP compressor → zstd** (was lzo) — matches zram config, ~30% better compression
+- **BFQ I/O scheduler enabled** — fairer I/O when ML jobs saturate NVMe
+- **fstab: commit=60** on both ext4 mounts — batch journal commits on fast NVMe
+- **fstab: /tmp tmpfs → 16G** (was 8G) — more headroom for ML temp files
+- **Auto module-rebuild hook** — `/etc/kernel/postinst.d/99-module-rebuild.install`
+
+Kernel rebuilding — requires reboot + verify after.
 
 ## Current State
 
@@ -92,17 +107,41 @@ Additional work:
 |---------|--------|-----------|
 | Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | **Production (Gentoo) — fully verified** | Test USB-C hub, clamshell mode |
+| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot on optimized kernel, verify |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
 | Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
 | Surface Pro 6 | Placeholder | Harvest on Fedora 43 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
+### XPS 9510 Post-Reboot Verification
+```bash
+# Preempt mode (should show "preempt")
+cat /sys/kernel/debug/sched/preempt
+
+# NUMA disabled (should be missing from dmesg)
+dmesg | grep -i numa
+
+# Intel idle driver
+dmesg | grep intel_idle
+
+# BFQ available
+cat /sys/block/nvme0n1/queue/scheduler
+
+# fstab changes
+mount | grep commit
+df -h /tmp
+
+# Module-rebuild automation (already tested if make install succeeded)
+ls /etc/kernel/postinst.d/
+```
+
 ## Next Steps (Priority Order)
 
-1. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
-2. **Test clamshell mode** — connect AOC 34" external, close lid
-3. **Install Gentoo on NUC11** — follow INSTALL.md
-4. **Harvest remaining machines** — run harvest scripts
-5. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+1. **Reboot XPS 9510** — apply optimized kernel + fstab changes
+2. **Verify optimizations** — run post-reboot checks above
+3. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+4. **Test clamshell mode** — connect AOC 34" external, close lid
+5. **Install Gentoo on NUC11** — follow INSTALL.md
+6. **Harvest remaining machines** — run harvest scripts
+7. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope

@@ -121,7 +121,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/portage-env` | `/etc/portage/env/` |
 | `shared/restore-desktop.sh` | User restore: XFCE keybindings, panels, displays, xhost autostart |
 | `shared/restore-system.sh` | Root restore: elogind, ACPI lid toggle, LightDM config |
-| `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, Super+Enter fullscreen, Super+Space search, etc.) |
+| `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, Super+Enter maximize, Super+Space search, etc.) |
 | `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
 | `shared/xfce4-displays.xml` | XFCE display profile (clamshell mode, AOC 34" external) |
 | `shared/acpi-lid.sh` | ACPI lid script: toggles eDP-1 on lid open/close, centered below AOC |
