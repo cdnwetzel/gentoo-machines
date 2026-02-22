@@ -172,7 +172,9 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Key drivers**: i915 (module), nvidia 590.48 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-a0-hr-b0-*, intel/ibt-20-*)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
+- **NVIDIA deps**: `DRM_QXL=m` required to pull in `DRM_TTM_HELPER` (nvidia-drivers build dependency on kernel 6.11+)
 - **GPU**: Hybrid Intel UHD + NVIDIA RTX 3050 Ti (PRIME/Optimus, nvidia-drivers)
+- **Kernel install**: `sys-kernel/installkernel` with `grub` USE flag — auto-runs grub-mkconfig on `make install`
 - **USB-C hubs**: Anker 7-in-1 tested (HDMI, PD, USB-A/C, SD/TF, Ethernet via r8152/ax88179/cdc_ether)
 - **Performance**: THP (always), MGLRU, KSM, NR_CPUS=16, zram 8GB zstd swap
 - **Power/Thermal**: thermald + tlp (auto performance on AC, powersave on battery)

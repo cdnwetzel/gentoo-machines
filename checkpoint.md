@@ -2,7 +2,7 @@
 
 ## Session Summary
 
-Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, including kernel tuning, desktop restore, USB-C hub support, and ML/AI workstation optimizations.
+Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, including kernel tuning, desktop restore, USB-C hub support, and ML/AI workstation optimizations. Second session fixed three kernel config issues discovered during post-reboot verification.
 
 ## What Was Done
 
@@ -54,7 +54,21 @@ Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, includin
   - Installed & enabled thermald (Intel thermal management)
   - Installed & enabled tlp (laptop power profiles)
   - Installed & enabled zram-init at boot
-- Kernel rebuild pending reboot
+
+### Phase 7: Post-Reboot Fixes (Second Session)
+Diagnosed three issues after first reboot on the optimized kernel:
+
+1. **i915 firmware failure** — `DRM_I915=y` (built-in) couldn't load firmware from `/lib/firmware/` before root mount (no initramfs). GuC/DMC failed, GPU declared wedged. **Fix**: changed `DRM_I915=m` (module).
+
+2. **nvidia-drivers module rebuild failure** — `emerge @module-rebuild` failed: `CONFIG_DRM_TTM_HELPER` not set, required by nvidia-drivers on kernel 6.11+ when `DRM_FBDEV_EMULATION` is enabled. **Fix**: enabled `CONFIG_DRM_QXL=m` which pulls in `DRM_TTM_HELPER=m`.
+
+3. **zram swap not activating** — zram-init config requested `zstd` but kernel only had `lzo-rle` backend compiled. **Fix**: enabled `CONFIG_ZRAM_BACKEND_ZSTD=y` and `CONFIG_CRYPTO_ZSTD=y`.
+
+Additional work:
+- Installed `sys-kernel/installkernel` with `grub` USE flag (auto grub-mkconfig on `make install`)
+- Added `sys-kernel/installkernel grub` to `/etc/portage/package.use/xps9510`
+- Rebuilt kernel with all three fixes, installed via `make modules_install && make install`
+- Installed `prime-run` script for NVIDIA GPU offloading
 
 ## Current State
 
@@ -66,36 +80,50 @@ Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, includin
 - `d00b74a` Document XPS 9510 dev stack, save fstab and grub config
 - `4963252` Save final running .config after olddefconfig, add nvidia-drivers to world
 - `985d54f` Add performance tuning for XPS 9510 ML workstation
+- `2cfbe88` Update checkpoint, add tap-to-click touchpad config
+- `8df3e54` Add prime-run script for NVIDIA GPU offloading
 
 ### Machine Status
 | Machine | Status | Next Step |
 |---------|--------|-----------|
 | Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot to apply kernel optimizations |
+| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot, `emerge @module-rebuild`, verify |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
 | Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
 | Surface Pro 6 | Placeholder | Harvest on Fedora 43 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
-### XPS 9510 Post-Reboot Verification
+### XPS 9510 Post-Reboot Verification (After Next Reboot)
 ```bash
-uname -r
+# i915 firmware loading (should show DMC + GuC loaded, no errors)
+dmesg | grep i915 | head -10
+
+# NVIDIA driver (rebuild first: sudo emerge @module-rebuild)
+nvidia-smi
+
+# zram swap (should show /dev/zram0, 8G, zstd)
+cat /proc/swaps
+zramctl
+
+# Performance tuning
 cat /sys/kernel/mm/transparent_hugepage/enabled    # [always]
 cat /sys/kernel/mm/lru_gen/enabled                 # MGLRU active
-swapon --show                                      # zram0 8G zstd
-rc-status | grep -E "thermald|tlp|zram|acpid"     # all started
 sysctl vm.swappiness vm.dirty_ratio                # 10, 40
-tlp-stat -s | head -5                              # TLP active
-nvidia-smi | head -4                               # GPU OK
+rc-status | grep -E "thermald|tlp|zram|acpid"     # all started
+
+# PRIME/Optimus test
+prime-run glxinfo | grep "OpenGL renderer"         # should show RTX 3050 Ti
 ```
 
 ## Next Steps (Priority Order)
 
-1. **Reboot XPS 9510** — verify kernel optimizations, zram, THP, MGLRU
-2. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
-3. **Test clamshell mode** — connect AOC 34" external, close lid
-4. **Install Gentoo on NUC11** — follow INSTALL.md
-5. **Harvest remaining machines** — run harvest scripts
-6. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+1. **Reboot XPS 9510** — apply kernel fixes (i915 module, zram zstd, DRM_TTM_HELPER)
+2. **`sudo emerge @module-rebuild`** — rebuild nvidia-drivers against new kernel
+3. **Verify all three fixes** — i915 firmware, zram swap, nvidia-smi
+4. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+5. **Test clamshell mode** — connect AOC 34" external, close lid
+6. **Install Gentoo on NUC11** — follow INSTALL.md
+7. **Harvest remaining machines** — run harvest scripts
+8. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope

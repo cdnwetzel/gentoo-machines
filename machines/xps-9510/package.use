@@ -1,0 +1,33 @@
+# /etc/portage/package.use - Dell XPS 15 9510 Gentoo
+
+# Browser support
+www-client/chromium-bin widevine vaapi
+www-client/google-chrome widevine
+
+# Graphics/Media
+media-libs/freetype harfbuzz
+media-libs/mesa vulkan
+media-plugins/alsa-plugins pulseaudio
+
+# Desktop
+dev-libs/libdbusmenu gtk3
+app-text/xmlto text
+
+# XPS 9510 specific
+sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
+
+# Networking
+net-libs/nodejs npm
+net-misc/remmina rdp vnc ssh
+net-vpn/networkmanager-sstp gui
+
+# NetworkManager WiFi support
+>=net-wireless/wpa_supplicant-2.11-r4 dbus
+
+# NVIDIA proprietary driver
+x11-drivers/nvidia-drivers kernel-open modules tools
+media-libs/mesa -video_cards_nouveau
+
+# Auto-unmasked dependencies
+>=x11-libs/libdrm-2.4.131 video_cards_nouveau video_cards_radeon video_cards_amdgpu
+sys-kernel/installkernel grub
