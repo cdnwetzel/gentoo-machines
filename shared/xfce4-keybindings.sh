@@ -85,4 +85,22 @@ xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Print" -n -t strin
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Print" -n -t string -s "xfce4-screenshooter -w"
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Shift>Print" -n -t string -s "xfce4-screenshooter -r"
 
+# --- Dell Fn hotkeys (audio, brightness) ---
+# Note: xfce4-pulseaudio-plugin handles F1-F3 natively once installed;
+# these amixer bindings serve as immediate fallback.
+
+# F1: Mute toggle
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioMute" -n -t string -s "amixer set Master toggle"
+# F2: Volume down
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioLowerVolume" -n -t string -s "amixer set Master 5%-"
+# F3: Volume up
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioRaiseVolume" -n -t string -s "amixer set Master 5%+"
+# F4: Mic mute toggle
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioMicMute" -n -t string -s "amixer set Capture toggle"
+
+# F6: Brightness down (requires sys-apps/brightnessctl)
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessDown" -n -t string -s "brightnessctl set 5%-"
+# F7: Brightness up
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessUp" -n -t string -s "brightnessctl set +5%"
+
 echo "Done. Keybindings restored."

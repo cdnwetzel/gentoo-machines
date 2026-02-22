@@ -7,3 +7,17 @@ in `gentoo-sources-6.12.58`. Causes build failure with GCC <15.
 
 **TODO:** Check if this exists in upstream Linux (torvalds/linux) or is
 Gentoo-specific, and report to the appropriate bugzilla.
+
+## intel_idle-add-tiger-lake.patch
+
+Adds Tiger Lake (0x8D) and Tiger Lake-L (0x8C) to the `intel_idle` CPU
+ID table in `drivers/idle/intel_idle.c`. Without this, the driver falls
+back to ACPI-enumerated C-states — Dell's BIOS only exposes 3 states
+(C1, ~C7, C10) instead of the 8 native SKL-family states (C1, C1E, C3,
+C6, C7s, C8, C9, C10).
+
+Maps both to `idle_cpu_skl` / `skl_cstates`, the same table used by
+Skylake and Kaby Lake. Safe — the driver validates each MWAIT substate
+at boot and skips any the hardware doesn't support.
+
+**Affects:** XPS 9510 (i7-11800H), NUC11 (i5-1135G7)

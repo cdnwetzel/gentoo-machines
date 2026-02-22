@@ -1,4 +1,4 @@
-# Checkpoint - 2026-02-21
+# Checkpoint - 2026-02-22
 
 ## Session Summary
 
@@ -99,6 +99,20 @@ Tuned kernel and fstab for i7-11800H 8C/16T, 32GB RAM, dual Samsung 990 PRO NVMe
 - **Auto module-rebuild hook** — `/etc/kernel/postinst.d/99-module-rebuild.install`
 
 Kernel rebuilding — requires reboot + verify after.
+
+### Phase 10: PipeWire Audio, Dell Hotkeys & Housekeeping (2026-02-22)
+
+1. **intel_idle Tiger Lake patch** — Created `patches/intel_idle-add-tiger-lake.patch` to add Tiger Lake (0x8D) and Tiger Lake-L (0x8C) to `intel_idle` CPU ID table. Maps to `idle_cpu_skl`/`skl_cstates` for proper C-state management instead of BIOS-limited ACPI fallback. Affects XPS 9510 and NUC11.
+
+2. **zram-init.conf fix** — Set `load_on_start=no` and `unload_on_stop=no` for built-in CONFIG_ZRAM=y. Was causing service stop failures trying to unload a built-in module.
+
+3. **PipeWire audio stack** — Added PipeWire, WirePlumber, xfce4-pulseaudio-plugin, pavucontrol to `shared/world` and `shared/package.use`. Added gentoo-pipewire-launcher autostart to `restore-desktop.sh`. Added pulseaudio plugin (plugin-19) to panel between systray and clock.
+
+4. **Dell Fn hotkey bindings** — Added XF86AudioMute/LowerVolume/RaiseVolume/MicMute (amixer fallback, overridden by xfce4-pulseaudio-plugin once installed) and XF86MonBrightnessDown/Up (brightnessctl) to `xfce4-keybindings.sh`.
+
+5. **brightnessctl** — Added `sys-apps/brightnessctl` to `shared/world` for F6/F7 brightness keys.
+
+6. **Repo housekeeping** — Created `backlog.md` with prioritized open items. Updated `checkpoint.md`, `CLAUDE.md`, `patches/README.md`.
 
 ## Current State
 

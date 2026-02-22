@@ -131,6 +131,11 @@ Shared files in `shared/` apply to all machines:
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 | `shared/30-touchpad.conf` | Xorg libinput: tap-to-click, natural scroll, disable-while-typing |
 | `shared/ksm.start` | KSM enable script, installed to `/etc/local.d/ksm.start` |
+| `patches/README.md` | Kernel patch descriptions and upstream status |
+| `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
+| `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
+| `backlog.md` | Prioritized open items tracker |
+| `checkpoint.md` | Session-by-session progress log |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 
@@ -180,6 +185,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Performance**: THP (always), MGLRU, KSM, NR_CPUS=16, zram 8GB zstd swap
 - **Power/Thermal**: thermald + tlp (auto performance on AC, powersave on battery)
 - **Sysctl**: vm.swappiness=10, dirty_ratio=40, TCP tuning (`sysctl-performance.conf`)
+- **Audio**: PipeWire + WirePlumber (replaces PulseAudio), xfce4-pulseaudio-plugin for tray volume
 - **Dev stack**: Python 3.13, PyTorch 2.10+CUDA, transformers, langchain, chromadb, faiss, jupyter, pyodbc+MSSQL ODBC 18
 - **Editors**: VS Code, Geany
 - **Node**: v24.11.1 + nvm

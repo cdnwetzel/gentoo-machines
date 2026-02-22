@@ -1,0 +1,30 @@
+From: Chris <chris@xps9510>
+Subject: [PATCH] intel_idle: add Tiger Lake CPU idle state support
+
+Tiger Lake (model 0x8D) and Tiger Lake-L (model 0x8C) are missing from
+the intel_idle CPU ID table, causing the driver to fall back to
+ACPI-enumerated C-states. On Dell XPS 9510 (i7-11800H), the BIOS only
+exposes 3 ACPI C-states (C1, ~C7, C10) instead of the 8 native states
+available in the Skylake-family table (C1, C1E, C3, C6, C7s, C8, C9,
+C10). This results in suboptimal power/latency tradeoffs for short and
+medium idle periods.
+
+Tiger Lake uses Willow Cove cores with the same MWAIT C-state hints as
+Skylake/Kaby Lake, so map both variants to idle_cpu_skl (skl_cstates).
+
+Signed-off-by: Chris <chris@xps9510>
+---
+ drivers/idle/intel_idle.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/idle/intel_idle.c
++++ b/drivers/idle/intel_idle.c
+@@ -1586,6 +1586,8 @@ static const struct x86_cpu_id intel_idle_ids[] __initconst = {
+ 	X86_MATCH_VFM(INTEL_KABYLAKE,		&idle_cpu_skl),
+ 	X86_MATCH_VFM(INTEL_SKYLAKE_X,		&idle_cpu_skx),
+ 	X86_MATCH_VFM(INTEL_ICELAKE_X,		&idle_cpu_icx),
++	X86_MATCH_VFM(INTEL_TIGERLAKE_L,	&idle_cpu_skl),
++	X86_MATCH_VFM(INTEL_TIGERLAKE,		&idle_cpu_skl),
+ 	X86_MATCH_VFM(INTEL_ICELAKE_D,		&idle_cpu_icx),
+ 	X86_MATCH_VFM(INTEL_ALDERLAKE,		&idle_cpu_adl),
+ 	X86_MATCH_VFM(INTEL_ALDERLAKE_L,	&idle_cpu_adl_l),

@@ -48,8 +48,15 @@ net-misc/remmina
 x11-apps/xrandr
 x11-drivers/xf86-input-libinput
 
-# Audio
+# Hardware Control
+sys-apps/brightnessctl
+
+# Audio (PipeWire replaces PulseAudio)
 media-sound/alsa-utils
+media-sound/pavucontrol
+media-video/pipewire
+media-video/wireplumber
+xfce-extra/xfce4-pulseaudio-plugin
 
 # XFCE Desktop
 x11-misc/lightdm
