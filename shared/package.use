@@ -1,4 +1,4 @@
-# Gentoo package.use for Dell XPS 13 9315
+# Gentoo package.use - shared across machines
 # Remote layout: /etc/portage/package.use/<per-package files>
 
 # Browser support
@@ -14,7 +14,7 @@ media-plugins/alsa-plugins pulseaudio
 dev-libs/libdbusmenu gtk3
 app-text/xmlto text
 
-# XPS 9315 specific
+# Hardware (common Intel platforms)
 sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
 
 # Networking
@@ -24,6 +24,10 @@ net-vpn/networkmanager-sstp gui
 
 # NetworkManager WiFi support
 >=net-wireless/wpa_supplicant-2.11-r4 dbus
+
+# NVIDIA proprietary driver (dGPU machines only)
+x11-drivers/nvidia-drivers kernel-open modules tools
+media-libs/mesa -video_cards_nouveau
 
 # Auto-unmasked dependencies
 >=x11-libs/libdrm-2.4.131 video_cards_nouveau video_cards_radeon video_cards_amdgpu

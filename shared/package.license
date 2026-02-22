@@ -1,4 +1,9 @@
-# Gentoo package.license for Dell XPS 13 9315
+# Gentoo package.license - shared across machines
 # Remote layout: /etc/portage/package.license/<per-package files>
 
+# Browsers
 www-client/google-chrome google-chrome
+www-client/microsoft-edge microsoft-edge
+
+# NVIDIA proprietary driver
+x11-drivers/nvidia-drivers NVIDIA-r2

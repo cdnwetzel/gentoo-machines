@@ -12,7 +12,7 @@ Multi-machine Gentoo Linux kernel configuration framework. Each machine director
 machines/           Per-machine kernel configs, make.conf, hardware docs
   xps-9315/         Dell XPS 13 9315 (Alder Lake) - PRODUCTION
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
-  xps-9510/         Dell XPS 15 9510 (planned)
+  xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
@@ -30,7 +30,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 |---|---------|-----|-----|---------------|------------|
 | 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production | Gentoo |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
-| 3 | Dell XPS 15 9510 | 11th Gen Intel | Intel + NVIDIA RTX 3050 Ti | Planned | Ubuntu 24.04 LTS |
+| 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 5 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
 | 6 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
@@ -163,9 +163,19 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 6. Run `make olddefconfig` on target to resolve dependencies
 7. Boot, verify with `lspci -k` and `dmesg | grep -i error`
 
+### Dell XPS 15 9510 (Production)
+
+- **Kernel**: Linux 6.12.58-gentoo
+- **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
+- **Compiler flags**: `-march=tigerlake -O2 -pipe`
+- **Key drivers**: i915 (module), nvidia 590.48 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb
+- **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-a0-hr-b0-*, intel/ibt-20-*)
+- **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
+- **GPU**: Hybrid Intel UHD + NVIDIA RTX 3050 Ti (PRIME/Optimus, nvidia-drivers)
+- **Hardware ref**: `machines/xps-9510/HARDWARE.md`
+
 ## Future Machine Notes
 
-- **XPS 9510**: Hybrid Intel/NVIDIA — needs nvidia-drivers ebuild, PRIME/Optimus, `CONFIG_DRM_I915=m` for iGPU
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
 - **Precision T5810**: Broadwell-EP Xeon — ECC memory, `-march=broadwell`, older chipset
 - **Precision 7960**: Modern Xeon W + dual NVIDIA — most complex config, multi-GPU with different NVIDIA cards

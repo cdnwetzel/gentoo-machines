@@ -1,9 +1,10 @@
-# OpenRC Services for Dell XPS 9315 Gentoo
+# OpenRC Services - shared across Gentoo machines
 # Enable these services after installation
 
 # Default runlevel
 rc-update add NetworkManager default
 rc-update add acpid default
+rc-update add bluetooth default
 rc-update add dbus default
 rc-update add display-manager default
 rc-update add elogind default
@@ -11,8 +12,6 @@ rc-update add local default
 rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
-rc-update add thermald default
-rc-update add tlp default
 
 # Boot runlevel
 rc-update add alsasound boot
