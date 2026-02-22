@@ -2,6 +2,7 @@
 # /etc/kernel/postinst.d/99-module-rebuild.install
 # Rebuild out-of-tree modules (nvidia-drivers, etc.) after kernel install
 # Called by installkernel with: $1=version $2=vmlinuz path
+# Must cd to / to avoid polluting nvidia's KDIR detection
 
 echo ">>> Rebuilding out-of-tree kernel modules..."
-emerge @module-rebuild
+cd / && emerge @module-rebuild
