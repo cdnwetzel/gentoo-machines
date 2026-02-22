@@ -79,5 +79,5 @@ dev-util/geany
 dev-vcs/git
 net-libs/nodejs
 
-# NVIDIA (machine-specific, only on dGPU machines)
-# x11-drivers/nvidia-drivers
+# NVIDIA (XPS 9510, ASRock B550, Precision 7960)
+x11-drivers/nvidia-drivers
