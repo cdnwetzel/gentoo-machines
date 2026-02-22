@@ -129,6 +129,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/lightdm-display-setup.sh` | LightDM greeter display setup for clamshell mode |
 | `shared/lightdm.conf` | Full LightDM config with display-setup-script wired in |
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
+| `shared/30-touchpad.conf` | Xorg libinput: tap-to-click, natural scroll, disable-while-typing |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 
@@ -173,10 +174,26 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
 - **GPU**: Hybrid Intel UHD + NVIDIA RTX 3050 Ti (PRIME/Optimus, nvidia-drivers)
 - **USB-C hubs**: Anker 7-in-1 tested (HDMI, PD, USB-A/C, SD/TF, Ethernet via r8152/ax88179/cdc_ether)
+- **Performance**: THP (always), MGLRU, KSM, NR_CPUS=16, zram 8GB zstd swap
+- **Power/Thermal**: thermald + tlp (auto performance on AC, powersave on battery)
+- **Sysctl**: vm.swappiness=10, dirty_ratio=40, TCP tuning (`sysctl-performance.conf`)
 - **Dev stack**: Python 3.13, PyTorch 2.10+CUDA, transformers, langchain, chromadb, faiss, jupyter, pyodbc+MSSQL ODBC 18
 - **Editors**: VS Code, Geany
 - **Node**: v24.11.1 + nvm
 - **Hardware ref**: `machines/xps-9510/HARDWARE.md`
+
+### XPS 9510 Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/xps-9510/.config` | Kernel config (Tiger Lake-H + NVIDIA + USB-C hub + perf tuning) |
+| `machines/xps-9510/make.conf` | Portage: `-march=tigerlake`, VIDEO_CARDS="intel iris nvidia" |
+| `machines/xps-9510/fstab` | Dual NVMe layout: root (nvme0n1) + /data (nvme1n1) |
+| `machines/xps-9510/grub` | GRUB defaults: i915.enable_guc=3, nvidia dynamic power |
+| `machines/xps-9510/sysctl-performance.conf` | VM/network tuning for 32GB RAM + dual NVMe |
+| `machines/xps-9510/zram-init.conf` | 8GB zstd compressed swap config |
+| `machines/xps-9510/HARDWARE.md` | Full hardware + software environment reference |
+| `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
 
 ## Future Machine Notes
 

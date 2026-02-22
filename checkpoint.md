@@ -1,82 +1,101 @@
-# Checkpoint - 2026-02-16
+# Checkpoint - 2026-02-21
 
 ## Session Summary
 
-Transformed the repository from a single Dell XPS 9315 kernel config into a multi-machine Gentoo Linux kernel configuration framework supporting 8 machines.
+Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, including kernel tuning, desktop restore, USB-C hub support, and ML/AI workstation optimizations.
 
 ## What Was Done
 
-### Phase 1: Repository Restructure
-- Reorganized flat layout into `machines/`, `tools/`, `shared/` directories
-- Moved XPS 9315 files to `machines/xps-9315/` (.config, make.conf, fstab, grub, INSTALL.md)
-- Moved harvest scripts to `tools/` (harvest.sh, deep_harvest.sh, build-kernel-remote.sh)
-- Moved shared portage files to `shared/` (world, package.use, package.accept_keywords, package.license, openrc-services, portage-env)
-- Created placeholder directories for 6 future machines with .gitkeep files
+### Phase 1: XPS 9510 First Boot Setup
+- Confirmed machine identity (XPS 15 9510, Tiger Lake-H i7-11800H, 32GB RAM, dual Samsung 990 PRO NVMe)
+- Verified XFCE/LightDM session running, services active (elogind, dbus, NetworkManager, acpid, bluetooth)
+- Display outputs confirmed: eDP-1, DP-1/2/3 on Intel i915 (same naming as XPS 9315)
 
-### Phase 2: NUC11 Kernel Config
-- Generated `machines/nuc11/.config` from XPS 9315 base with 33 config changes
-- **Enabled**: igc (dual 2.5GbE), ahci/SATA, igen6_edac, tps6598x, mtd/spi_nor, parport, intel_powerclamp, mei_hdcp/pxp, sof_tigerlake, ee1004, acpi_tad, serial_multi_instantiate
-- **Disabled**: All Dell drivers (16 options), IPU6 camera, ISH, MEI VSC, intel_hfi_thermal, sched_mc_prio
+### Phase 2: SSH & Git Setup
+- Generated ED25519 SSH key for GitHub (`~/.ssh/id_ed25519`)
+- Configured git identity on both `/data` and `~/` repos
+- Switched remotes from HTTPS to SSH (`git@github.com:cdnwetzel/gentoo_dell_xps9315.git`)
+- Pushed 2 pending commits (XPS 9510 production config + POST-REBOOT.md)
+- Synced both repo clones (`~/gentoo_dell_xps9315` and `/data/gentoo_dell_xps9315`)
 
-### Phase 3: NUC11 make.conf
-- Created with `-march=tigerlake` and dynamic `$(nproc)` parallelism
+### Phase 3: Bug Fixes & Missing Packages
+- **Fixed `acpi-lid.sh`**: hardcoded `/home/chris/.Xauthority` → dynamic user detection via `who`
+- **Installed missing packages**: x11-apps/xrandr, x11-apps/xhost, gentoolkit, dmidecode, i2c-tools, usbutils, alsa-utils
+- **Updated `shared/world`**: added xrandr, xfce4-power-manager, xfce4-taskmanager, nvidia-drivers
+- **Updated `shared/openrc-services`**: moved elogind to boot runlevel, added thermald/tlp/zram-init
+- **Enabled alsasound** at boot runlevel
 
-### Phase 4: Hardware Documentation
-- Created `machines/nuc11/HARDWARE.md` from Ubuntu harvest data
-- Created `machines/xps-9315/HARDWARE.md` from existing documentation
+### Phase 4: USB-C Hub Support
+- Enabled kernel drivers for USB-C hub peripherals:
+  - `CONFIG_USB_RTL8152=m` (Realtek RTL8153 Ethernet)
+  - `CONFIG_USB_USBNET=m` + CDC_ETHER, CDC_NCM, AX8817X, AX88179_178A
+  - `CONFIG_MISC_RTSX_USB=m` (USB SD card reader)
+- Rebuilt kernel, verified modules load (`modprobe r8152`, `modprobe usbnet`)
+- Documented Anker 7-in-1 USB-C hub support in HARDWARE.md
 
-### Phase 5: Documentation
-- Rewrote `CLAUDE.md` for multi-machine framework (8 machines, all tools)
-- Rewrote `README.md` with machine table, new layout, per-machine differences
-- Created root `INSTALL.md` — general-purpose guide that works on any machine
+### Phase 5: Documentation & Config Backup
+- Saved XPS 9510 `fstab` and `grub` defaults to repo
+- Documented full software environment in HARDWARE.md:
+  - Python 3.13, PyTorch 2.10+CUDA 13.1, transformers, langchain, chromadb, faiss, jupyter
+  - MSSQL ODBC 18, pyodbc, unixODBC
+  - VS Code, Geany, Node.js 24 + nvm
+- Updated CLAUDE.md with dev stack summary
 
-### Phase 6: Tools
-- Generalized `build-kernel-remote.sh` to use associative array for multi-target
-- Created `generate-config.sh` — uses `claude -p` to analyze harvest data and auto-generate .config, make.conf, HARDWARE.md for new machines
-- Updated `make.conf` files to use `$(nproc)` instead of hardcoded `-j8`
+### Phase 6: Performance Tuning (ML Workstation)
+- **Kernel config optimizations**:
+  - `NR_CPUS=16` (match actual 8C/16T, saves memory)
+  - Transparent Huge Pages (always) — reduces TLB misses for large ML tensors
+  - MGLRU (`LRU_GEN`) — better page reclaim under memory pressure
+  - KSM — memory deduplication across model instances
+  - zram with zstd compression backend
+- **System tuning**:
+  - `sysctl-performance.conf`: vm.swappiness=10, dirty_ratio=40, TCP buffer tuning
+  - `zram-init.conf`: 8GB zstd-compressed swap (safety net for large models)
+  - Installed & enabled thermald (Intel thermal management)
+  - Installed & enabled tlp (laptop power profiles)
+  - Installed & enabled zram-init at boot
+- Kernel rebuild pending reboot
 
 ## Current State
 
-### Commits
-- `bdb5804` - Restructure repo for multi-machine, add NUC11
-- `df0fdb4` - Add general install guide, AI config generator, dynamic parallelism
+### Commits This Session
+- `abf6dfe` Add XPS 9510 production config, fix WiFi/GPU firmware loading (pre-existing, pushed)
+- `6344b3a` Add XPS 9510 post-reboot checklist (pushed)
+- `41c6e28` Fix ACPI lid script user detection, update shared packages
+- `ccec511` Enable USB-C hub support for XPS 9510 (Ethernet, SD/TF)
+- `d00b74a` Document XPS 9510 dev stack, save fstab and grub config
+- `4963252` Save final running .config after olddefconfig, add nvidia-drivers to world
+- `985d54f` Add performance tuning for XPS 9510 ML workstation
 
 ### Machine Status
 | Machine | Status | Next Step |
 |---------|--------|-----------|
-| Dell XPS 13 9315 | Production (Gentoo running) | Maintenance only |
-| Intel NUC11TNBi5 | Config ready, needs Gentoo install | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | Placeholder only | Harvest on Ubuntu 24.04 |
-| ASRock B550 / Ryzen 9 5950X | Placeholder only | Harvest on Fedora 42 (has SATA SSDs) |
-| Dell Precision T5810 | Placeholder only | Harvest on Fedora 42 |
-| Dell Precision 7960 | Placeholder only | Harvest on RHEL 10.1 |
-| Surface Pro 6 | Placeholder only | Harvest on Fedora 43 (needs linux-surface patches) |
-| Surface Pro 9 | Placeholder only | Harvest on Windows 11 Pro (or install Linux first) |
+| Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
+| Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
+| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot to apply kernel optimizations |
+| ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
+| Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
+| Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
+| Surface Pro 6 | Placeholder | Harvest on Fedora 43 |
+| Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
+
+### XPS 9510 Post-Reboot Verification
+```bash
+uname -r
+cat /sys/kernel/mm/transparent_hugepage/enabled    # [always]
+cat /sys/kernel/mm/lru_gen/enabled                 # MGLRU active
+swapon --show                                      # zram0 8G zstd
+rc-status | grep -E "thermald|tlp|zram|acpid"     # all started
+sysctl vm.swappiness vm.dirty_ratio                # 10, 40
+tlp-stat -s | head -5                              # TLP active
+nvidia-smi | head -4                               # GPU OK
+```
 
 ## Next Steps (Priority Order)
 
-1. **Install Gentoo on NUC11** — boot from live USB, follow INSTALL.md with `MACHINE=nuc11`
-2. **Harvest remaining machines** — run harvest scripts on each machine's current OS
-3. **Generate configs** — use `generate-config.sh` or manual process for each new machine
-4. **NVIDIA machines** — XPS 9510, ASRock B550, Precision 7960 need nvidia-drivers planning
-5. **Surface machines** — research linux-surface patches for Pro 6 and Pro 9
-6. **Consider renaming GitHub repo** — current name `gentoo_dell_xps9315` doesn't reflect multi-machine scope
-
-## Files Modified This Session
-- `CLAUDE.md` — complete rewrite for multi-machine
-- `README.md` — complete rewrite for multi-machine
-- `INSTALL.md` — new general-purpose install guide (root level)
-- `machines/xps-9315/.config` — moved from root
-- `machines/xps-9315/make.conf` — moved + dynamic $(nproc)
-- `machines/xps-9315/fstab` — moved from root
-- `machines/xps-9315/grub` — moved from root
-- `machines/xps-9315/HARDWARE.md` — new
-- `machines/xps-9315/INSTALL.md` — moved from root (XPS-specific guide preserved)
-- `machines/nuc11/.config` — new (derived from XPS with 33 changes)
-- `machines/nuc11/make.conf` — new (-march=tigerlake)
-- `machines/nuc11/HARDWARE.md` — new (from harvest data)
-- `tools/build-kernel-remote.sh` — generalized for multi-target
-- `tools/generate-config.sh` — new (Claude-powered config generation)
-- `tools/harvest.sh` — moved from root
-- `tools/deep_harvest.sh` — moved from root
-- `shared/*` — all moved from root
+1. **Reboot XPS 9510** — verify kernel optimizations, zram, THP, MGLRU
+2. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+3. **Test clamshell mode** — connect AOC 34" external, close lid
+4. **Install Gentoo on NUC11** — follow INSTALL.md
+5. **Harvest remaining machines** — run harvest scripts
+6. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
