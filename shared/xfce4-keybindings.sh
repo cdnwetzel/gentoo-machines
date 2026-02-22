@@ -98,9 +98,9 @@ xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioRaiseVolu
 # F4: Mic mute toggle
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioMicMute" -n -t string -s "amixer set Capture toggle"
 
-# F6: Brightness down (requires sys-apps/brightnessctl)
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessDown" -n -t string -s "brightnessctl set 5%-"
+# F6: Brightness down (requires sys-power/acpilight)
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessDown" -n -t string -s "xbacklight -dec 5"
 # F7: Brightness up
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessUp" -n -t string -s "brightnessctl set +5%"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86MonBrightnessUp" -n -t string -s "xbacklight -inc 5"
 
 echo "Done. Keybindings restored."

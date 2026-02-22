@@ -1,7 +1,7 @@
 # Backlog
 
 ## High Priority
-- [ ] Install PipeWire + WirePlumber + xfce4-pulseaudio-plugin + pavucontrol + brightnessctl
+- [ ] Install PipeWire + WirePlumber + xfce4-pulseaudio-plugin + pavucontrol + acpilight
 - [ ] Run restore-desktop.sh to apply hotkey + panel + PipeWire autostart changes
 - [ ] Apply intel_idle Tiger Lake patch and rebuild kernel
 - [ ] Deploy fixed zram-init.conf: `sudo cp machines/xps-9510/zram-init.conf /etc/conf.d/zram-init`
