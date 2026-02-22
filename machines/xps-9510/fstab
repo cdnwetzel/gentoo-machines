@@ -1,0 +1,7 @@
+# /etc/fstab - XPS 9510 Gentoo (UUIDs required - NVMe device names swap on reboot)
+#
+# <fs>                                          <mountpoint>    <type>  <opts>                  <dump> <pass>
+UUID=2df3e30b-76dd-499e-b96e-8ea19769b88a       /               ext4    noatime,discard         0       1
+UUID=9AF9-209F                                  /boot/efi       vfat    noauto,umask=0077       0       2
+UUID=e9a907ae-a3cc-4f82-9768-c5d3c5d3987d       /data           ext4    noatime,discard         0       2
+tmpfs                                           /tmp            tmpfs   size=8G,nosuid,nodev    0       0

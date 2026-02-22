@@ -128,6 +128,54 @@ Tested with Anker 7-in-1 USB-C Hub (4K@60Hz HDMI, 85W PD, 3xUSB-A 3.0, USB-C 3.0
 | `intel/ibt-20-*.sfi` | Intel Bluetooth firmware |
 | `intel/ibt-20-*.ddc` | Intel Bluetooth DDC configuration |
 
+## Software Environment
+
+### Development Tools
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| VS Code | 1.109.4 | Primary IDE |
+| Geany | 2.1 | Lightweight editor |
+| Git | System | SSH key auth to GitHub |
+| Node.js | 24.11.1 | System package |
+| nvm | Installed | `~/.nvm`, manages Node versions |
+| npm | 11.6.2 | Via system Node |
+
+### Python / AI / ML / NLP
+
+| Package | Version | Notes |
+|---------|---------|-------|
+| Python | 3.13.11 | System (`PYTHON_SINGLE_TARGET`) |
+| pip | 25.3 | System |
+| Virtual env | `~/venvs/ml/` | All ML packages here |
+| PyTorch | 2.10.0+cu126 | CUDA-enabled |
+| transformers | 5.2.0 | Hugging Face |
+| sentence-transformers | 5.2.3 | Embeddings |
+| langchain | 1.2.10 | + community, core |
+| chromadb | 0.3.11 | Vector store |
+| faiss-cpu | 1.13.2 | Similarity search |
+| openai | 2.21.0 | API client |
+| pandas | 3.0.1 | Data processing |
+| numpy | 2.4.2 | Numerical computing |
+| scikit-learn | 1.8.0 | ML toolkit |
+| jupyter / jupyterlab | 4.5.4 | Notebooks |
+
+### Database / ODBC
+
+| Component | Version | Notes |
+|-----------|---------|-------|
+| unixODBC | 2.3.12 | ODBC driver manager |
+| MSSQL ODBC Driver | 18 | `/opt/microsoft/msodbcsql*` |
+| pyodbc | 5.3.0 | Python ODBC (in ML venv) |
+
+### NVIDIA / CUDA
+
+| Component | Version |
+|-----------|---------|
+| nvidia-drivers | 590.48.01 |
+| CUDA Version | 13.1 |
+| GPU | RTX 3050 Ti Mobile (GA107M, 4GB GDDR6) |
+
 ## Key Differences from XPS 9315
 
 | Feature | XPS 9510 | XPS 9315 |

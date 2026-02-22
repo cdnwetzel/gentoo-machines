@@ -173,6 +173,9 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
 - **GPU**: Hybrid Intel UHD + NVIDIA RTX 3050 Ti (PRIME/Optimus, nvidia-drivers)
 - **USB-C hubs**: Anker 7-in-1 tested (HDMI, PD, USB-A/C, SD/TF, Ethernet via r8152/ax88179/cdc_ether)
+- **Dev stack**: Python 3.13, PyTorch 2.10+CUDA, transformers, langchain, chromadb, faiss, jupyter, pyodbc+MSSQL ODBC 18
+- **Editors**: VS Code, Geany
+- **Node**: v24.11.1 + nvm
 - **Hardware ref**: `machines/xps-9510/HARDWARE.md`
 
 ## Future Machine Notes
