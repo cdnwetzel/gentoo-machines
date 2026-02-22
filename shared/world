@@ -16,8 +16,11 @@ sys-firmware/intel-microcode
 sys-kernel/gentoo-sources
 sys-kernel/linux-firmware
 
-# Power Management
+# Power & Thermal Management
+sys-block/zram-init
 sys-power/acpid
+sys-power/thermald
+sys-power/tlp
 
 # Session & Auth
 sys-auth/elogind

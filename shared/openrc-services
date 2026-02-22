@@ -12,6 +12,9 @@ rc-update add local default
 rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
+rc-update add thermald default
+rc-update add tlp default
+rc-update add zram-init boot
 
 # Boot runlevel
 rc-update add alsasound boot

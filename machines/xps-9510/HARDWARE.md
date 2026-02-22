@@ -176,6 +176,32 @@ Tested with Anker 7-in-1 USB-C Hub (4K@60Hz HDMI, 85W PD, 3xUSB-A 3.0, USB-C 3.0
 | CUDA Version | 13.1 |
 | GPU | RTX 3050 Ti Mobile (GA107M, 4GB GDDR6) |
 
+## Performance Tuning
+
+### Kernel Optimizations
+- **NR_CPUS=16** — matches actual 8C/16T (reduced from default 64, saves memory)
+- **Transparent Huge Pages** — enabled (always), reduces TLB misses for large ML workloads
+- **MGLRU (LRU_GEN)** — multi-gen LRU for better page reclaim under memory pressure
+- **KSM** — Kernel Same-page Merging, deduplicates memory across ML model instances
+- **HZ=1000** — low-latency timer for responsive desktop
+- **PREEMPT_VOLUNTARY** — good balance of throughput and interactivity
+- **zram with zstd** — compressed swap backend (better ratio than lzo-rle)
+
+### VM / Sysctl Tuning (`sysctl-performance.conf`)
+- **vm.swappiness=10** — prefer RAM over swap (32GB is plenty)
+- **vm.dirty_ratio=40** — batch NVMe writes for throughput
+- **vm.vfs_cache_pressure=50** — keep filesystem caches longer
+- **TCP tuning** — larger buffers, fast open enabled
+
+### Power / Thermal
+- **thermald** — Intel thermal daemon, prevents throttling during sustained loads
+- **tlp** — automatic power profiles (performance on AC, powersave on battery)
+- **zram-init** — 8GB zstd-compressed swap as safety net for large model loads
+
+### Storage
+- **I/O scheduler**: `none` (direct NVMe, no software scheduling overhead)
+- **Dual 990 PRO**: root on nvme0n1, data on nvme1n1 — parallel I/O for builds + data
+
 ## Key Differences from XPS 9315
 
 | Feature | XPS 9510 | XPS 9315 |
