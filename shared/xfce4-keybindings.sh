@@ -86,15 +86,12 @@ xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Print" -n -t 
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Shift>Print" -n -t string -s "xfce4-screenshooter -r"
 
 # --- Dell Fn hotkeys (audio, brightness) ---
-# Note: xfce4-pulseaudio-plugin handles F1-F3 natively once installed;
-# these amixer bindings serve as immediate fallback.
+# Volume (F1-F3): xfce4-pulseaudio-plugin handles these natively.
+# Do NOT bind XF86AudioRaiseVolume/LowerVolume here — they conflict
+# with the plugin and silently fail. Only mute/mic-mute need explicit binding.
 
-# F1: Mute toggle
+# F1: Mute toggle (fallback — plugin also handles this)
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioMute" -n -t string -s "amixer set Master toggle"
-# F2: Volume down
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioLowerVolume" -n -t string -s "amixer set Master 5%-"
-# F3: Volume up
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioRaiseVolume" -n -t string -s "amixer set Master 5%+"
 # F4: Mic mute toggle
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/XF86AudioMicMute" -n -t string -s "amixer set Capture toggle"
 
