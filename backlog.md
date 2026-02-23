@@ -5,7 +5,9 @@
 - [x] Run restore-desktop.sh to apply hotkey + panel + PipeWire autostart changes
 - [x] Apply intel_idle Tiger Lake patch and rebuild kernel
 - [x] Deploy fixed zram-init.conf
-- [ ] Verify post-reboot: PipeWire, intel_idle, zram, brightness/volume hotkeys
+- [x] Verify post-reboot: PipeWire, intel_idle, zram, brightness/volume hotkeys
+- [x] Fix nvidia-drivers module-rebuild hook (KERNEL_DIR=/usr/src/linux)
+- [x] Fix volume hotkeys (remove XFCE bindings that conflict with pulseaudio plugin)
 
 ## Medium Priority
 - [ ] Enable SCHED_DEBUG in kernel for runtime preempt mode switching

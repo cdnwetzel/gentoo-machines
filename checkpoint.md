@@ -108,13 +108,27 @@ Kernel rebuilding — requires reboot + verify after.
 
 3. **PipeWire audio stack** — Installed PipeWire (with `sound-server` USE flag), WirePlumber, xfce4-pulseaudio-plugin, pavucontrol. PipeWire replaces pulseaudio-daemon (auto-uninstalled on USE flag rebuild). Added gentoo-pipewire-launcher autostart to `restore-desktop.sh`. Added pulseaudio plugin (plugin-19) to panel between systray and clock. Deployed `shared/package.use` to `/etc/portage/package.use/shared`.
 
-4. **Dell Fn hotkey bindings** — Added XF86AudioMute/LowerVolume/RaiseVolume/MicMute (amixer fallback, overridden by xfce4-pulseaudio-plugin once installed) and XF86MonBrightnessDown/Up (xbacklight via acpilight) to `xfce4-keybindings.sh`. Ran `restore-desktop.sh` to apply.
+4. **Dell Fn hotkey bindings** — Added XF86AudioMute/MicMute (amixer) and XF86MonBrightnessDown/Up (xbacklight) to `xfce4-keybindings.sh`. Volume up/down (F2/F3) handled natively by xfce4-pulseaudio-plugin — custom XFCE shortcuts for those keys conflict and must NOT be set.
 
 5. **acpilight** — Installed `sys-power/acpilight` for F6/F7 brightness keys (provides `xbacklight` using sysfs ACPI). Added to boot runlevel for brightness save/restore. User added to `video` group. Note: `brightnessctl` is NOT in Gentoo main repos — acpilight is the correct package.
 
-6. **Kernel rebuilt** — Rebuilt with intel_idle patch, `make install` triggered auto grub-mkconfig and nvidia-drivers module-rebuild via postinst hook. Rebooting to apply.
+6. **Kernel rebuilt** — Rebuilt with intel_idle patch, `make install` triggered auto grub-mkconfig and nvidia-drivers module-rebuild via postinst hook.
 
-7. **Repo housekeeping** — Created `backlog.md` with prioritized open items. Updated `checkpoint.md`, `CLAUDE.md`, `patches/README.md`.
+7. **nvidia module-rebuild hook fix** — `99-module-rebuild.install` must set `KERNEL_DIR=/usr/src/linux` explicitly. `make modules_install` only creates a `build` symlink in `/lib/modules/<ver>/`, not `source`. Without explicit KERNEL_DIR, nvidia-drivers resolves it to empty → `/Kbuild` not found.
+
+8. **Repo housekeeping** — Created `backlog.md` with prioritized open items. Updated `checkpoint.md`, `CLAUDE.md`, `patches/README.md`.
+
+### Post-Reboot Verification Results (2026-02-22)
+
+All checks passed:
+- **PipeWire**: Running (PulseAudio on PipeWire 1.4.10)
+- **intel_idle**: Active (`current_driver: intel_idle`), 8 native C-states (C1, C1E, C6, C7s, C8, C9, C10) — vs 3 with ACPI fallback
+- **zram**: 8G zstd active
+- **Brightness**: xbacklight working, Fn+F6/F7 hotkeys working
+- **nvidia**: 590.48.01, RTX 3050 Ti loaded
+- **Volume**: Fn+F1 mute, Fn+F2/F3 volume (via pulseaudio plugin) all working
+- **Audio**: speaker-test confirms sound output working
+- **Preempt**: CONFIG_PREEMPT=y with PREEMPT_DYNAMIC confirmed
 
 ## Current State
 
@@ -123,44 +137,26 @@ Kernel rebuilding — requires reboot + verify after.
 |---------|--------|-----------|
 | Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | **Production (Gentoo)** | Verify post-reboot (PipeWire, intel_idle, hotkeys) |
+| Dell XPS 15 9510 | **Production (Gentoo) — VERIFIED** | Test USB-C hub, clamshell mode |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
 | Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
 | Surface Pro 6 | Placeholder | Harvest on Fedora 43 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
-### XPS 9510 Post-Reboot Verification
+### XPS 9510 Verification Commands
 ```bash
-# PipeWire sound server (should show "PipeWire")
-pactl info | grep "Server Name"
-
-# intel_idle with Tiger Lake C-states (should show skl_cstates loading)
-dmesg | grep intel_idle
-
-# zram swap active (should show /dev/zram0, zstd, 8G)
-swapon --show
-
-# Brightness control (should return a percentage)
-xbacklight -get
-
-# Preempt mode (should show "preempt")
-cat /sys/kernel/debug/sched/preempt
-
-# BFQ I/O scheduler available
-cat /sys/block/nvme0n1/queue/scheduler
-
-# fstab commit=60 applied
-mount | grep commit
-
-# /tmp tmpfs 16G
-df -h /tmp
-
-# Volume hotkeys: press Fn+F1/F2/F3, check panel plugin responds
-# Brightness hotkeys: press Fn+F6/F7, check screen brightness changes
+pactl info | grep "Server Name"                          # PipeWire
+cat /sys/devices/system/cpu/cpuidle/current_driver       # intel_idle
+swapon --show                                            # zram 8G zstd
+xbacklight -get                                          # brightness
+nvidia-smi                                               # nvidia driver
+zgrep PREEMPT /proc/config.gz | grep "CONFIG_PREEMPT=y"  # preempt
+cat /sys/block/nvme0n1/queue/scheduler                   # BFQ scheduler
+mount | grep commit                                      # fstab commit=60
+df -h /tmp                                               # tmpfs 16G
+# Fn+F1 mute, Fn+F2/F3 volume, Fn+F6/F7 brightness     # hotkeys (manual)
 ```
-
-If PipeWire isn't running after reboot, logout/login (autostart via `gentoo-pipewire-launcher`).
 
 ## Reproducibility — From-Zero Install Checklist
 
@@ -179,13 +175,13 @@ All config is in the repo. To rebuild this machine from scratch:
 11. `cp machines/xps-9510/zram-init.conf /etc/conf.d/zram-init`
 12. `sudo bash shared/restore-system.sh`
 13. `bash shared/restore-desktop.sh` (as user)
-14. `rc-update add acpilight boot`
-15. Reboot and verify
+14. `cp machines/xps-9510/99-module-rebuild.install /etc/kernel/postinst.d/99-module-rebuild.install`
+15. `rc-update add acpilight boot`
+16. Reboot and verify
 
 ## Next Steps (Priority Order)
 
-1. **Verify post-reboot** — run checks above (PipeWire, intel_idle, zram, brightness, hotkeys)
-2. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+1. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
 3. **Test clamshell mode** — connect AOC 34" external, close lid
 4. **Install Gentoo on NUC11** — follow INSTALL.md
 5. **Harvest remaining machines** — run harvest scripts

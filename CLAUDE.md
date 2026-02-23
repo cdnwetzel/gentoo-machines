@@ -203,6 +203,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/zram-init.conf` | 8GB zstd compressed swap config |
 | `machines/xps-9510/HARDWARE.md` | Full hardware + software environment reference |
 | `machines/xps-9510/ksm.start` | KSM enable script (also in shared/) |
+| `machines/xps-9510/99-module-rebuild.install` | Kernel postinst hook: auto `emerge @module-rebuild` with KERNEL_DIR set |
 | `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
 
 ## Future Machine Notes
