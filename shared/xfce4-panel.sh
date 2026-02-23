@@ -30,7 +30,7 @@ xfconf-query -c xfce4-panel -p /panels/panel-2/autohide-behavior -n -t int -s 1
 xfconf-query -c xfce4-panel -p /panels/panel-2/length -n -t int -s 1
 xfconf-query -c xfce4-panel -p /panels/panel-2/plugin-ids -n -a \
     -t int -s 11 -t int -s 12 -t int -s 13 -t int -s 14 -t int -s 15 \
-    -t int -s 16 -t int -s 17 -t int -s 18
+    -t int -s 20 -t int -s 16 -t int -s 17 -t int -s 18
 xfconf-query -c xfce4-panel -p /panels/panel-2/position -n -t string -s "p=10;x=0;y=0"
 xfconf-query -c xfce4-panel -p /panels/panel-2/position-locked -n -t bool -s true
 xfconf-query -c xfce4-panel -p /panels/panel-2/size -n -t int -s 48
@@ -74,10 +74,11 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-10 -n -t string -s "actions"
 xfconf-query -c xfce4-panel -p /plugins/plugin-11 -n -t string -s "showdesktop"
 # 12: Separator
 xfconf-query -c xfce4-panel -p /plugins/plugin-12 -n -t string -s "separator"
-# 13-16: Launchers
+# 13-16, 20: Launchers
 xfconf-query -c xfce4-panel -p /plugins/plugin-13 -n -t string -s "launcher"
 xfconf-query -c xfce4-panel -p /plugins/plugin-14 -n -t string -s "launcher"
 xfconf-query -c xfce4-panel -p /plugins/plugin-15 -n -t string -s "launcher"
+xfconf-query -c xfce4-panel -p /plugins/plugin-20 -n -t string -s "launcher"
 xfconf-query -c xfce4-panel -p /plugins/plugin-16 -n -t string -s "launcher"
 # 17: Separator
 xfconf-query -c xfce4-panel -p /plugins/plugin-17 -n -t string -s "separator"
@@ -130,6 +131,20 @@ Name=Web Browser
 Comment=Browse the web
 DESKTOP
 
+mkdir -p "$PANEL_DIR/launcher-20"
+cat > "$PANEL_DIR/launcher-20/remmina.desktop" << 'DESKTOP'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=remmina
+Icon=org.remmina.Remmina
+StartupNotify=true
+Terminal=false
+Categories=Network;
+Name=Remmina
+Comment=Connect to remote desktops
+DESKTOP
+
 mkdir -p "$PANEL_DIR/launcher-16"
 cat > "$PANEL_DIR/launcher-16/17709279644.desktop" << 'DESKTOP'
 [Desktop Entry]
@@ -148,6 +163,7 @@ DESKTOP
 xfconf-query -c xfce4-panel -p /plugins/plugin-13/items -n -a -t string -s "17709279641.desktop"
 xfconf-query -c xfce4-panel -p /plugins/plugin-14/items -n -a -t string -s "17709279642.desktop"
 xfconf-query -c xfce4-panel -p /plugins/plugin-15/items -n -a -t string -s "17709279643.desktop"
+xfconf-query -c xfce4-panel -p /plugins/plugin-20/items -n -a -t string -s "remmina.desktop"
 xfconf-query -c xfce4-panel -p /plugins/plugin-16/items -n -a -t string -s "17709279644.desktop"
 
 echo "Done. Panel config restored. Run 'xfce4-panel --restart' to apply."
