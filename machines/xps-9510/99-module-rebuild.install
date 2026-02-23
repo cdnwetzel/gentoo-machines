@@ -2,7 +2,10 @@
 # /etc/kernel/postinst.d/99-module-rebuild.install
 # Rebuild out-of-tree modules (nvidia-drivers, etc.) after kernel install
 # Called by installkernel with: $1=version $2=vmlinuz path
-# Must cd to / to avoid polluting nvidia's KDIR detection
+#
+# KERNEL_DIR must be set explicitly because /lib/modules/<ver>/source
+# symlink may not exist (only build symlink is created by make modules_install).
+# Without it, nvidia-drivers resolves KERNEL_DIR="" → /Kbuild not found.
 
 echo ">>> Rebuilding out-of-tree kernel modules..."
-cd / && emerge @module-rebuild
+KERNEL_DIR=/usr/src/linux emerge @module-rebuild
