@@ -130,6 +130,20 @@ All checks passed:
 - **Audio**: speaker-test confirms sound output working
 - **Preempt**: CONFIG_PREEMPT=y with PREEMPT_DYNAMIC confirmed
 
+### Phase 11: SSTP VPN, Remmina Remote Workflow & Module-Rebuild Fix (2026-02-22)
+
+1. **PPP kernel modules for SSTP VPN** — CONFIG_PPP was completely disabled. Added CONFIG_PPP=m, PPP_BSDCOMP=m, PPP_DEFLATE=m, PPP_FILTER=y, PPP_MPPE=m, PPP_MULTILINK=y, PPP_ASYNC=m, PPP_SYNC_TTY=m. Rebuilt kernel. `/dev/ppp` device node auto-created by udev on boot (ppp_generic has `alias: devname:ppp`).
+
+2. **SSTP VPN (PS VPN)** — Configured NetworkManager SSTP connection to `vpn.example.com` as `DOMAIN\chris`. PAP authentication required by Duo Auth Proxy on NPS/RRAS. DNS servers 10.0.0.42 and 10.0.0.40 with search domain `corp.local` (dns-priority -1 for VPN preference). Connection verified — can ping and resolve internal hostnames (e.g. `server01`).
+
+3. **Module-rebuild hook `env -i` fix** — Root-caused the persistent nvidia build failure from postinst hook. When `99-module-rebuild.install` runs during `make install`, the kernel's make environment (MAKEFLAGS, MAKELEVEL, KBUILD_*) leaks into the emerge/nvidia build and breaks it. Manual `emerge @module-rebuild` always worked because no leaked vars. Fixed by wrapping emerge call in `env -i` with explicit PATH/HOME/TERM. This is the definitive fix (previous KERNEL_DIR fix was necessary but insufficient).
+
+4. **Remmina remote desktop setup** — Added Remmina launcher (plugin-20) to XFCE bottom dock panel between Web Browser and App Finder. Created RDP profile for `server01.corp.local` (domain: DOMAIN, user: chris). Created SSH profile for `ssh.example.com` (user: sysadmin, key auth via `~/.ssh/id_ed25519`, ssh_auth=1).
+
+5. **USB-C hub initial test** — Anker 7-in-1 hub detected on right-side USB-C port (Genesys Logic hub), PD charging active. HDMI and USB 3.0 device testing deferred — needs external monitor and USB peripherals.
+
+6. **`shared/restore-system.sh` updated** — Added `/dev/ppp` device node creation (mknod c 108 0) as fallback for systems without ppp_generic module loaded.
+
 ## Current State
 
 ### Machine Status
@@ -181,8 +195,9 @@ All config is in the repo. To rebuild this machine from scratch:
 
 ## Next Steps (Priority Order)
 
-1. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
-3. **Test clamshell mode** — connect AOC 34" external, close lid
-4. **Install Gentoo on NUC11** — follow INSTALL.md
-5. **Harvest remaining machines** — run harvest scripts
-6. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+1. **Test USB-C hub** — plug in Anker 7-in-1 with HDMI monitor + USB 3.0 devices
+2. **Test clamshell mode** — connect AOC 34" external, close lid
+3. **Install Gentoo on NUC11** — follow INSTALL.md
+4. **Harvest remaining machines** — run harvest scripts
+5. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+6. **Upstream patches** — ipu-bridge to Gentoo bugzilla, intel_idle Tiger Lake to LKML

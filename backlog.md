@@ -8,11 +8,18 @@
 - [x] Verify post-reboot: PipeWire, intel_idle, zram, brightness/volume hotkeys
 - [x] Fix nvidia-drivers module-rebuild hook (KERNEL_DIR=/usr/src/linux)
 - [x] Fix volume hotkeys (remove XFCE bindings that conflict with pulseaudio plugin)
+- [x] Fix module-rebuild hook environment leak (`env -i` to isolate from kernel make vars)
+- [x] Configure SSTP VPN (PS VPN) — sstpc + pppd + NM, PAP auth for Duo MFA
+- [x] Add PPP kernel modules (CONFIG_PPP=m, MPPE, ASYNC, etc.) for SSTP VPN
+- [x] Configure VPN DNS (10.0.0.42/40, corp.local search domain)
+- [x] Set up Remmina RDP profile (server01.corp.local)
+- [x] Set up Remmina SSH profile (ssh.example.com, key auth)
+- [x] Add Remmina launcher to XFCE bottom dock panel
 
 ## Medium Priority
 - [x] Enable SCHED_DEBUG in kernel for runtime preempt mode switching
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md
-- [ ] Test USB-C hub (Anker 7-in-1) — Ethernet/HDMI/SD
+- [ ] Test USB-C hub (Anker 7-in-1) — HDMI + USB 3.0 devices (hub detected, PD working)
 - [ ] Test clamshell mode with AOC 34" external
 
 ## Low Priority
