@@ -2,7 +2,7 @@
 
 ## Session Summary
 
-Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, including kernel tuning, desktop restore, USB-C hub support, and ML/AI workstation optimizations. Second session fixed three kernel config issues discovered during post-reboot verification.
+Brought the Dell XPS 15 9510 to full production status on Gentoo Linux, including kernel tuning, desktop restore, USB-C hub support, ML/AI workstation optimizations, PipeWire audio, Dell Fn hotkeys, and kernel patches. Multiple sessions fixed kernel config issues, added audio/brightness support, and created a from-zero reproducible config set.
 
 ## What Was Done
 
@@ -102,17 +102,19 @@ Kernel rebuilding — requires reboot + verify after.
 
 ### Phase 10: PipeWire Audio, Dell Hotkeys & Housekeeping (2026-02-22)
 
-1. **intel_idle Tiger Lake patch** — Created `patches/intel_idle-add-tiger-lake.patch` to add Tiger Lake (0x8D) and Tiger Lake-L (0x8C) to `intel_idle` CPU ID table. Maps to `idle_cpu_skl`/`skl_cstates` for proper C-state management instead of BIOS-limited ACPI fallback. Affects XPS 9510 and NUC11.
+1. **intel_idle Tiger Lake patch** — Created `patches/intel_idle-add-tiger-lake.patch` to add Tiger Lake (0x8D) and Tiger Lake-L (0x8C) to `intel_idle` CPU ID table. Maps to `idle_cpu_skl`/`skl_cstates` for proper C-state management instead of BIOS-limited ACPI fallback. Affects XPS 9510 and NUC11. Patch applied to source tree and kernel rebuilt.
 
-2. **zram-init.conf fix** — Set `load_on_start=no` and `unload_on_stop=no` for built-in CONFIG_ZRAM=y. Was causing service stop failures trying to unload a built-in module.
+2. **zram-init.conf fix** — Set `load_on_start=no` and `unload_on_stop=no` for built-in CONFIG_ZRAM=y. Was causing service stop failures trying to unload a built-in module. Deployed to `/etc/conf.d/zram-init`.
 
-3. **PipeWire audio stack** — Added PipeWire, WirePlumber, xfce4-pulseaudio-plugin, pavucontrol to `shared/world` and `shared/package.use`. Added gentoo-pipewire-launcher autostart to `restore-desktop.sh`. Added pulseaudio plugin (plugin-19) to panel between systray and clock.
+3. **PipeWire audio stack** — Installed PipeWire (with `sound-server` USE flag), WirePlumber, xfce4-pulseaudio-plugin, pavucontrol. PipeWire replaces pulseaudio-daemon (auto-uninstalled on USE flag rebuild). Added gentoo-pipewire-launcher autostart to `restore-desktop.sh`. Added pulseaudio plugin (plugin-19) to panel between systray and clock. Deployed `shared/package.use` to `/etc/portage/package.use/shared`.
 
-4. **Dell Fn hotkey bindings** — Added XF86AudioMute/LowerVolume/RaiseVolume/MicMute (amixer fallback, overridden by xfce4-pulseaudio-plugin once installed) and XF86MonBrightnessDown/Up (brightnessctl) to `xfce4-keybindings.sh`.
+4. **Dell Fn hotkey bindings** — Added XF86AudioMute/LowerVolume/RaiseVolume/MicMute (amixer fallback, overridden by xfce4-pulseaudio-plugin once installed) and XF86MonBrightnessDown/Up (xbacklight via acpilight) to `xfce4-keybindings.sh`. Ran `restore-desktop.sh` to apply.
 
-5. **brightnessctl** — Added `sys-apps/brightnessctl` to `shared/world` for F6/F7 brightness keys.
+5. **acpilight** — Installed `sys-power/acpilight` for F6/F7 brightness keys (provides `xbacklight` using sysfs ACPI). Added to boot runlevel for brightness save/restore. User added to `video` group. Note: `brightnessctl` is NOT in Gentoo main repos — acpilight is the correct package.
 
-6. **Repo housekeeping** — Created `backlog.md` with prioritized open items. Updated `checkpoint.md`, `CLAUDE.md`, `patches/README.md`.
+6. **Kernel rebuilt** — Rebuilt with intel_idle patch, `make install` triggered auto grub-mkconfig and nvidia-drivers module-rebuild via postinst hook. Rebooting to apply.
+
+7. **Repo housekeeping** — Created `backlog.md` with prioritized open items. Updated `checkpoint.md`, `CLAUDE.md`, `patches/README.md`.
 
 ## Current State
 
@@ -121,7 +123,7 @@ Kernel rebuilding — requires reboot + verify after.
 |---------|--------|-----------|
 | Dell XPS 13 9315 | Production (Gentoo) | Maintenance only |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
-| Dell XPS 15 9510 | **Production (Gentoo)** | Reboot on optimized kernel, verify |
+| Dell XPS 15 9510 | **Production (Gentoo)** | Verify post-reboot (PipeWire, intel_idle, hotkeys) |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
 | Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
@@ -130,32 +132,61 @@ Kernel rebuilding — requires reboot + verify after.
 
 ### XPS 9510 Post-Reboot Verification
 ```bash
+# PipeWire sound server (should show "PipeWire")
+pactl info | grep "Server Name"
+
+# intel_idle with Tiger Lake C-states (should show skl_cstates loading)
+dmesg | grep intel_idle
+
+# zram swap active (should show /dev/zram0, zstd, 8G)
+swapon --show
+
+# Brightness control (should return a percentage)
+xbacklight -get
+
 # Preempt mode (should show "preempt")
 cat /sys/kernel/debug/sched/preempt
 
-# NUMA disabled (should be missing from dmesg)
-dmesg | grep -i numa
-
-# Intel idle driver
-dmesg | grep intel_idle
-
-# BFQ available
+# BFQ I/O scheduler available
 cat /sys/block/nvme0n1/queue/scheduler
 
-# fstab changes
+# fstab commit=60 applied
 mount | grep commit
+
+# /tmp tmpfs 16G
 df -h /tmp
 
-# Module-rebuild automation (already tested if make install succeeded)
-ls /etc/kernel/postinst.d/
+# Volume hotkeys: press Fn+F1/F2/F3, check panel plugin responds
+# Brightness hotkeys: press Fn+F6/F7, check screen brightness changes
 ```
+
+If PipeWire isn't running after reboot, logout/login (autostart via `gentoo-pipewire-launcher`).
+
+## Reproducibility — From-Zero Install Checklist
+
+All config is in the repo. To rebuild this machine from scratch:
+
+1. Follow `INSTALL.md` (base Gentoo install)
+2. `cp machines/xps-9510/make.conf /etc/portage/make.conf`
+3. `cp shared/package.use /etc/portage/package.use/shared`
+4. `emerge --ask $(cat shared/world | grep -v '^#' | grep -v '^$')`
+5. `cp machines/xps-9510/.config /usr/src/linux/.config`
+6. Apply patches: `cd /usr/src/linux && patch -p1 < ~/gentoo_dell_xps9315/patches/intel_idle-add-tiger-lake.patch`
+7. `make olddefconfig && make -j$(nproc) && make modules_install && make install`
+8. `cp machines/xps-9510/fstab /etc/fstab`
+9. `cp machines/xps-9510/grub /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg`
+10. `cp machines/xps-9510/sysctl-performance.conf /etc/sysctl.d/`
+11. `cp machines/xps-9510/zram-init.conf /etc/conf.d/zram-init`
+12. `sudo bash shared/restore-system.sh`
+13. `bash shared/restore-desktop.sh` (as user)
+14. `rc-update add acpilight boot`
+15. Reboot and verify
 
 ## Next Steps (Priority Order)
 
-1. **Reboot XPS 9510** — apply optimized kernel + fstab changes
-2. **Verify optimizations** — run post-reboot checks above
-3. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
-4. **Test clamshell mode** — connect AOC 34" external, close lid
-5. **Install Gentoo on NUC11** — follow INSTALL.md
-6. **Harvest remaining machines** — run harvest scripts
-7. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
+1. **Verify post-reboot** — run checks above (PipeWire, intel_idle, zram, brightness, hotkeys)
+2. **Test USB-C hub** — plug in Anker 7-in-1, verify Ethernet/HDMI/SD
+3. **Test clamshell mode** — connect AOC 34" external, close lid
+4. **Install Gentoo on NUC11** — follow INSTALL.md
+5. **Harvest remaining machines** — run harvest scripts
+6. **Consider renaming GitHub repo** — `gentoo_dell_xps9315` doesn't reflect multi-machine scope
