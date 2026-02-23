@@ -10,7 +10,7 @@
 - [x] Fix volume hotkeys (remove XFCE bindings that conflict with pulseaudio plugin)
 
 ## Medium Priority
-- [ ] Enable SCHED_DEBUG in kernel for runtime preempt mode switching
+- [x] Enable SCHED_DEBUG in kernel for runtime preempt mode switching
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md
 - [ ] Test USB-C hub (Anker 7-in-1) — Ethernet/HDMI/SD
 - [ ] Test clamshell mode with AOC 34" external
