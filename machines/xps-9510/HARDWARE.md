@@ -112,6 +112,30 @@ Tested with Anker 7-in-1 USB-C Hub (4K@60Hz HDMI, 85W PD, 3xUSB-A 3.0, USB-C 3.0
 | USB Ethernet (ASIX) | ax88179_178a | Module |
 | USB Ethernet (CDC) | cdc_ether, cdc_ncm | Module |
 
+## Remote Access
+
+### SSTP VPN (PS VPN)
+
+| Setting | Value |
+|---------|-------|
+| **Protocol** | SSTP (via `sstpc` + `pppd`) |
+| **Server** | `vpn.example.com` |
+| **Auth** | PAP (`DOMAIN\chris`) — required by Duo MFA on NPS/RRAS |
+| **DNS** | 10.0.0.42, 10.0.0.40 |
+| **Search domain** | `corp.local` |
+| **Manager** | NetworkManager (`networkmanager-sstp` plugin) |
+| **Kernel deps** | `CONFIG_PPP=m`, `PPP_MPPE=m`, `PPP_ASYNC=m` (+ related PPP modules) |
+| **Device node** | `/dev/ppp` — auto-created by udev from `ppp_generic` module alias |
+
+### Remmina Profiles
+
+| Profile | Protocol | Server | User | Auth |
+|---------|----------|--------|------|------|
+| SERVER01 | RDP | `server01.corp.local` | `DOMAIN\chris` | Password |
+| AI Server (RHEL) | SSH | `ssh.example.com` | `sysadmin` | ED25519 key (`~/.ssh/id_ed25519`) |
+
+Requires active VPN connection for RDP target. SSH target reachable over VPN or internet.
+
 ## Platform-Specific
 
 - **Integrated Sensor Hub**: Intel ISH `[8086:43fc]` (`intel_ish_ipc`)
