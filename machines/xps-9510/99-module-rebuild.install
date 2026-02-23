@@ -3,9 +3,19 @@
 # Rebuild out-of-tree modules (nvidia-drivers, etc.) after kernel install
 # Called by installkernel with: $1=version $2=vmlinuz path
 #
-# KERNEL_DIR must be set explicitly because /lib/modules/<ver>/source
-# symlink may not exist (only build symlink is created by make modules_install).
-# Without it, nvidia-drivers resolves KERNEL_DIR="" → /Kbuild not found.
+# make modules_install creates a "build" symlink but not "source" in
+# /lib/modules/<ver>/. nvidia-drivers resolves KERNEL_DIR from the source
+# symlink — when missing, the build fails with /Kbuild not found.
+# Fix: create the source symlink from the build symlink before emerging.
+
+VERSION="$1"
+MOD_DIR="/lib/modules/${VERSION}"
+
+# Create source symlink if missing (nvidia-drivers needs it)
+if [ -L "${MOD_DIR}/build" ] && [ ! -e "${MOD_DIR}/source" ]; then
+    ln -s "$(readlink "${MOD_DIR}/build")" "${MOD_DIR}/source"
+    echo ">>> Created ${MOD_DIR}/source symlink"
+fi
 
 echo ">>> Rebuilding out-of-tree kernel modules..."
-KERNEL_DIR=/usr/src/linux emerge @module-rebuild
+emerge @module-rebuild
