@@ -3,10 +3,13 @@
 # Rebuild out-of-tree modules (nvidia-drivers, etc.) after kernel install
 # Called by installkernel with: $1=version $2=vmlinuz path
 #
-# make modules_install creates a "build" symlink but not "source" in
-# /lib/modules/<ver>/. nvidia-drivers resolves KERNEL_DIR from the source
-# symlink — when missing, the build fails with /Kbuild not found.
-# Fix: create the source symlink from the build symlink before emerging.
+# Two issues fixed here:
+# 1. make modules_install creates a "build" symlink but not "source" in
+#    /lib/modules/<ver>/. nvidia-drivers resolves KERNEL_DIR from the source
+#    symlink — when missing, the build fails with /Kbuild not found.
+# 2. When called from make install, the kernel's make environment leaks
+#    variables (MAKEFLAGS, MAKELEVEL, KBUILD_*) that break the nvidia
+#    build. Use env -i to start with a clean environment.
 
 VERSION="$1"
 MOD_DIR="/lib/modules/${VERSION}"
@@ -18,4 +21,6 @@ if [ -L "${MOD_DIR}/build" ] && [ ! -e "${MOD_DIR}/source" ]; then
 fi
 
 echo ">>> Rebuilding out-of-tree kernel modules..."
-emerge @module-rebuild
+env -i HOME=/root TERM="${TERM}" \
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin" \
+    emerge @module-rebuild

@@ -44,14 +44,25 @@ echo "Done."
 echo
 
 # KSM (Kernel Same-page Merging) startup
-echo "[5/6] Installing KSM startup script..."
+echo "[5/7] Installing KSM startup script..."
 cp "${SCRIPT_DIR}/ksm.start" /etc/local.d/ksm.start
 chmod +x /etc/local.d/ksm.start
 echo "Done."
 echo
 
+# /dev/ppp device node (required for SSTP VPN / pppd)
+echo "[6/7] Creating /dev/ppp device node..."
+if [ ! -c /dev/ppp ]; then
+    mknod /dev/ppp c 108 0
+    echo "Created /dev/ppp"
+else
+    echo "Already exists."
+fi
+echo "Done."
+echo
+
 # Restart services
-echo "[6/6] Restarting services..."
+echo "[7/7] Restarting services..."
 rc-service elogind restart
 rc-service acpid restart
 echo "Done."
