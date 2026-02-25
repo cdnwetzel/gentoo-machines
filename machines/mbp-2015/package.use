@@ -1,0 +1,2 @@
+# required by net-misc/remmina[appindicator]
+>=dev-libs/libdbusmenu-16.04.0-r4 gtk3

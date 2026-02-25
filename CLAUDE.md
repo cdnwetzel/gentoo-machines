@@ -13,6 +13,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   xps-9315/         Dell XPS 13 9315 (Alder Lake) - PRODUCTION
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
+  mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
@@ -31,11 +32,12 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production | Gentoo |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
-| 4 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| 5 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
-| 6 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
-| 7 | Surface Pro 6 | 8th Gen Intel | Intel UHD 620 | Planned | Fedora 43 |
-| 8 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
+| 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
+| 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
+| 6 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
+| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
+| 8 | Surface Pro 6 | 8th Gen Intel | Intel UHD 620 | Planned | Fedora 43 |
+| 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will need **linux-surface** kernel patches.
 
@@ -60,6 +62,18 @@ NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will n
 - **Key differences from XPS**: No camera/ISP, no Dell drivers, no ISH, has SATA, dual Ethernet, SPI flash, EDAC
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-*, intel/ibt-20-*)
 - **Hardware ref**: `machines/nuc11/HARDWARE.md`
+
+### MacBook Pro 12,1 Early 2015 (Production)
+
+- **Kernel**: Linux 6.18.12-gentoo
+- **Architecture**: x86_64, 2C/4T (Broadwell)
+- **Compiler flags**: `-march=broadwell -O2 -pipe`
+- **Key drivers**: i915 (module), brcmfmac (BCM43602 WiFi), btusb+btbcm (BT), snd_hda_codec_cs420x (CS4208 audio), bcm5974 (trackpad), applesmc (fan/thermal), thunderbolt (Falcon Ridge)
+- **Firmware**: Loaded from /lib/firmware/ (brcm/brcmfmac43602-pcie.*, regulatory.db)
+- **Apple-specific**: hid_apple (fnmode=3), applesmc (35 sensors), mbpfan, apple_gmux (backlight), smc::kbd_backlight
+- **Boot params**: `libata.force=noncq reboot=pci fbcon=font:TER16x32 i915.enable_fbc=1 i915.enable_psr=2`
+- **Not working**: FaceTime camera (needs out-of-tree facetimehd driver)
+- **Hardware ref**: `machines/mbp-2015/HARDWARE.md`
 
 ## Tools
 
@@ -205,6 +219,23 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/ksm.start` | KSM enable script (also in shared/) |
 | `machines/xps-9510/99-module-rebuild.install` | Kernel postinst hook: auto `emerge @module-rebuild` with KERNEL_DIR set |
 | `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
+
+### MBP 2015 Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/mbp-2015/.config` | Kernel config (Broadwell + Apple HW + THP/MGLRU/PREEMPT tuning) |
+| `machines/mbp-2015/make.conf` | Portage: `-march=broadwell`, VIDEO_CARDS="intel", ccache, 12G tmpfs |
+| `machines/mbp-2015/fstab` | Single SSD: root (sda3) + boot (sda2) + EFI (sda1) + portage tmpfs |
+| `machines/mbp-2015/grub` | GRUB defaults: libata.force=noncq, reboot=pci, i915 power saving |
+| `machines/mbp-2015/mbpfan.conf` | Fan control: 1300-6199 RPM, low=55 high=80 max=86 |
+| `machines/mbp-2015/zram-init.conf` | 4GB zstd compressed swap config |
+| `machines/mbp-2015/disable-wakeup.start` | Prevent immediate wake from suspend (LID0/XHC1) |
+| `machines/mbp-2015/setup-hotkeys.sh` | XFCE Fn row keybindings + pulseaudio panel plugin |
+| `machines/mbp-2015/package.accept_keywords` | ~amd64 keywords: mbpfan, networkmanager-sstp |
+| `machines/mbp-2015/package.use` | USE overrides: libdbusmenu gtk3 (remmina dep) |
+| `machines/mbp-2015/world` | Installed package set |
+| `machines/mbp-2015/HARDWARE.md` | Full hardware + software environment reference |
 
 ## Future Machine Notes
 
