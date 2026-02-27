@@ -145,6 +145,8 @@ Shared files in `shared/` apply to all machines:
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 | `shared/30-touchpad.conf` | Xorg libinput: tap-to-click, natural scroll, disable-while-typing |
 | `shared/ksm.start` | KSM enable script, installed to `/etc/local.d/ksm.start` |
+| `shared/fstrim-weekly` | Weekly SSD TRIM maintenance script |
+| `shared/xhost-local.desktop` | XDG autostart: `xhost +local:` for X11 access |
 | `patches/README.md` | Kernel patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
@@ -219,6 +221,8 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/ksm.start` | KSM enable script (also in shared/) |
 | `machines/xps-9510/99-module-rebuild.install` | Kernel postinst hook: auto `emerge @module-rebuild` with KERNEL_DIR set |
 | `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
+| `machines/xps-9510/package.use` | USE overrides for XPS 9510 packages |
+| `machines/xps-9510/prime-run` | NVIDIA PRIME Optimus wrapper script |
 
 ### MBP 2015 Machine-Specific Files
 
