@@ -259,17 +259,19 @@ emerge -pv media-video/wireplumber
 
 # zram-init config
 cat > /etc/conf.d/zram-init << 'EOF'
-# Surface Pro 6: 8GB RAM, use 4GB compressed swap
+# Surface Pro 6: 8GB RAM, use 4GB compressed swap (zstd)
+# ZRAM is built-in (=y), so load_on_start=no
 load_on_start="no"
 unload_on_stop="no"
+
+# Number of zram devices — REQUIRED or service silently does nothing
+num_devices="1"
+
+# Device 0: compressed swap
 type0="swap"
-flag0=""
 size0="4096"
 algo0="zstd"
-mlimit0=""
-back0=""
-icache0=""
-wlimit0=""
+labl0="zram_swap"
 EOF
 
 # Battery plugin for XFCE panel
