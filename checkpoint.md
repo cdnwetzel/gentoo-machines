@@ -80,7 +80,10 @@ Integrated Surface Pro 6 and MacBook Pro 2015 build artifacts from Ventoy USB in
 
 ## Next Steps (Priority Order)
 
-1. **Execute Surface Pro 6 install** — boot Ventoy, run 3 scripts, ~3.5 hours
+1. **Execute Surface Pro 6 install TONIGHT** — boot Ventoy, run part1 → part2 → part3
+   - Disable Secure Boot first (Volume Up + Power)
+   - Scripts at `/media/cwetzel/VTOYEFI/surfacepro6/`
+   - Key gotchas: Marvell WiFi (not Intel), i915=m, 4GB tmpfs, -march=skylake
 2. **Test USB-C hub on XPS 9510** — Anker 7-in-1, HDMI + USB 3.0
 3. **Test clamshell mode on XPS 9510** — AOC 34" external
 4. **Install Gentoo on NUC11** — follow INSTALL.md
