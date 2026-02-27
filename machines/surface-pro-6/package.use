@@ -1,0 +1,11 @@
+# Surface Pro 6 - machine-specific package.use
+# Install to: /etc/portage/package.use/surface-pro-6
+
+# installkernel: auto-run grub-mkconfig on kernel install
+sys-kernel/installkernel grub
+
+# MBP-specific libva driver not needed; use iHD on 8th gen+
+# media-libs/libva-intel-driver is NOT in our world file
+
+# networkmanager-sstp needs these for the GUI
+net-vpn/networkmanager-sstp gui

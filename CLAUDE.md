@@ -17,7 +17,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
-  surface-pro-6/    Surface Pro 6 (planned)
+  surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - READY TO INSTALL
   surface-pro-9/    Surface Pro 9 (planned)
 tools/              harvest.sh, deep_harvest.sh, build-kernel-remote.sh, generate-config.sh
 shared/             Common portage files, XFCE desktop config restore scripts
@@ -36,7 +36,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
 | 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
-| 8 | Surface Pro 6 | 8th Gen Intel | Intel UHD 620 | Planned | Fedora 43 |
+| 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Ready to install | Fedora 43 |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will need **linux-surface** kernel patches.
@@ -236,6 +236,52 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/mbp-2015/package.use` | USE overrides: libdbusmenu gtk3 (remmina dep) |
 | `machines/mbp-2015/world` | Installed package set |
 | `machines/mbp-2015/HARDWARE.md` | Full hardware + software environment reference |
+| `machines/mbp-2015/kernel_config.sh` | Programmatic kernel config script (scripts/config based) |
+| `machines/mbp-2015/post_install_setup.sh` | Post-kernel install reference steps |
+| `machines/mbp-2015/wifi_firmware_fix.sh` | BCM43602 firmware symlink/check script |
+| `machines/mbp-2015/package.env` | Large package tmpdir override (chromium, firefox, llvm, rust, gcc) |
+| `machines/mbp-2015/portage_env_notmpfs.conf` | Fallback PORTAGE_TMPDIR to disk |
+| `machines/mbp-2015/gentoo_install_part1.sh` | Disk partitioning from live USB |
+| `machines/mbp-2015/gentoo_install_part2.sh` | Stage3 + chroot + kernel build |
+
+### Surface Pro 6 (Ready to Install)
+
+- **Kernel**: Target 6.18.x gentoo-sources
+- **Architecture**: x86_64, 4C/8T (Kaby Lake-R)
+- **Compiler flags**: `-march=skylake -O2 -pipe` (GCC has no `-march=kabylake`)
+- **Key drivers**: i915 (module, KBL GT2), mwifiex_pcie (Marvell 88W8897 WiFi), snd_hda_intel (ALC298), surface_aggregator, btmrvl_sdio (Marvell BT)
+- **Firmware**: Loaded from /lib/firmware/ (i915/kbl_dmc_*, mrvl/pcie8897_uapsta.bin, mrvl/usb8897_uapsta.bin)
+- **Critical**: DRM_I915=m (module), WiFi is Marvell NOT Intel, no initramfs
+- **Display**: 2736x1824 PixelSense (267 PPI, 3:2 aspect)
+- **Storage**: SK hynix BC501 NVMe 238GB, no swap partition (4GB zram zstd)
+- **RAM**: 8GB LPDDR3 (soldered), 4GB portage tmpfs with disk fallback for large packages
+- **Input**: Type Cover USB HID (keyboard + touchpad), touchscreen non-functional (HW defect)
+- **Suspend**: s2idle only (no S3 deep sleep)
+- **Hardware ref**: `machines/surface-pro-6/HARDWARE.md`
+
+### Surface Pro 6 Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/surface-pro-6/make.conf` | Portage: `-march=skylake`, VIDEO_CARDS="intel", 4GB tmpfs |
+| `machines/surface-pro-6/kernel_config.sh` | Programmatic kernel config (scripts/config based) |
+| `machines/surface-pro-6/package.use` | USE: installkernel+grub, networkmanager-sstp gui |
+| `machines/surface-pro-6/package.env` | Large package tmpdir override |
+| `machines/surface-pro-6/portage_env_notmpfs.conf` | Fallback PORTAGE_TMPDIR to disk |
+| `machines/surface-pro-6/world` | Target package set (70+ packages) |
+| `machines/surface-pro-6/iptsd.conf` | Surface touch/pen input daemon config |
+| `machines/surface-pro-6/iptsd-device.conf` | Surface Pro 6 specific IPTSD device config |
+| `machines/surface-pro-6/50-iptsd.rules` | udev rules for IPTSD |
+| `machines/surface-pro-6/fedora-reference.config` | Fedora 43 kernel 6.18.8 config (cross-reference) |
+| `machines/surface-pro-6/HARDWARE.md` | Complete hardware inventory (5 harvest rounds) |
+| `machines/surface-pro-6/INSTALL_PREFLIGHT.md` | 13-phase install checklist |
+| `machines/surface-pro-6/INSTALL_GOTCHAS.md` | 20 lessons learned from prior builds |
+| `machines/surface-pro-6/EXEC_SEQUENCE.md` | 7-step quick reference |
+| `machines/surface-pro-6/FEDORA_REFERENCE.md` | Config mined from running Fedora |
+| `machines/surface-pro-6/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions explained |
+| `machines/surface-pro-6/gentoo_install_part1.sh` | Partition + format NVMe |
+| `machines/surface-pro-6/gentoo_install_part2.sh` | Stage3 + config copy + chroot prep |
+| `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ## Future Machine Notes
 

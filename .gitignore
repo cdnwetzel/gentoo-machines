@@ -23,6 +23,9 @@ gshadow-
 # Env files with secrets
 .env
 *.env
+# But allow portage package.env files
+!**/package.env
+!**/portage_env_notmpfs.conf
 
 # GPG / keyring
 *.gpg
