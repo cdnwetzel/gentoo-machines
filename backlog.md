@@ -8,6 +8,8 @@
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external
+- [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver)
+- [ ] MBP 2015: fix GRUB installkernel to use version suffix (avoid manual cp after make install)
 
 ## Low Priority
 - [ ] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines or similar)
@@ -17,3 +19,5 @@
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro)
 - [ ] Report ipu-bridge-fix-double-brace.patch upstream (Gentoo or kernel bugzilla)
 - [ ] Submit intel_idle Tiger Lake patch upstream to LKML
+- [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional)
+- [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power
