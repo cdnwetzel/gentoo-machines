@@ -10,7 +10,7 @@ Multi-machine Gentoo Linux kernel configuration framework. Each machine director
 
 ```
 machines/           Per-machine kernel configs, make.conf, hardware docs
-  xps-9315/         Dell XPS 13 9315 (Alder Lake) - PRODUCTION
+  xps-9315/         Dell XPS 13 9315 (Alder Lake) - CONFIGS UPDATED (returned to Windows)
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
@@ -29,7 +29,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 
 | # | Machine | CPU | GPU | Kernel Status | Current OS |
 |---|---------|-----|-----|---------------|------------|
-| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production | Gentoo |
+| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Configs updated | Windows (returned) |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
@@ -131,7 +131,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/package.use` | `/etc/portage/package.use/` |
 | `shared/package.accept_keywords` | `/etc/portage/package.accept_keywords/` |
 | `shared/package.license` | `/etc/portage/package.license/` |
-| `shared/openrc-services` | Reference for `rc-update` commands |
+| `shared/openrc-services` | Reference for `rc-update` commands (machine-conditional annotations) |
 | `shared/portage-env` | `/etc/portage/env/` |
 | `shared/restore-desktop.sh` | User restore: XFCE keybindings, panels, displays, xhost autostart |
 | `shared/restore-system.sh` | Root restore: elogind, ACPI lid toggle, LightDM config |
@@ -150,6 +150,8 @@ Shared files in `shared/` apply to all machines:
 | `patches/README.md` | Kernel patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
+| `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (25 lessons from all machines) |
+| `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `backlog.md` | Prioritized open items tracker |
 | `checkpoint.md` | Session-by-session progress log |
 
@@ -221,8 +223,21 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/ksm.start` | KSM enable script (also in shared/) |
 | `machines/xps-9510/99-module-rebuild.install` | Kernel postinst hook: auto `emerge @module-rebuild` with KERNEL_DIR set |
 | `machines/xps-9510/POST-REBOOT.md` | Post-install verification checklist |
-| `machines/xps-9510/package.use` | USE overrides for XPS 9510 packages |
+| `machines/xps-9510/package.use` | USE overrides for XPS 9510 packages (PipeWire, NVIDIA, fwupd) |
 | `machines/xps-9510/prime-run` | NVIDIA PRIME Optimus wrapper script |
+| `machines/xps-9510/kernel_config.sh` | 26-phase programmatic kernel config (Tiger Lake-H + NVIDIA) |
+| `machines/xps-9510/world` | Installed package set (61 packages) |
+| `machines/xps-9510/package.env` | Large package disk fallback (6 packages) |
+| `machines/xps-9510/portage_env_notmpfs.conf` | Disk PORTAGE_TMPDIR for large builds |
+| `machines/xps-9510/package.accept_keywords` | ~amd64 keywords |
+| `machines/xps-9510/tlp.conf` | TLP power: performance on AC, powersave on battery |
+| `machines/xps-9510/live-fixes.sh` | Apply CPU_FLAGS_X86 fix + optimizations to live system |
+| `machines/xps-9510/gentoo_install_part1.sh` | Partition dual NVMe from live USB |
+| `machines/xps-9510/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/xps-9510/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA phases) |
+| `machines/xps-9510/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions (NVIDIA dep chain, built-in vs module) |
+| `machines/xps-9510/INSTALL_GOTCHAS.md` | 10 XPS 9510-specific install lessons |
+| `machines/xps-9510/INSTALL_PREFLIGHT.md` | 13-phase install checklist with NVIDIA verification |
 
 ### MBP 2015 Machine-Specific Files
 

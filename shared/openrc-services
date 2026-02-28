@@ -1,23 +1,38 @@
 # OpenRC Services - shared across Gentoo machines
 # Enable these services after installation
+#
+# Machine-conditional services are marked with [CONDITION]
 
-# Default runlevel
+# ============================================================================
+# DEFAULT RUNLEVEL — all machines
+# ============================================================================
 rc-update add NetworkManager default
 rc-update add acpid default
 rc-update add bluetooth default
 rc-update add dbus default
-rc-update add display-manager default
-rc-update add elogind boot
+rc-update add display-manager default    # configure via /etc/conf.d/display-manager
 rc-update add local default
 rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
-rc-update add thermald default
-rc-update add tlp default
-rc-update add zram-init boot
 
-# Boot runlevel
-rc-update add alsasound boot
+# [LAPTOPS] Thermal management — Intel laptops only
+rc-update add thermald default           # MBP 2015, XPS 9315, XPS 9510, Surface Pro 6, NUC11
+
+# [LAPTOPS] Power management — laptops with battery
+rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
+
+# [APPLE] Fan control — Apple hardware only
+# rc-update add mbpfan default           # MBP 2015 ONLY (applesmc fan control)
+
+# ============================================================================
+# BOOT RUNLEVEL
+# ============================================================================
+rc-update add elogind boot               # session management (all machines)
+rc-update add zram-init boot             # compressed swap (all machines)
+rc-update add alsasound boot             # ALSA state save/restore
+
+# Standard boot services (usually enabled by default in stage3)
 rc-update add binfmt boot
 rc-update add bootmisc boot
 rc-update add fsck boot
@@ -38,7 +53,12 @@ rc-update add sysctl boot
 rc-update add systemd-tmpfiles-setup boot
 rc-update add termencoding boot
 
-# Sysinit runlevel
+# [LAPTOPS] Brightness save/restore — laptops with backlight
+# rc-update add acpilight boot           # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
+
+# ============================================================================
+# SYSINIT RUNLEVEL
+# ============================================================================
 rc-update add cgroups sysinit
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
@@ -48,10 +68,14 @@ rc-update add systemd-tmpfiles-setup-dev sysinit
 rc-update add udev sysinit
 rc-update add udev-trigger sysinit
 
-# Shutdown runlevel
+# ============================================================================
+# SHUTDOWN RUNLEVEL
+# ============================================================================
 rc-update add killprocs shutdown
 rc-update add mount-ro shutdown
 rc-update add savecache shutdown
 
-# Nonetwork runlevel
+# ============================================================================
+# NONETWORK RUNLEVEL
+# ============================================================================
 rc-update add local nonetwork

@@ -3,6 +3,7 @@
 # System Administration
 app-admin/metalog
 app-admin/sudo
+app-portage/cpuid2cpuflags
 app-portage/gentoolkit
 sys-apps/dmidecode
 sys-apps/i2c-tools
@@ -14,6 +15,7 @@ sys-apps/usbutils
 sys-boot/grub
 sys-firmware/intel-microcode
 sys-kernel/gentoo-sources
+sys-kernel/installkernel
 sys-kernel/linux-firmware
 
 # Power & Thermal Management
@@ -71,7 +73,7 @@ www-client/microsoft-edge
 # CLI Tools
 app-arch/zip
 app-misc/jq
-app-misc/neofetch
+app-misc/fastfetch
 app-misc/tmux
 app-text/tesseract
 app-text/tree
@@ -86,6 +88,7 @@ app-editors/vscode
 dev-db/unixODBC
 dev-python/pip
 dev-util/geany
+dev-util/ccache
 dev-vcs/git
 net-libs/nodejs
 
