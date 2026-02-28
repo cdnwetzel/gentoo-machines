@@ -1,0 +1,27 @@
+# /etc/portage/package.use - Dell XPS 13 9315
+# WARNING: Not verified on live system
+
+# Installkernel with GRUB integration
+sys-kernel/installkernel grub
+
+# PipeWire audio
+media-video/pipewire sound-server dbus elogind bluetooth pipewire-alsa extra
+xfce-extra/xfce4-pulseaudio-plugin libnotify
+
+# Networking
+net-vpn/networkmanager-sstp gui
+>=net-wireless/wpa_supplicant-2.11-r4 dbus
+net-libs/nodejs npm
+net-misc/remmina rdp vnc ssh
+
+# Graphics/Media
+media-libs/freetype harfbuzz
+media-libs/mesa vulkan
+media-plugins/alsa-plugins pulseaudio
+
+# Desktop
+dev-libs/libdbusmenu gtk3
+app-text/xmlto text
+
+# Hardware
+sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
