@@ -9,6 +9,10 @@ media-libs/freetype harfbuzz
 media-libs/mesa vulkan
 media-plugins/alsa-plugins pulseaudio
 
+# PipeWire audio (replaces PulseAudio)
+media-video/pipewire sound-server dbus elogind bluetooth pipewire-alsa extra
+xfce-extra/xfce4-pulseaudio-plugin libnotify
+
 # Desktop
 dev-libs/libdbusmenu gtk3
 app-text/xmlto text

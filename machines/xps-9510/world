@@ -1,0 +1,95 @@
+# /var/lib/portage/world - Dell XPS 15 9510 Gentoo
+# Based on shared/world + NVIDIA/CUDA + dev stack
+
+# System Administration
+app-admin/metalog
+app-admin/sudo
+app-portage/cpuid2cpuflags
+app-portage/gentoolkit
+sys-apps/dmidecode
+sys-apps/i2c-tools
+sys-apps/lm-sensors
+sys-apps/pciutils
+sys-apps/usbutils
+
+# Boot & Kernel
+sys-boot/grub
+sys-firmware/intel-microcode
+sys-kernel/gentoo-sources
+sys-kernel/installkernel
+sys-kernel/linux-firmware
+
+# Power & Thermal Management
+sys-block/zram-init
+sys-power/acpid
+sys-power/acpilight
+sys-power/thermald
+sys-power/tlp
+
+# Session & Auth
+sys-auth/elogind
+sys-fs/udisks
+
+# Networking
+gnome-extra/nm-applet
+net-misc/dhcpcd
+net-misc/networkmanager
+net-misc/openssh
+net-wireless/wireless-regdb
+net-wireless/wpa_supplicant
+x11-apps/xhost
+
+# Bluetooth
+net-wireless/bluez
+net-wireless/blueman
+
+# VPN
+net-vpn/networkmanager-sstp
+
+# Remote Desktop
+net-misc/remmina
+
+# Graphics & Video
+x11-apps/xrandr
+x11-drivers/nvidia-drivers
+x11-drivers/xf86-input-libinput
+
+# Audio (PipeWire replaces PulseAudio)
+media-sound/alsa-utils
+media-sound/pavucontrol
+media-video/pipewire
+media-video/wireplumber
+xfce-extra/xfce4-pulseaudio-plugin
+
+# XFCE Desktop
+x11-misc/lightdm
+xfce-base/xfce4-meta
+xfce-base/xfce4-power-manager
+xfce-extra/xfce4-battery-plugin
+xfce-extra/xfce4-taskmanager
+
+# Web Browsers
+www-client/google-chrome
+www-client/microsoft-edge
+
+# CLI Tools
+app-arch/zip
+app-misc/fastfetch
+app-misc/jq
+app-misc/tmux
+app-text/tesseract
+app-text/tree
+net-fs/sshfs
+sys-process/btop
+sys-process/htop
+sys-process/nvtop
+x11-misc/xclip
+
+# Development
+app-editors/vscode
+dev-db/unixODBC
+dev-python/pip
+dev-util/ccache
+dev-util/geany
+dev-vcs/git
+net-libs/nodejs

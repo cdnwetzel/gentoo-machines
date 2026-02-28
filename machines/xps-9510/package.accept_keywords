@@ -1,0 +1,2 @@
+# /etc/portage/package.accept_keywords - Dell XPS 15 9510
+net-vpn/networkmanager-sstp ~amd64
