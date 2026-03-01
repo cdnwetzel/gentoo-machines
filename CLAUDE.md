@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - READY TO INSTALL
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, build-kernel-remote.sh, generate-config.sh
+tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -78,16 +78,42 @@ NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will n
 ## Tools
 
 ### harvest.sh
-General-purpose hardware inventory (works on any Linux system):
+General-purpose hardware inventory (works on any Linux system, 15 sections):
 ```bash
 sudo tools/harvest.sh
 ```
+Sections 1-8: PCI devices, CPU, DMI/BIOS, I2C, USB, loaded modules, firmware, storage.
+Sections 9-15: CPU_FLAGS_X86, audio subsystem (SOF vs HDA), platform vendor, boot type (EFI/BIOS/Secure Boot), suspend capabilities (s2idle vs S3), loaded firmware mapping, GCC `-march` suggestion.
 
 ### deep_harvest.sh
 Deep hardware discovery with module and firmware detection:
 ```bash
 sudo -E tools/deep_harvest.sh
 ```
+
+### kconfig-lint.sh
+Static validator for kernel_config.sh scripts — catches 5 classes of silent bugs:
+```bash
+tools/kconfig-lint.sh machines/xps-9510/kernel_config.sh [/usr/src/linux]
+```
+
+| Severity | Check | Example bug caught |
+|----------|-------|-------------------|
+| FAIL | `--module` on bool option | `DELL_SMBIOS_WMI`, `SND_SOC_SOF_INTEL_TOPLEVEL` |
+| WARN | Missing parent toggle | `X86_PLATFORM_DRIVERS_DELL` not set before Dell drivers |
+| WARN | Firmware driver set =y (built-in) | `DRM_I915=y` without initramfs |
+| WARN | Dependency not satisfied | dep not set anywhere in script |
+| INFO | Unknown config option | typos, renamed symbols, wrong kernel version |
+
+Parses all Kconfig files into a symbol database (~19K symbols, ~2s), then cross-references every `scripts/config` call. Requires kernel source tree.
+
+### kernel-config-template.sh
+Generate a machine-specific kernel_config.sh skeleton from harvest data:
+```bash
+tools/kernel-config-template.sh <machine-name> <harvest-log>
+# Example: tools/kernel-config-template.sh precision-t5810 /tmp/t5810-harvest/hardware_inventory.log
+```
+Auto-detects CPU, GPU, WiFi (8 vendors), audio (SOF/HDA), storage, platform vendor (Dell/Apple/Surface/Lenovo/HP/ASUS), Ethernet, Thunderbolt, ISH sensors, cameras. Generates a complete 26-phase kernel_config.sh and auto-runs kconfig-lint on the output.
 
 ### build-kernel-remote.sh
 Cross-compile and deploy kernels over SSH:
