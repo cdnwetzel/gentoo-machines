@@ -2,7 +2,7 @@
 
 ## Session Summary
 
-Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger Lake flags), rebuilt @world with hardware acceleration, installed evince/QEMU/xdotool, dogfooded kernel_config.sh from defconfig, found and fixed 5 issues (parent toggles, bool vs tristate). Kernel build in progress.
+Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger Lake flags), rebuilt @world with hardware acceleration, installed evince/QEMU/xdotool, dogfooded kernel_config.sh from defconfig, found and fixed 5 issues (parent toggles, bool vs tristate). Built, installed, rebooted — all verified clean.
 
 ## What Was Done
 
@@ -38,7 +38,14 @@ Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger L
   4. `DELL_SMBIOS_WMI`, `DELL_SMBIOS_SMM` are booleans, not tristate (--enable not --module)
   5. `ITCO_VENDOR_SUPPORT` is boolean, not tristate
 - Second run: 0 warnings, all 26 phases clean
-- Kernel build (`make -j17`) in progress
+- Kernel built (`make -j17`), modules_install, make install, @module-rebuild
+- **Rebooted and verified** — all checks pass:
+  - IKCONFIG: enabled (=y, _PROC=y)
+  - dmesg: only Dell ACPI BIOS bug (\_TZ.ETMD, harmless)
+  - lspci -k: all devices have drivers (i915, nvidia, iwlwifi, nvme x2, snd_hda_intel, etc.)
+  - nvidia-smi: RTX 3050 Ti running, driver 590.48, CUDA 13.1, 7W idle
+  - zram: 8GB zstd swap active
+  - sensors: all temps normal (CPU 52C, GPU 49C)
 
 ### Repo Updates
 - Updated `machines/xps-9510/make.conf` with verified 31 CPU_FLAGS_X86
@@ -73,7 +80,7 @@ Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger L
 ### Machine Status
 | Machine | Status | Next Step |
 |---------|--------|-----------|
-| Dell XPS 15 9510 | **Production — kernel rebuild in progress** | Reboot, verify, emerge @module-rebuild |
+| Dell XPS 15 9510 | **Production — dogfooded kernel verified** | Maintenance only |
 | MacBook Pro 12,1 (2015) | Production | Maintenance only |
 | Surface Pro 6 | Ready to install | Run install scripts from Ventoy |
 | Dell XPS 13 9315 | Configs updated (returned to Windows) | N/A |
@@ -83,18 +90,8 @@ Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger L
 | Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
-## Next Steps (When Kernel Build Completes)
+## Next Steps
 
-1. **Install new kernel**: `make modules_install && make install`
-2. **Rebuild NVIDIA**: `emerge @module-rebuild`
-3. **Reboot and verify**:
-   ```bash
-   zcat /proc/config.gz | grep IKCONFIG    # should work now
-   dmesg | grep -i error
-   lspci -k                                # all drivers bound
-   nvidia-smi                              # NVIDIA working
-   swapon --show                           # zram
-   sensors                                 # thermal
-   ```
-4. **Copy verified .config to repo**: `cp /usr/src/linux/.config machines/xps-9510/.config`
-5. **Surface Pro 6 install** — boot Ventoy, run part1 → part2 → part3
+1. **Surface Pro 6 install** — boot Ventoy, run part1 → part2 → part3
+2. **NUC11** — boot live USB, follow INSTALL.md
+3. **ASRock B550 / Precision T5810 / Precision 7960** — harvest on existing OS, generate configs
