@@ -2,11 +2,52 @@
 
 ## Session Summary
 
-Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger Lake flags), rebuilt @world with hardware acceleration, installed evince/QEMU/xdotool, dogfooded kernel_config.sh from defconfig, found and fixed 5 issues (parent toggles, bool vs tristate). Built, installed, rebooted — all verified clean.
+Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that catches 5 classes of silent bugs), enhanced harvest.sh (7 new hardware discovery sections), and kernel-config-template.sh (auto-generates kernel_config.sh from harvest data). kconfig-lint immediately caught a real bug in XPS 9315 — `SND_SOC_SOF_INTEL_TOPLEVEL` is bool but was set with `--module`, silently disabling SOF audio support.
 
 ## What Was Done
 
-### XPS 9510 — Live System Fixes (Phase 1)
+### Future-Proof Kernel Config Tooling (3 tools)
+
+#### Tool 1: kconfig-lint.sh (360 lines) — Static Config Validator
+- Parses all 1812 Kconfig files into a 19414-symbol TSV database (~2s)
+- 5 checks: `--module` on bool (FAIL), missing parent toggles (WARN), firmware driver =y (WARN), unsatisfied deps (WARN), unknown options (INFO)
+- Fixed `find -L` for symlinked kernel source, `((n++))` bash `set -e` gotcha
+- Pre-scans script for all symbols to reduce false positives on ordering
+- Expanded always-on skip lists (arch basics, subsystem menus, common selections)
+- Validation results across all 4 machines:
+  - XPS 9510: 0 FAIL, 2 WARN, 12 INFO (clean — already fixed)
+  - XPS 9315: **1 FAIL** (SND_SOC_SOF_INTEL_TOPLEVEL), 6 WARN, 10 INFO
+  - MBP 2015: 0 FAIL, 10 WARN, 26 INFO
+  - Surface Pro 6: 0 FAIL, 15 WARN, 16 INFO
+
+#### Tool 2: harvest.sh enhancements (+263 lines, 15 sections total)
+- Section 9: CPU_FLAGS_X86 via cpuid2cpuflags (with /proc/cpuinfo fallback + 28 flag mappings)
+- Section 10: Audio subsystem — SOF vs HDA detection from loaded modules + codec info
+- Section 11: Platform vendor — DMI classification (Dell/Apple/Surface/Lenovo/HP/ASUS/Intel/generic)
+- Section 12: Boot type — EFI vs BIOS, Secure Boot state, EFI bitness (32/64)
+- Section 13: Suspend capabilities — s2idle vs S3 deep, hibernate support
+- Section 14: Loaded firmware — module-to-firmware file mapping from dmesg + on-disk scan
+- Section 15: GCC -march suggestion — CPU vendor:family:model lookup table (Intel Broadwell→Meteor Lake, AMD Zen 1→Zen 4)
+
+#### Tool 3: kernel-config-template.sh (1279 lines) — Skeleton Generator
+- Parses harvest log to auto-detect: CPU (vendor, cores, hybrid), GPU (Intel/NVIDIA/AMD), WiFi (8 vendors), Audio (SOF/HDA + codec), Storage (NVMe/SATA), Platform (6 vendors), Ethernet, Thunderbolt, ISH, cameras
+- Generates complete 26-phase kernel_config.sh with correct drivers pre-filled
+- Module-to-config lookup: iwlwifi, brcmfmac, mwifiex, ath11k, ath12k, mt76, rtw89, rtw88, i915, amdgpu, nouveau/nvidia, snd_hda_intel, sof variants, igc, e1000e, r8169, igb, ixgbe, mlx5, and more
+- Platform templates: Dell (SMBIOS/WMI), Apple (applesmc/gmux/bcm5974), Surface (SAM/HID/DTX), Lenovo (thinkpad_acpi), HP (WMI), ASUS (WMI)
+- Auto-runs kconfig-lint on generated output
+
+#### Bug Fix: XPS 9315 SND_SOC_SOF_INTEL_TOPLEVEL
+- kconfig-lint caught: `--module` on bool option (FAIL)
+- Fixed: changed to `--enable` — SOF Intel audio was silently never enabled
+
+### Commits Pushed
+- `53f9a78` Add future-proof kernel config tooling: kconfig-lint, harvest enhancements, template generator
+- `bc708be` Fix XPS 9315: SND_SOC_SOF_INTEL_TOPLEVEL is bool, not tristate
+- `4d9f3f0` Document kconfig-lint, kernel-config-template, and harvest enhancements in CLAUDE.md
+
+## Previous Session (2026-03-01 earlier)
+
+### XPS 9510 — Live Dogfooding + Fixes
 - Ran `machines/xps-9510/live-fixes.sh` on live system — all 6 fixes applied:
   - **CPU_FLAGS_X86**: cpuid2cpuflags detected 31 flags (10 more than predicted: avx512_bitalg, avx512_vbmi2, avx512_vnni, avx512_vp2intersect, avx512_vpopcntdq, avx512ifma, avx512vbmi, bmi1, bmi2, vpclmulqdq)
   - **INPUT_DEVICES**: Added `libinput`
@@ -47,7 +88,7 @@ Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger L
   - zram: 8GB zstd swap active
   - sensors: all temps normal (CPU 52C, GPU 49C)
 
-### Repo Updates
+### Repo Updates (earlier session)
 - Updated `machines/xps-9510/make.conf` with verified 31 CPU_FLAGS_X86
 - Updated `machines/xps-9510/INSTALL_GOTCHAS.md` with correct flags
 - Updated `machines/xps-9510/kernel_config.sh` with QEMU support (VHOST_NET, BRIDGE) and all 5 fixes
@@ -55,7 +96,7 @@ Live dogfooding of XPS 9510 optimizations: applied CPU_FLAGS_X86 fix (31 Tiger L
 - Updated `machines/xps-9510/package.use` with poppler cairo
 - Created `tools/keep-awake.sh` (xdotool mouse wiggle for long compiles)
 
-### Commits Pushed
+### Earlier Commits
 - `8f7f7bc` Fix CPU_FLAGS_X86 to match verified cpuid2cpuflags output
 - `1541248` Add evince, QEMU, xdotool; add KVM/VHOST_NET/BRIDGE to kernel config
 - `c04bd30` Fix kernel_config.sh: parent toggles and bool vs tristate
