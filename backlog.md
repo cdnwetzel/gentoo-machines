@@ -19,7 +19,7 @@
 - [ ] Harvest Dell Precision T5810 (Fedora 42)
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1)
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro)
-- [ ] Report ipu-bridge double-brace to Gentoo Bugzilla (fixed upstream, Gentoo-specific backport error)
+- [x] Report ipu-bridge double-brace to Gentoo Bugzilla — Bug 970769
 - [ ] Submit intel_idle Tiger Lake patch to linux-pm@vger.kernel.org (still missing upstream, patch LKML-ready)
 - [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional)
 - [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power

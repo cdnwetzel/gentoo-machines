@@ -10,8 +10,8 @@ the correct single-brace `if (!csi_dev) {` at line 217. This is a
 Gentoo-specific issue — likely a backport error in the gentoo-sources 6.12.x
 patchset.
 
-**Action needed:** Report to [Gentoo Bugzilla](https://bugs.gentoo.org/) so
-the 6.12.x patchset gets corrected. No LKML submission needed.
+**Reported:** [Bug 970769](https://bugs.gentoo.org/970769) — filed 2026-03-01.
+No LKML submission needed.
 
 **Affects:** gentoo-sources-6.12.58 only (not upstream)
 
