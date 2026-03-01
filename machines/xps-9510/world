@@ -76,6 +76,7 @@ www-client/microsoft-edge
 # Desktop Apps
 app-text/evince
 sys-apps/flatpak
+# Office: app-office/libreoffice-bin (Portage) or OnlyOffice via flatpak install flathub org.onlyoffice.desktopeditors
 
 # CLI Tools
 app-arch/unzip
