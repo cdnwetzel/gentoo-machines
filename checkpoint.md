@@ -1,6 +1,28 @@
 # Checkpoint - 2026-03-01
 
-## Session Summary
+## Latest Session: SP6 Config Validation
+
+Validated Surface Pro 6 configs and fixed bugs before continuing the install (phases 5-13) tomorrow at the office.
+
+### What Was Done
+1. **Fixed filename mismatch bug (CRITICAL)**: `kernel_config_surface_pro6.sh` → `kernel_config.sh` in part2.sh (4 refs), part3_chroot.sh (2 refs), kernel_config.sh USAGE comment, EXEC_SEQUENCE.md — 8 total occurrences. Would have broken install on first run.
+2. **Added `# UPDATE THIS URL` comment** above STAGE3_FILE in part2.sh (consistency with XPS 9510)
+3. **Fixed stale `-march=kabylake`** references in HARDWARE.md and EXEC_SEQUENCE.md → `-march=skylake` (see gotcha #19)
+4. **Validated make.conf** against harvest data: CPU_FLAGS_X86 (16 flags), MAKEOPTS (-j9 -l8), VIDEO_CARDS (intel), MICROCODE_SIGNATURES (0x000806ea) — all correct
+5. **Cross-checked kernel_config.sh vs HARDWARE.md**: All 20+ PCI devices/subsystems have drivers, all firmware paths correct, no missing platform drivers
+6. **kconfig-lint** already run (previous session): 0 FAILs, 15 WARNs, 16 INFOs
+
+### SP6 Install Status
+- Phases 1-4 done on-site: kernel built, GRUB installed, users created
+- Machine is at office — can't verify until tomorrow
+- Phases 5-13 remain: networking, world, services, LightDM, PipeWire, Surface HW, verification
+
+### Commits
+- `ba6cb91` Fix SP6 install script bugs: filename mismatch + stale march references
+
+---
+
+## Previous Session Summary
 
 Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that catches 5 classes of silent bugs), enhanced harvest.sh (7 new hardware discovery sections), and kernel-config-template.sh (auto-generates kernel_config.sh from harvest data). kconfig-lint immediately caught a real bug in XPS 9315 — `SND_SOC_SOF_INTEL_TOPLEVEL` is bool but was set with `--module`, silently disabling SOF audio support.
 

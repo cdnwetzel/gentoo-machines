@@ -24,6 +24,7 @@
 - [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power
 
 ## Completed
+- [x] Validate SP6 configs: fix filename mismatch bug (8 refs), validate make.conf + kernel_config.sh vs HARDWARE.md
 - [x] Build kconfig-lint.sh — static kernel config validator (5 checks, 19K symbols)
 - [x] Enhance harvest.sh with 7 new sections (CPU_FLAGS_X86, audio, vendor, EFI, suspend, firmware, -march)
 - [x] Build kernel-config-template.sh — skeleton generator from harvest data
