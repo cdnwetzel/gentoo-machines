@@ -15,6 +15,7 @@ set -euo pipefail
 GENTOO="/mnt/gentoo"
 MIRROR="https://gentoo.osuosl.org"
 STAGE3_DIR="releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc"
+# UPDATE THIS URL — check ${MIRROR}/${STAGE3_DIR}/ for latest tarball
 STAGE3_FILE="stage3-amd64-desktop-openrc-20260222T170100Z.tar.xz"
 STAGE3_URL="${MIRROR}/${STAGE3_DIR}/${STAGE3_FILE}"
 DIGESTS_URL="${STAGE3_URL}.DIGESTS"
@@ -137,11 +138,11 @@ if [[ -f "$CONFIGS/portage_env_notmpfs.conf" ]]; then
 fi
 
 # --- Kernel config script ---
-if [[ -f "$CONFIGS/kernel_config_surface_pro6.sh" ]]; then
+if [[ -f "$CONFIGS/kernel_config.sh" ]]; then
     mkdir -p "$GENTOO/root/surface-pro-6-configs"
-    cp "$CONFIGS/kernel_config_surface_pro6.sh" "$GENTOO/root/surface-pro-6-configs/"
-    chmod +x "$GENTOO/root/surface-pro-6-configs/kernel_config_surface_pro6.sh"
-    echo "  [OK] kernel_config_surface_pro6.sh -> /root/surface-pro-6-configs/"
+    cp "$CONFIGS/kernel_config.sh" "$GENTOO/root/surface-pro-6-configs/"
+    chmod +x "$GENTOO/root/surface-pro-6-configs/kernel_config.sh"
+    echo "  [OK] kernel_config.sh -> /root/surface-pro-6-configs/"
 fi
 
 # --- World file ---

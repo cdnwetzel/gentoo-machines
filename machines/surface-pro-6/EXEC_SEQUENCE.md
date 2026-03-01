@@ -155,9 +155,9 @@ surfacepro6/
 │   ├── gentoo_install_part1.sh          # Step 1: partition NVMe
 │   ├── gentoo_install_part2.sh          # Step 2: stage3 + config staging
 │   ├── gentoo_install_part3_chroot.sh   # Step 4: one-shot chroot install
-│   └── kernel_config_surface_pro6.sh    # Kernel config via scripts/config
+│   └── kernel_config.sh                 # Kernel config via scripts/config
 ├── Configs
-│   ├── make.conf                        # Portage: -march=kabylake, 4G tmpfs
+│   ├── make.conf                        # Portage: -march=skylake, 4G tmpfs
 │   ├── world                            # Package set
 │   ├── package.use                      # installkernel grub USE flag
 │   ├── package.env                      # Large package disk fallback

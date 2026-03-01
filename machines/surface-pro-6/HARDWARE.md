@@ -13,7 +13,7 @@
 - **Base clock**: 1.60 GHz, turbo ~3.40 GHz
 - **Observed MHz**: ~2600 (live)
 - **Microarch**: Kaby Lake (no P/E core split, uniform cores)
-- **Gentoo march**: `-march=kabylake`
+- **Gentoo march**: `-march=skylake` (Kaby Lake = Skylake ISA; see gotcha #19)
 - **MAKEOPTS**: `-j9 -l8`
 - **CPU_FLAGS_X86**: `aes avx avx2 f16c fma3 mmx mmxext pclmul popcnt rdrand sse sse2 sse3 sse4_1 sse4_2 ssse3`
 - **Notable**: NO AVX-512 (consumer Kaby Lake), has VMX (KVM capable)
@@ -151,7 +151,7 @@
 | Feature | Surface Pro 6 | MBP 2015 | XPS 9315 | XPS 9510 |
 |---------|--------------|----------|----------|----------|
 | CPU gen | 8th (Kaby Lake-R) | 5th (Broadwell) | 12th (Alder Lake) | 11th (Tiger Lake-H) |
-| march | kabylake | broadwell | alderlake | tigerlake |
+| march | skylake | broadwell | alderlake | tigerlake |
 | GPU | UHD 620 | Iris 6100 | Iris Xe | UHD + RTX 3050 Ti |
 | WiFi | Marvell mwifiex | Broadcom brcmfmac | Intel iwlwifi | Intel iwlwifi |
 | Audio codec | Realtek ALC298 | Cirrus CS4208 | SOF (sof-audio) | HDA Intel |

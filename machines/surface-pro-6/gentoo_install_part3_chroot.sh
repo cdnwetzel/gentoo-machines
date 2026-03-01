@@ -30,7 +30,7 @@ echo "============================================================"
 echo ""
 
 # Verify we're in a chroot
-if [[ ! -f "$CONFIGS/kernel_config_surface_pro6.sh" ]]; then
+if [[ ! -f "$CONFIGS/kernel_config.sh" ]]; then
     echo "ERROR: Config files not found at $CONFIGS"
     echo "Are you inside the chroot? Did part2 run?"
     exit 1
@@ -99,7 +99,7 @@ else
 fi
 
 # Apply Surface Pro 6 customizations
-bash "$CONFIGS/kernel_config_surface_pro6.sh"
+bash "$CONFIGS/kernel_config.sh"
 
 # Resolve dependencies
 echo "[2.4] Resolving kernel config dependencies..."

@@ -15,7 +15,7 @@
 # USAGE:
 #   cd /usr/src/linux
 #   cp /path/to/mbp-2015/.config .config    # start from MBP base
-#   bash /path/to/kernel_config_surface_pro6.sh
+#   bash /path/to/kernel_config.sh
 #   make olddefconfig     # resolve all dependencies
 #   make menuconfig       # review
 #   make -j9 && make modules_install && make install
