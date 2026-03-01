@@ -72,6 +72,9 @@ xfce-extra/xfce4-taskmanager
 www-client/google-chrome
 www-client/microsoft-edge
 
+# Documents
+app-text/evince
+
 # CLI Tools
 app-arch/zip
 app-misc/fastfetch
@@ -84,6 +87,10 @@ sys-process/btop
 sys-process/htop
 sys-process/nvtop
 x11-misc/xclip
+x11-misc/xdotool
+
+# Virtualization
+app-emulation/qemu
 
 # Development
 app-editors/vscode

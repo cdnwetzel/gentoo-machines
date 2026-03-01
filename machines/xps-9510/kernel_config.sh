@@ -86,6 +86,8 @@ $SC --module PROC_THERMAL_MMIO_RAPL
 # KVM (CPU supports VMX)
 $SC --module KVM
 $SC --module KVM_INTEL
+$SC --module VHOST_NET
+$SC --module VHOST
 
 echo "  [OK] Processor"
 
@@ -478,6 +480,7 @@ $SC --module NFT_FIB
 $SC --module NFT_REJECT
 
 $SC --module TUN
+$SC --module BRIDGE
 
 # PPP for SSTP VPN (confirmed needed — NetworkManager SSTP)
 $SC --enable PPP

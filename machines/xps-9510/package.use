@@ -32,6 +32,9 @@ net-vpn/networkmanager-sstp gui
 x11-drivers/nvidia-drivers kernel-open modules tools
 media-libs/mesa -video_cards_nouveau
 
+# Documents
+app-text/poppler cairo
+
 # Auto-unmasked dependencies
 >=x11-libs/libdrm-2.4.131 video_cards_nouveau video_cards_radeon video_cards_amdgpu
 sys-kernel/installkernel grub
