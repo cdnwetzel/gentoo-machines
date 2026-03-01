@@ -61,7 +61,7 @@ was missing AVX, AVX2, AVX-512, AES-NI, FMA3, SHA hardware acceleration.
 **Fix**: Always run `cpuid2cpuflags` and set the flags in make.conf.
 For i7-11800H (Tiger Lake-H):
 ```
-CPU_FLAGS_X86="aes avx avx2 avx512bw avx512cd avx512dq avx512f avx512vl f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 ssse3"
+CPU_FLAGS_X86="aes avx avx2 avx512_bitalg avx512_vbmi2 avx512_vnni avx512_vp2intersect avx512_vpopcntdq avx512bw avx512cd avx512dq avx512f avx512ifma avx512vbmi avx512vl bmi1 bmi2 f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 ssse3 vpclmulqdq"
 ```
 
 ### G9. ccache Directory on /data
