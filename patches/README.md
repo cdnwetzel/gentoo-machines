@@ -2,18 +2,16 @@
 
 ## ipu-bridge-fix-double-brace.patch
 
-Fixes a double-brace typo in `drivers/media/pci/intel/ipu-bridge.c` line 195
-in `gentoo-sources-6.12.58`. Causes build failure with GCC <15.
+Fixes a double-brace typo in `drivers/media/pci/intel/ipu-bridge.c` line 195.
+Causes build failure with GCC <15.
 
-**Upstream status:** FIXED in mainline Linux. `torvalds/linux` master has
-the correct single-brace `if (!csi_dev) {` at line 217. This is a
-Gentoo-specific issue — likely a backport error in the gentoo-sources 6.12.x
-patchset.
+**Status:** LOCAL PATCH ONLY. Originally reported as
+[Bug 970769](https://bugs.gentoo.org/970769), but Sam James confirmed the
+typo is not present in official genpatches, the ebuild, or upstream 6.12.y.
+Root cause was local filesystem corruption during emerge. Patch kept for
+reference but should not be needed on a clean source tree.
 
-**Reported:** [Bug 970769](https://bugs.gentoo.org/970769) — filed 2026-03-01.
-No LKML submission needed.
-
-**Affects:** gentoo-sources-6.12.58 only (not upstream)
+**Affects:** Local copy only (not in official gentoo-sources)
 
 ## intel_idle-add-tiger-lake.patch
 
