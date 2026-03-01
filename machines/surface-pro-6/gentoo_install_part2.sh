@@ -155,7 +155,7 @@ fi
 MBP_CONFIG="/run/media/liveuser/VTOYEFI/mbp2015/.config"
 if [[ ! -f "$MBP_CONFIG" ]]; then
     # Try from git repo
-    MBP_CONFIG="/home/liveuser/gentoo_dell_xps9315/machines/mbp-2015/.config"
+    MBP_CONFIG="/home/liveuser/gentoo-machines/machines/mbp-2015/.config"
 fi
 if [[ -f "$MBP_CONFIG" ]]; then
     cp "$MBP_CONFIG" "$GENTOO/root/surface-pro-6-configs/base.config"
@@ -181,7 +181,7 @@ if [[ -f "$CONFIGS/iptsd-surface-pro-6.conf" ]]; then
 fi
 
 # --- Shared portage files from git repo ---
-REPO="/home/liveuser/gentoo_dell_xps9315"
+REPO="/home/liveuser/gentoo-machines"
 if [[ -d "$REPO/shared" ]]; then
     # package.use
     mkdir -p "$GENTOO/etc/portage/package.use"

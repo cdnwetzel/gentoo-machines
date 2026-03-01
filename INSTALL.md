@@ -49,8 +49,8 @@ If the target machine is running another Linux distro, capture hardware info fir
 
 ```bash
 # Clone this repo on the target machine (while still running current OS)
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 
 # Run hardware inventory (requires root)
 sudo tools/harvest.sh
@@ -270,7 +270,7 @@ ls /mnt/gentoo
 
 ```bash
 # Clone into the new system (will be available inside chroot)
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git /mnt/gentoo/root/gentoo_config
+git clone https://github.com/cdnwetzel/gentoo-machines.git /mnt/gentoo/root/gentoo_config
 ```
 
 Or if git isn't available on the live USB, download the ZIP from GitHub and extract it.
@@ -578,7 +578,7 @@ After booting into your new Gentoo system:
 ```bash
 # Clone the repo to your home directory
 cd ~
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git gentoo_config
+git clone https://github.com/cdnwetzel/gentoo-machines.git gentoo_config
 cd gentoo_config
 
 # Run hardware verification
@@ -715,8 +715,8 @@ To add support for a machine not yet in the repository:
 Boot the target machine in its current OS (any Linux distro works) and run:
 
 ```bash
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 sudo tools/harvest.sh
 sudo -E tools/deep_harvest.sh
 ```

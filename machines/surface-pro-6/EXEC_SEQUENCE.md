@@ -6,7 +6,7 @@
 - [ ] Booted Fedora 43 live USB via Ventoy
 - [ ] WiFi connected (NetworkManager on live USB)
 - [ ] Ventoy USB mounted at `/run/media/liveuser/VTOYEFI/`
-- [ ] Git repo cloned at `/home/liveuser/gentoo_dell_xps9315/`
+- [ ] Git repo cloned at `/home/liveuser/gentoo-machines/`
 
 ## Step 1: Partition & Format NVMe
 
@@ -130,8 +130,8 @@ uname -r                            # should show gentoo-sources version
 
 ```bash
 cd ~
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 bash shared/restore-desktop.sh       # XFCE keybindings, panels, displays
 sudo bash shared/restore-system.sh   # elogind, ACPI lid, LightDM display setup
 ```

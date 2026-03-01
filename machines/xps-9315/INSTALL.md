@@ -233,8 +233,8 @@ cd /mnt/gentoo/root
 emerge-webrsync  # Only if git not available
 
 # Clone this repo
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 ```
 
 Or download as ZIP from GitHub and extract.
@@ -242,7 +242,7 @@ Or download as ZIP from GitHub and extract.
 ### 4.4 Copy Configuration Files
 
 ```bash
-# From inside /mnt/gentoo/root/gentoo_dell_xps9315/
+# From inside /mnt/gentoo/root/gentoo-machines/
 
 # Portage configuration
 cp make.conf /mnt/gentoo/etc/portage/make.conf
@@ -354,7 +354,7 @@ ls -l /usr/src/linux
 
 ```bash
 # Copy our pre-configured kernel config
-cp /root/gentoo_dell_xps9315/.config /usr/src/linux/
+cp /root/gentoo-machines/.config /usr/src/linux/
 
 # Enter kernel directory
 cd /usr/src/linux
@@ -440,7 +440,7 @@ emerge --ask sys-boot/grub
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
 # Copy our GRUB config (has XPS 9315 specific settings)
-cp /root/gentoo_dell_xps9315/grub /etc/default/grub
+cp /root/gentoo-machines/grub /etc/default/grub
 
 # Generate GRUB configuration
 grub-mkconfig -o /boot/grub/grub.cfg
@@ -479,7 +479,7 @@ passwd
 
 ```bash
 # Copy world file (list of all packages to install)
-cp /root/gentoo_dell_xps9315/world /var/lib/portage/world
+cp /root/gentoo-machines/world /var/lib/portage/world
 
 # Install everything (this takes 1-2 hours)
 emerge --ask --update --deep --newuse @world
@@ -569,10 +569,10 @@ Remove the USB drive when the system restarts.
 
 ```bash
 # Restore all XFCE settings (keybindings, panels, display profiles, xhost)
-bash ~/gentoo_dell_xps9315/shared/restore-desktop.sh
+bash ~/gentoo-machines/shared/restore-desktop.sh
 
 # Restore system configs (elogind, ACPI lid toggle, LightDM) — requires root
-sudo bash ~/gentoo_dell_xps9315/shared/restore-system.sh
+sudo bash ~/gentoo-machines/shared/restore-system.sh
 ```
 
 ### 12.3 Connect to WiFi
@@ -593,8 +593,8 @@ Or click the network icon in the system tray.
 ```bash
 # Clone the repo to your home directory
 cd ~
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 
 # Run hardware verification
 sudo ./harvest.sh

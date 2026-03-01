@@ -501,7 +501,7 @@ if [[ $FAIL -eq 0 ]]; then
     echo "  2. Verify audio: pactl info | grep 'Server Name'"
     echo "  3. Verify display: xrandr (should show 2736x1824)"
     echo "  4. Verify zram: swapon --show"
-    echo "  5. Restore desktop: bash ~/gentoo_dell_xps9315/shared/restore-desktop.sh"
+    echo "  5. Restore desktop: bash ~/gentoo-machines/shared/restore-desktop.sh"
 else
     echo "=== $FAIL CHECKS FAILED ==="
     echo "=========================================="

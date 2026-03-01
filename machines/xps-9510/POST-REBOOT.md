@@ -64,14 +64,14 @@ aplay -l
 
 ### 6. Restore XFCE Settings (as chris, in GUI)
 ```bash
-cd /data/gentoo_dell_xps9315
+cd /data/gentoo-machines
 bash shared/restore-desktop.sh
 ```
 This restores: keyboard shortcuts, panel layout, display profiles, xhost autostart.
 
 ### 7. Restore System Settings (as root)
 ```bash
-cd /data/gentoo_dell_xps9315
+cd /data/gentoo-machines
 sudo bash shared/restore-system.sh
 ```
 This restores: elogind config, ACPI lid toggle, LightDM display setup.
@@ -80,21 +80,21 @@ This restores: elogind config, ACPI lid toggle, LightDM display setup.
 
 ### 8. Push Repo Changes
 ```bash
-cd /data/gentoo_dell_xps9315
+cd /data/gentoo-machines
 git config user.name "Chris Wetzel"
 git config user.email "chris@cwetzel.com"
-git remote set-url origin git@github.com:cdnwetzel/gentoo_dell_xps9315.git
+git remote set-url origin git@github.com:cdnwetzel/gentoo-machines.git
 # Or use HTTPS with token:
-# git remote set-url origin https://<TOKEN>@github.com/cdnwetzel/gentoo_dell_xps9315.git
+# git remote set-url origin https://<TOKEN>@github.com/cdnwetzel/gentoo-machines.git
 git push origin main
 ```
 
 ### 9. Clone Repo to Home (optional)
 ```bash
 cd ~
-git clone /data/gentoo_dell_xps9315
+git clone /data/gentoo-machines
 # Or from GitHub after push:
-# git clone git@github.com:cdnwetzel/gentoo_dell_xps9315.git
+# git clone git@github.com:cdnwetzel/gentoo-machines.git
 ```
 
 ## Python / AI ML Environment

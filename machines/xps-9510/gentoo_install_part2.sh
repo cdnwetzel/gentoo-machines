@@ -38,11 +38,11 @@ echo "[OK] Root filesystem mounted."
 # Try to find config files
 if [[ ! -d "$CONFIGS" ]]; then
     # Fallback: try git repo
-    CONFIGS="/home/liveuser/gentoo_dell_xps9315/machines/xps-9510"
+    CONFIGS="/home/liveuser/gentoo-machines/machines/xps-9510"
     if [[ ! -d "$CONFIGS" ]]; then
         echo "ERROR: Config directory not found."
         echo "Tried: /run/media/liveuser/VTOYEFI/xps9510"
-        echo "       /home/liveuser/gentoo_dell_xps9315/machines/xps-9510"
+        echo "       /home/liveuser/gentoo-machines/machines/xps-9510"
         echo "Clone the repo or mount the USB and try again."
         exit 1
     fi
@@ -53,7 +53,7 @@ echo ""
 # Shared config directory
 SHARED="${CONFIGS}/../../shared"
 if [[ ! -d "$SHARED" ]]; then
-    SHARED="/home/liveuser/gentoo_dell_xps9315/shared"
+    SHARED="/home/liveuser/gentoo-machines/shared"
 fi
 
 # ============================================================================

@@ -380,8 +380,8 @@ sensors  # should show coretemp values
 ```bash
 # Clone repo to home
 cd ~
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 
 # Restore XFCE settings
 bash shared/restore-desktop.sh

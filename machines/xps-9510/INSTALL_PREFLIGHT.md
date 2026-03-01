@@ -160,7 +160,7 @@ rc-status default
 
 ### Restore Desktop
 ```bash
-cd ~/gentoo_dell_xps9315   # or /data/gentoo_dell_xps9315
+cd ~/gentoo-machines   # or /data/gentoo-machines
 bash shared/restore-desktop.sh
 sudo bash shared/restore-system.sh
 ```

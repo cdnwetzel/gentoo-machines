@@ -514,7 +514,7 @@ if [[ $FAIL -eq 0 ]]; then
     echo "  3. xrandr (verify display)"
     echo "  4. pactl info | grep 'Server Name' (PipeWire)"
     echo "  5. swapon --show (verify zram)"
-    echo "  6. Restore desktop: bash ~/gentoo_dell_xps9315/shared/restore-desktop.sh"
+    echo "  6. Restore desktop: bash ~/gentoo-machines/shared/restore-desktop.sh"
 else
     echo "=== $FAIL CHECKS FAILED ==="
     echo "=========================================="

@@ -7,8 +7,8 @@ Run on the target machine (any Linux distro — Fedora, Ubuntu, etc.):
 
 ```bash
 # Clone the repo
-git clone https://github.com/cdnwetzel/gentoo_dell_xps9315.git
-cd gentoo_dell_xps9315
+git clone https://github.com/cdnwetzel/gentoo-machines.git
+cd gentoo-machines
 
 # Basic hardware inventory
 sudo tools/harvest.sh
