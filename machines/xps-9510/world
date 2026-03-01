@@ -69,13 +69,16 @@ xfce-extra/xfce4-battery-plugin
 xfce-extra/xfce4-taskmanager
 
 # Web Browsers
+www-client/firefox-bin
 www-client/google-chrome
 www-client/microsoft-edge
 
-# Documents
+# Desktop Apps
 app-text/evince
+sys-apps/flatpak
 
 # CLI Tools
+app-arch/unzip
 app-arch/zip
 app-misc/fastfetch
 app-misc/jq
