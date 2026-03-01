@@ -386,6 +386,15 @@ $SC --enable INPUT_MOUSEDEV
 $SC --enable INPUT_EVDEV
 $SC --enable INPUT_UINPUT
 
+# Synaptics touchpad — RMI4 over HID-I2C for multitouch + palm rejection
+$SC --enable RMI4_CORE
+$SC --enable RMI4_I2C
+$SC --enable RMI4_SMB
+$SC --enable RMI4_F11
+$SC --enable RMI4_F12
+$SC --enable RMI4_F30
+$SC --enable HID_RMI
+
 echo "  [OK] USB/HID"
 
 # ==========================================================================
