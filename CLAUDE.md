@@ -35,7 +35,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
-| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Planned | RHEL 10.1 |
+| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Harvest only | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Ready to install | Fedora 43 |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
@@ -332,5 +332,5 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
 - **Precision T5810**: Broadwell-EP Xeon — ECC memory, `-march=broadwell`, older chipset
-- **Precision 7960**: Modern Xeon W + dual NVIDIA — most complex config, multi-GPU with different NVIDIA cards
+- **Precision 7960**: Harvest only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
 - **Surface Pro 6/9**: Need linux-surface kernel patches for touchscreen, cameras, battery, etc.
