@@ -27,12 +27,25 @@ Maps both to `idle_cpu_skl` / `skl_cstates`, the same table used by
 Skylake and Kaby Lake. Safe — the driver validates each MWAIT substate
 at boot and skips any the hardware doesn't support.
 
-**Upstream status:** STILL MISSING in mainline Linux as of v6.15+.
-`INTEL_TIGERLAKE` and `INTEL_TIGERLAKE_L` are not in `intel_idle_ids[]`
-in `torvalds/linux` master. This is a legitimate candidate for LKML
-submission.
+**Upstream status:** LOCAL PATCH ONLY — not submitting to LKML.
 
-**Submission target:** linux-pm@vger.kernel.org (Rafael Wysocki maintains
-intel_idle). Patch formatted for `git send-email`.
+Tiger Lake was never in `intel_idle_ids[]` upstream, and this is intentional.
+Starting with Ice Lake client (2019), the kernel maintainer (Rafael Wysocki)
+stopped adding client CPUs to the native table, relying instead on ACPI `_CST`
+fallback (`18734958e9bf`, Dec 2019). Comet Lake, Ice Lake client, Rocket Lake,
+and Raptor Lake patches were either rejected or never merged for the same
+reason. The maintainer's position: if ACPI `_CST` exposes insufficient
+C-states, that's a firmware bug, not a kernel gap.
+
+**Root cause:** Dell's XPS 9510 BIOS only exposes 3 C-states via ACPI `_CST`
+(C1, ~C7, C10) when the hardware supports 8. This is a Dell firmware
+deficiency, but the XPS 9510 (2021) is unlikely to receive BIOS updates.
+
+**Our patch works around this** by adding Tiger Lake to the native table,
+bypassing the ACPI path entirely. Safe to carry as a local patch — the driver
+validates each MWAIT substate at boot and skips unsupported states.
+
+**Investigated:** 2026-03-01 via `torvalds/linux` clone. Verified git history
+confirms CML/ICL/TGL/RKL were never in the table (not accidentally removed).
 
 **Affects:** XPS 9510 (i7-11800H), NUC11 (i5-1135G7)
