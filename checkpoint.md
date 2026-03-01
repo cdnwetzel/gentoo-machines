@@ -1,6 +1,17 @@
 # Checkpoint - 2026-03-01
 
-## Latest Session: MBP installkernel + Upstream Patch Investigation
+## Latest Session: XPS 9510 Touchpad + Bug 970769 Feedback
+
+### What Was Done
+1. **XPS 9510 touchpad fix**: Enabled RMI4 subsystem (RMI4_CORE, RMI4_I2C, RMI4_SMB, RMI4_F11, RMI4_F12, RMI4_F30) and HID_RMI in both .config and kernel_config.sh. Synaptics touchpad was falling back to generic HID without these — no two-finger scrolling, poor palm rejection causing tap-while-typing. Kernel rebuild in progress on XPS 9510.
+2. **Bug 970769 feedback**: Sam James responded — double-brace typo not found in genpatches, ebuild, or upstream 6.12.y. Likely local filesystem corruption. Need to re-emerge and verify before responding.
+
+### Commits
+- `6898d7f` XPS 9510: enable RMI4 for Synaptics touchpad multitouch + palm rejection
+
+---
+
+## Previous Session: MBP installkernel + Upstream Patch Investigation
 
 ### What Was Done
 1. **MBP 2015 installkernel fix**: Added `sys-kernel/installkernel grub` to package.use, added installkernel to world, updated post_install_setup.sh — now matches XPS 9510/9315/SP6 pattern (auto grub-mkconfig on `make install`)

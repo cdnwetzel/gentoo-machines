@@ -5,6 +5,7 @@
 - [ ] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU
 
 ## Medium Priority
+- [ ] Bug 970769: respond to Sam James — re-emerge gentoo-sources-6.12.58 on XPS 9510, verify double-brace exists in clean sources; if not, close as local corruption
 - [ ] Unify git identity across all dev machines — `git config --global user.name "Chris Wetzel"` + `git config --global user.email "chris@cwetzel.com"` on: ~~XPS 9510 (Gentoo)~~, MBP 2015 (Gentoo), NUC11 (Ubuntu), Mac Studio (macOS), Precision 7960 (RHEL 10.1), Surface Pro 6 (post-install)
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices
@@ -32,3 +33,4 @@
 - [x] Report ipu-bridge double-brace to Gentoo Bugzilla — Bug 970769
 - [x] intel_idle Tiger Lake: investigated upstream — intentionally omission, Dell firmware bug, keeping as local patch
 - [x] XPS 9510: install unzip, firefox-bin, flatpak + flathub + xdg-desktop-portal-gtk
+- [x] XPS 9510: enable RMI4 for Synaptics touchpad (two-finger scroll + palm rejection)
