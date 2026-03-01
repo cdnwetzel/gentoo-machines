@@ -66,6 +66,7 @@ $SC --enable SCHED_MC
 $SC --enable SCHED_SMT
 $SC --enable SCHED_AUTOGROUP
 $SC --enable X86_INTEL_PSTATE
+$SC --enable CPU_FREQ_GOV_POWERSAVE
 $SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
 $SC --enable INTEL_IDLE
 $SC --enable MICROCODE
@@ -78,6 +79,8 @@ $SC --enable INTEL_POWERCLAMP
 $SC --enable CORETEMP
 
 # DPTF thermal framework (Intel Dynamic Tuning [8086:9a03])
+# ACPI_DPTF is the parent toggle — must be enabled first
+$SC --enable ACPI_DPTF
 $SC --module INT340X_THERMAL
 $SC --module ACPI_THERMAL_REL
 $SC --module INTEL_PCH_THERMAL
@@ -335,11 +338,13 @@ echo "  [OK] USB-C hub"
 # ==========================================================================
 echo "[Phase 14] Dell platform drivers..."
 
+# Parent toggle — without this, all Dell drivers are hidden
+$SC --enable X86_PLATFORM_DRIVERS_DELL
 $SC --module DELL_LAPTOP
 $SC --module DELL_WMI
 $SC --module DELL_SMBIOS
-$SC --module DELL_SMBIOS_WMI
-$SC --module DELL_SMBIOS_SMM
+$SC --enable DELL_SMBIOS_WMI
+$SC --enable DELL_SMBIOS_SMM
 
 echo "  [OK] Dell platform"
 
@@ -445,7 +450,7 @@ $SC --module INTEL_MEI_PXP
 
 # Watchdog
 $SC --module ITCO_WDT
-$SC --module ITCO_VENDOR_SUPPORT
+$SC --enable ITCO_VENDOR_SUPPORT
 
 echo "  [OK] ACPI"
 
