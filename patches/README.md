@@ -5,8 +5,15 @@
 Fixes a double-brace typo in `drivers/media/pci/intel/ipu-bridge.c` line 195
 in `gentoo-sources-6.12.58`. Causes build failure with GCC <15.
 
-**TODO:** Check if this exists in upstream Linux (torvalds/linux) or is
-Gentoo-specific, and report to the appropriate bugzilla.
+**Upstream status:** FIXED in mainline Linux. `torvalds/linux` master has
+the correct single-brace `if (!csi_dev) {` at line 217. This is a
+Gentoo-specific issue — likely a backport error in the gentoo-sources 6.12.x
+patchset.
+
+**Action needed:** Report to [Gentoo Bugzilla](https://bugs.gentoo.org/) so
+the 6.12.x patchset gets corrected. No LKML submission needed.
+
+**Affects:** gentoo-sources-6.12.58 only (not upstream)
 
 ## intel_idle-add-tiger-lake.patch
 
@@ -19,5 +26,13 @@ C6, C7s, C8, C9, C10).
 Maps both to `idle_cpu_skl` / `skl_cstates`, the same table used by
 Skylake and Kaby Lake. Safe — the driver validates each MWAIT substate
 at boot and skips any the hardware doesn't support.
+
+**Upstream status:** STILL MISSING in mainline Linux as of v6.15+.
+`INTEL_TIGERLAKE` and `INTEL_TIGERLAKE_L` are not in `intel_idle_ids[]`
+in `torvalds/linux` master. This is a legitimate candidate for LKML
+submission.
+
+**Submission target:** linux-pm@vger.kernel.org (Rafael Wysocki maintains
+intel_idle). Patch formatted for `git send-email`.
 
 **Affects:** XPS 9510 (i7-11800H), NUC11 (i5-1135G7)

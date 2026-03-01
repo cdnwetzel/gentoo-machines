@@ -1,4 +1,4 @@
-From: Chris <chris@xps9510>
+From: Chris Wetzel <chris@cwetzel.com>
 Subject: [PATCH] intel_idle: add Tiger Lake CPU idle state support
 
 Tiger Lake (model 0x8D) and Tiger Lake-L (model 0x8C) are missing from
@@ -11,8 +11,11 @@ medium idle periods.
 
 Tiger Lake uses Willow Cove cores with the same MWAIT C-state hints as
 Skylake/Kaby Lake, so map both variants to idle_cpu_skl (skl_cstates).
+The driver validates each MWAIT substate at boot and skips any the
+hardware doesn't support, so this mapping is safe even if future
+firmware changes the available substates.
 
-Signed-off-by: Chris <chris@xps9510>
+Signed-off-by: Chris Wetzel <chris@cwetzel.com>
 ---
  drivers/idle/intel_idle.c | 2 ++
  1 file changed, 2 insertions(+)

@@ -1,6 +1,18 @@
 # Checkpoint - 2026-03-01
 
-## Latest Session: SP6 Config Validation
+## Latest Session: MBP installkernel + Upstream Patch Prep
+
+### What Was Done
+1. **MBP 2015 installkernel fix**: Added `sys-kernel/installkernel grub` to package.use, added installkernel to world, updated post_install_setup.sh — now matches XPS 9510/9315/SP6 pattern (auto grub-mkconfig on `make install`)
+2. **patches/README.md**: Updated both patches with upstream research status
+   - ipu-bridge: FIXED upstream, Gentoo-specific backport error — needs Gentoo Bugzilla report
+   - intel_idle Tiger Lake: STILL MISSING upstream — legitimate LKML candidate
+3. **intel_idle patch cleanup**: Updated Signed-off-by to `Chris Wetzel <chris@cwetzel.com>`, improved commit message with safety rationale
+4. **Backlog updated**: MBP installkernel marked done, patch items updated with actionable details
+
+---
+
+## Previous Session: SP6 Config Validation
 
 Validated Surface Pro 6 configs and fixed bugs before continuing the install (phases 5-13) tomorrow at the office.
 

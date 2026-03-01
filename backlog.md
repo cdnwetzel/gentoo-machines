@@ -9,7 +9,7 @@
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external
 - [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver)
-- [ ] MBP 2015: fix GRUB installkernel to use version suffix (avoid manual cp after make install)
+- [x] MBP 2015: add installkernel with grub USE flag (auto grub-mkconfig on make install)
 - [x] Run kconfig-lint against MBP 2015 / SP6 — 0 FAILs on both (WARNs/INFOs only, kernel version diffs)
 
 ## Low Priority
@@ -19,8 +19,8 @@
 - [ ] Harvest Dell Precision T5810 (Fedora 42)
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1)
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro)
-- [ ] Report ipu-bridge-fix-double-brace.patch upstream (Gentoo or kernel bugzilla)
-- [ ] Submit intel_idle Tiger Lake patch upstream to LKML
+- [ ] Report ipu-bridge double-brace to Gentoo Bugzilla (fixed upstream, Gentoo-specific backport error)
+- [ ] Submit intel_idle Tiger Lake patch to linux-pm@vger.kernel.org (still missing upstream, patch LKML-ready)
 - [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional)
 - [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power
 
