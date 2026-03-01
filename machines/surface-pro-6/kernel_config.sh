@@ -122,6 +122,7 @@ $SC --enable INTEL_POWERCLAMP
 $SC --enable CORETEMP
 
 # DPTF thermal framework (confirmed: INT3400, INT3403 thermal zones active)
+$SC --enable ACPI_DPTF
 $SC --module INT340X_THERMAL
 $SC --module ACPI_THERMAL_REL
 $SC --module INTEL_PCH_THERMAL
@@ -530,7 +531,7 @@ $SC --module INTEL_MEI_PXP
 
 # Watchdog
 $SC --module ITCO_WDT
-$SC --module ITCO_VENDOR_SUPPORT
+$SC --enable ITCO_VENDOR_SUPPORT
 
 echo "  [OK] ACPI"
 

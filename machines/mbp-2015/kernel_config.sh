@@ -316,7 +316,7 @@ $SC --module INTEL_MEI_PXP
 
 # Watchdog
 $SC --module ITCO_WDT
-$SC --module ITCO_VENDOR_SUPPORT
+$SC --enable ITCO_VENDOR_SUPPORT
 
 # --------------------------------------------------------------------------
 # SUSPEND / HIBERNATE

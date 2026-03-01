@@ -75,6 +75,7 @@ $SC --enable SCHED_MC
 $SC --enable SCHED_SMT
 $SC --enable SCHED_AUTOGROUP
 $SC --enable X86_INTEL_PSTATE
+$SC --enable CPU_FREQ_GOV_POWERSAVE
 $SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
 $SC --enable INTEL_IDLE
 $SC --enable MICROCODE
@@ -87,6 +88,7 @@ $SC --enable INTEL_POWERCLAMP
 $SC --enable CORETEMP
 
 # DPTF thermal framework (Innovation Platform [8086:461d])
+$SC --enable ACPI_DPTF
 $SC --module INT340X_THERMAL
 $SC --module ACPI_THERMAL_REL
 $SC --module INTEL_PCH_THERMAL
@@ -309,11 +311,12 @@ echo "  [OK] Camera (IPU6)"
 # ==========================================================================
 echo "[Phase 13] Dell platform drivers..."
 
+$SC --enable X86_PLATFORM_DRIVERS_DELL
 $SC --module DELL_LAPTOP
 $SC --module DELL_WMI
 $SC --module DELL_SMBIOS
-$SC --module DELL_SMBIOS_WMI
-$SC --module DELL_SMBIOS_SMM
+$SC --enable DELL_SMBIOS_WMI
+$SC --enable DELL_SMBIOS_SMM
 $SC --module DELL_SMO8800 2>/dev/null || true
 
 echo "  [OK] Dell platform"
@@ -415,7 +418,7 @@ $SC --module INTEL_MEI_HDCP
 $SC --module INTEL_MEI_PXP
 
 $SC --module ITCO_WDT
-$SC --module ITCO_VENDOR_SUPPORT
+$SC --enable ITCO_VENDOR_SUPPORT
 
 echo "  [OK] ACPI"
 
