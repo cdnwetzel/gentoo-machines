@@ -1,14 +1,23 @@
 # Checkpoint - 2026-03-01
 
-## Latest Session: MBP installkernel + Upstream Patch Prep
+## Latest Session: MBP installkernel + Upstream Patch Investigation
 
 ### What Was Done
 1. **MBP 2015 installkernel fix**: Added `sys-kernel/installkernel grub` to package.use, added installkernel to world, updated post_install_setup.sh — now matches XPS 9510/9315/SP6 pattern (auto grub-mkconfig on `make install`)
-2. **patches/README.md**: Updated both patches with upstream research status
-   - ipu-bridge: FIXED upstream, Gentoo-specific backport error — needs Gentoo Bugzilla report
-   - intel_idle Tiger Lake: STILL MISSING upstream — legitimate LKML candidate
-3. **intel_idle patch cleanup**: Updated Signed-off-by to `Chris Wetzel <chris@cwetzel.com>`, improved commit message with safety rationale
-4. **Backlog updated**: MBP installkernel marked done, patch items updated with actionable details
+2. **ipu-bridge bug filed**: [Bug 970769](https://bugs.gentoo.org/970769) on Gentoo Bugzilla — double-brace typo in gentoo-sources-6.12.58, fixed in upstream mainline, Gentoo-specific backport error. Filed via pybugz CLI.
+3. **intel_idle Tiger Lake — deep upstream investigation**: Cloned torvalds/linux, traced full git history of `intel_idle_ids[]`. Key findings:
+   - CML/ICL-client/TGL/RKL were **never** in the table (not removed — never merged)
+   - Rafael Wysocki deliberately stopped adding client CPUs after Kaby Lake (Dec 2019), relying on ACPI `_CST` fallback (`18734958e9bf`)
+   - CML patch was posted but never merged; ICL-client patch was NAK'd
+   - Root cause is Dell BIOS only exposing 3 of 8 C-states via ACPI — firmware deficiency
+   - **Decision: keep as local patch only**, LKML submission not viable
+4. **intel_idle patch cleanup**: Updated Signed-off-by to `Chris Wetzel <chris@cwetzel.com>`, improved commit message
+5. **pybugz configured**: `~/.bugzrc` with Gentoo Bugzilla API key (outside repo)
+
+### Commits
+- `0031b63` MBP installkernel fix + upstream patch prep
+- `a5058f1` Update backlog + patches/README: ipu-bridge reported as Bug 970769
+- `1457827` Close intel_idle LKML item: intentional upstream omission, Dell firmware bug
 
 ---
 
