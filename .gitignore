@@ -40,6 +40,9 @@ authorized_keys
 # Logs that may contain sensitive info
 *.log
 
+# NetworkManager connection profiles (may contain WiFi/VPN credentials)
+*.nmconnection
+
 # Temporary / editor files
 *.swp
 *.swo

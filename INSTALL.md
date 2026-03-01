@@ -9,12 +9,13 @@ Before starting, confirm your target machine has a config ready:
 | Machine | Directory | Config Status |
 |---------|-----------|---------------|
 | Dell XPS 13 9315 | `machines/xps-9315/` | Production |
+| Dell XPS 15 9510 | `machines/xps-9510/` | Production |
+| MacBook Pro 12,1 (2015) | `machines/mbp-2015/` | Production |
 | Intel NUC11TNBi5 | `machines/nuc11/` | Ready to build |
-| Dell XPS 15 9510 | `machines/xps-9510/` | Planned |
+| Surface Pro 6 | `machines/surface-pro-6/` | Ready to install |
 | ASRock B550 / Ryzen 9 5950X | `machines/asrock-b550/` | Planned |
 | Dell Precision T5810 | `machines/precision-t5810/` | Planned |
 | Dell Precision 7960 | `machines/precision-7960/` | Planned |
-| Surface Pro 6 | `machines/surface-pro-6/` | Planned |
 | Surface Pro 9 | `machines/surface-pro-9/` | Planned |
 
 If your machine isn't listed or is "Planned", you'll need to generate a config first. See [Adding a New Machine](#adding-a-new-machine) at the end.

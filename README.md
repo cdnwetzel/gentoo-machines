@@ -149,6 +149,10 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 | AVX-512 | No | Yes | No | Yes | No | No |
 | Hybrid cores | Yes | No | No | No | No | No |
 
+## Upstream Contributions
+
+- **[Bug 970769](https://bugs.gentoo.org/970769)** — Reported double-brace typo in `drivers/media/pci/intel/ipu-bridge.c` in gentoo-sources-6.12.58. Causes build failure with GCC <15. Fixed in mainline Linux; Gentoo-specific backport error. Patch included in `patches/`.
+
 ## Machine Notes
 
 ### Production: XPS 9510 (Hybrid GPU)
