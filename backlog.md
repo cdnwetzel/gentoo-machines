@@ -30,3 +30,4 @@
 - [x] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines) + set description + update 11 files
 - [x] Report ipu-bridge double-brace to Gentoo Bugzilla — Bug 970769
 - [x] intel_idle Tiger Lake: investigated upstream — intentionally omission, Dell firmware bug, keeping as local patch
+- [x] XPS 9510: install unzip, firefox-bin, flatpak + flathub + xdg-desktop-portal-gtk
