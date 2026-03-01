@@ -13,7 +13,8 @@
 - [x] Run kconfig-lint against MBP 2015 / SP6 — 0 FAILs on both (WARNs/INFOs only, kernel version diffs)
 
 ## Low Priority
-- [x] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines) + set description
+- [ ] Rename local directory ~/ai/gentoo_dell_xps9315 → ~/ai/gentoo-machines
+- [x] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines) + set description + update 11 files
 - [ ] Harvest ASRock B550 / Ryzen 9 5950X (Fedora 42)
 - [ ] Harvest Dell Precision T5810 (Fedora 42)
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1)
