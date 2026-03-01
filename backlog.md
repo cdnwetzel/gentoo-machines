@@ -10,7 +10,7 @@
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external
 - [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver)
 - [ ] MBP 2015: fix GRUB installkernel to use version suffix (avoid manual cp after make install)
-- [ ] Run kconfig-lint against MBP 2015 / SP6 on their target kernel versions (6.12.58 INFOs may clear)
+- [x] Run kconfig-lint against MBP 2015 / SP6 — 0 FAILs on both (WARNs/INFOs only, kernel version diffs)
 
 ## Low Priority
 - [ ] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines or similar)
