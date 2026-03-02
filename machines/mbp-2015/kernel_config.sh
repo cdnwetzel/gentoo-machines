@@ -72,6 +72,7 @@ $SC --enable LZ4_COMPRESS
 $SC --enable LZ4HC_COMPRESS
 $SC --enable ZSWAP
 $SC --enable SWAP
+$SC --enable KSM
 
 # --------------------------------------------------------------------------
 # ACPI / PLATFORM - Apple EFI v1.1
