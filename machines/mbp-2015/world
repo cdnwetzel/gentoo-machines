@@ -4,6 +4,7 @@ app-laptop/mbpfan
 dev-util/ccache
 gnome-extra/nm-applet
 media-libs/libva-intel-driver
+media-sound/alsa-utils
 media-sound/pavucontrol
 media-video/pipewire
 net-misc/networkmanager
@@ -12,13 +13,18 @@ net-misc/sstp-client
 net-vpn/networkmanager-sstp
 net-wireless/wpa_supplicant
 sys-apps/flatpak
+sys-apps/lm-sensors
+sys-apps/usbutils
 sys-apps/xdg-desktop-portal-gtk
+sys-block/zram-init
 sys-boot/grub
 sys-firmware/intel-microcode
 sys-kernel/dracut
 sys-kernel/gentoo-sources
 sys-kernel/installkernel
 sys-kernel/linux-firmware
+sys-power/acpid
+sys-power/acpilight
 sys-process/cronie
 www-client/firefox-bin
 x11-base/xorg-server
