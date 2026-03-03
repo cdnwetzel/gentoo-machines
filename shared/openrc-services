@@ -22,6 +22,12 @@ rc-update add thermald default           # MBP 2015, XPS 9315, XPS 9510, Surface
 # [LAPTOPS] Power management — laptops with battery
 rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
 
+# [LAPTOPS] Low-battery hibernate — cron job, not an OpenRC service
+# Installed by shared/hibernate-setup.sh:
+#   crontab: */2 * * * * /usr/local/bin/low-battery-hibernate.sh
+# Requires: swap file + GRUB resume params (run hibernate-setup.sh first)
+# Desktops with UPS: use apcupsd doshutdown override instead
+
 # [APPLE] Fan control — Apple hardware only
 # rc-update add mbpfan default           # MBP 2015 ONLY (applesmc fan control)
 
