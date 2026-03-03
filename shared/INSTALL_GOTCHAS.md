@@ -109,8 +109,8 @@ sys-devel/gcc notmpfs.conf
 **tmpfs sizing by RAM**:
 | RAM | tmpfs | Notes |
 |-----|-------|-------|
-| 8GB | 4GB | MBP 2015, XPS 9315, Surface Pro 6 |
-| 16GB | 12GB | Conservative |
+| 8GB | 4GB | Surface Pro 6 |
+| 16GB | 12GB | MBP 2015, XPS 9315 |
 | 32GB | 24GB | XPS 9510 |
 
 ## 9. Firmware File Inventory

@@ -38,7 +38,7 @@ Replace these placeholders with your actual values:
 | `WIFI_IFACE` | `wlp0s20f3` | WiFi interface name (use `ip link`) |
 | `HOSTNAME` | `nuc11-gentoo` | Your chosen hostname |
 | `USERNAME` | `chris` | Your login username |
-| `KVER` | `6.12.58-gentoo` | Kernel version from `ls /usr/src/` |
+| `KVER` | `6.18.12-gentoo` | Kernel version from `ls /usr/src/` |
 
 ---
 
@@ -400,9 +400,12 @@ KVER=$(cat include/config/kernel.release)
 echo "Kernel version: ${KVER}"
 ```
 
-### 7.4 Generate Initramfs
+### 7.4 Generate Initramfs (if needed)
+
+Most production machines in this repo build root-path drivers (AHCI, NVMe, ext4) as built-in and do not need an initramfs. Check your machine's `kernel_config.sh` — if storage and filesystem drivers are `--enable` (=y), skip this step.
 
 ```bash
+# Only needed if root-path drivers are modules (=m)
 dracut --kver ${KVER}
 
 # Verify boot files exist

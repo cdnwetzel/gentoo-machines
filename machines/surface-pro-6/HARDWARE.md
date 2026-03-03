@@ -160,7 +160,7 @@
 | Sensors | ISH (accel/gyro/ALS/rotation) | applesmc | ISH | N/A |
 | Fan control | SAM | applesmc/mbpfan | DPTF | DPTF/thermald |
 | Suspend | s2idle only | S3 deep | s2idle | s2idle |
-| Special | linux-surface patches | Apple quirks | Dell WMI | NVIDIA hybrid |
+| Special | Surface SAM/HID | Apple quirks | Dell WMI | NVIDIA hybrid |
 
 ## What linux-surface Patches Add
 1. **IPTS touchscreen + pen** (the big one - touchscreen doesn't work without it)
@@ -170,24 +170,8 @@
 5. **Suspend/resume** reliability fixes
 
 ## Gentoo Kernel Strategy
-- Use `sys-kernel/gentoo-sources` as base
-- Apply linux-surface patches from github.com/linux-surface/linux-surface
-- Key configs: SURFACE_AGGREGATOR=m, SURFACE_AGGREGATOR_BUS=y, SURFACE_AGGREGATOR_REGISTRY=m, HID sensors, IPU3, mwifiex
-- All firmware from /lib/firmware/ (no embedded firmware needed since drivers will be modules)
+- Use `sys-kernel/gentoo-sources` as base (stock, no linux-surface patches needed for core functionality)
+- Key configs: SURFACE_AGGREGATOR=m, SURFACE_AGGREGATOR_BUS=y, SURFACE_AGGREGATOR_REGISTRY=m, HID sensors, mwifiex
+- All firmware from /lib/firmware/ (no embedded firmware, no initramfs)
 - i915 as module (consistent with XPS 9510 pattern)
-
-## Files Saved to This Directory
-- hardware_inventory.log - harvest.sh output
-- deep_harvest.log - deep_harvest.sh output
-- dmesg_full.log - complete dmesg
-- i915_dmesg.log - GPU-specific dmesg
-- surface_dmesg.log - Surface/SAM/mwifiex/camera dmesg
-- input_devices.log - /proc/bus/input/devices
-- lspci_verbose.log - lspci -nnkvv
-- lsusb_verbose.log - lsusb -v
-- dmidecode_full.log - full SMBIOS/DMI dump
-- lsmod.log - all loaded modules
-- gentoo_install_part1_REFERENCE.sh - MBP install script (adapt for NVMe)
-- gentoo_install_part2_REFERENCE.sh - MBP chroot setup (adapt paths)
-- package.env - large package -> disk build (reuse as-is)
-- portage_env_notmpfs.conf - portage disk fallback (reuse as-is)
+- Touchscreen non-functional (hardware defect on this unit, not a kernel issue)

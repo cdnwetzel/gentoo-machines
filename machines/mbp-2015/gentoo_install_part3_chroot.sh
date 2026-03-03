@@ -304,7 +304,7 @@ rc-update add bluetooth default
 rc-update add mbpfan default
 rc-update add display-manager default
 rc-update add sshd default
-rc-update add metalog default
+rc-update add sysklogd default
 rc-update add local default
 rc-update add netmount default
 

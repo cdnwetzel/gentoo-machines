@@ -8,7 +8,7 @@
 ## Medium Priority
 - [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) [repo+hardware]
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
-- [ ] Unify git identity across all dev machines — `git config --global user.name "Chris Wetzel"` + `git config --global user.email "chris@cwetzel.com"` on: ~~XPS 9510 (Gentoo)~~, MBP 2015 (Gentoo), NUC11 (Ubuntu), Mac Studio (macOS), Precision 7960 (RHEL 10.1), Surface Pro 6 (post-install) [hardware]
+- [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, MBP 2015, NUC11, Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external [hardware]
 
