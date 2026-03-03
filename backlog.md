@@ -1,8 +1,8 @@
 # Backlog
 
 ## High Priority
-- [ ] Execute Surface Pro 6 Gentoo install (scripts ready, ~3.5 hours) [hardware]
-- [ ] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU [hardware]
+- [x] Execute Surface Pro 6 Gentoo install (scripts ready, ~3.5 hours) [hardware]
+- [x] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU [hardware]
 - [x] MBP 2015: upgrade install scripts to XPS/SP6 standard — 9 orphaned files, filename mismatch, zram algo inconsistency [repo]
 
 ## Medium Priority
