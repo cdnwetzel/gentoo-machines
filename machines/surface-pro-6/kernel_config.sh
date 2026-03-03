@@ -357,6 +357,9 @@ $SC --module SURFACE_AGGREGATOR_CDEV
 $SC --module SURFACE_AGGREGATOR_HUB
 $SC --module SURFACE_AGGREGATOR_TABLET_SWITCH
 
+# Surface battery (requires SAM + serdev UART connection)
+$SC --module SURFACE_BATTERY
+
 # Surface ACPI and power
 $SC --module SURFACE_ACPI_NOTIFY
 $SC --module SURFACE_GPE
@@ -464,6 +467,9 @@ echo "[Phase 15] I2C and Serial IO..."
 $SC --enable MFD_INTEL_LPSS
 $SC --enable MFD_INTEL_LPSS_ACPI
 $SC --enable MFD_INTEL_LPSS_PCI
+
+# DesignWare 8250 UART (SAM communicates via dw-apb-uart on LPSS UART 00:1e.0)
+$SC --enable SERIAL_8250_DW
 
 # DesignWare I2C (i2c-0..3 confirmed via sysfs)
 $SC --enable I2C_DESIGNWARE_CORE
