@@ -346,12 +346,20 @@ else
     echo "  [WARN] No lightdm-display-setup.sh found"
 fi
 
-echo "[9.4] Verifying LightDM configuration..."
+echo "[9.4] Installing LightDM GTK greeter config (HiDPI fonts)..."
+if [[ -f "$CONFIGS/lightdm-gtk-greeter.conf" ]]; then
+    cp "$CONFIGS/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
+    echo "  [OK] lightdm-gtk-greeter.conf installed (Sans 16, 144 DPI)"
+else
+    echo "  [WARN] No lightdm-gtk-greeter.conf found"
+fi
+
+echo "[9.5] Verifying LightDM configuration..."
 grep "user-session=xfce" /etc/lightdm/lightdm.conf && echo "  [OK] user-session=xfce" || echo "  [FAIL] Check user-session!"
 grep "session-wrapper=/etc/lightdm/Xsession" /etc/lightdm/lightdm.conf && echo "  [OK] session-wrapper" || echo "  [WARN] Check session-wrapper"
 ls -la /etc/lightdm/Xsession 2>/dev/null && echo "  [OK] Xsession exists" || echo "  [FAIL] Xsession missing!"
 
-echo "[9.5] Setting display manager..."
+echo "[9.6] Setting display manager..."
 sed -i 's/DISPLAYMANAGER=".*"/DISPLAYMANAGER="lightdm"/' /etc/conf.d/display-manager 2>/dev/null || \
     echo 'DISPLAYMANAGER="lightdm"' > /etc/conf.d/display-manager
 

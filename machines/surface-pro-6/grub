@@ -18,7 +18,7 @@ GRUB_TIMEOUT=5
 GRUB_TIMEOUT_STYLE=menu
 
 # Append parameters to the linux kernel command line
-GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2"
+GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2 fbcon=font:TER16x32"
 #
 # Examples:
 #
@@ -37,7 +37,8 @@ GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2"
 # Resolution used on graphical terminal.
 # The list of valid modes may be obtained using the 'vbeinfo' (PC BIOS) or
 # 'videoinfo' (EFI) command from a GRUB boot prompt.
-#GRUB_GFXMODE=640x480
+# Surface Pro 6: 2736x1824 native is unreadable — use 1024x768 for large GRUB text
+GRUB_GFXMODE=1024x768
 
 # Set to 'text' to force the Linux kernel to boot in normal text
 # mode, 'keep' to preserve the graphics mode set using
