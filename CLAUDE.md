@@ -16,7 +16,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
-  precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
+  precision-7960/   Dell Precision 7960 / Xeon W5 (harvest only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
 tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh
@@ -39,7 +39,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
-NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will need **linux-surface** kernel patches.
+NVIDIA machines will use **proprietary nvidia-drivers**. Surface Pro 6 runs stock gentoo-sources; Surface Pro 9 will need **linux-surface** kernel patches.
 
 ## Machine-Specific Details
 
@@ -214,12 +214,14 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 6. Run `make olddefconfig` on target to resolve dependencies
 7. Boot, verify with `lspci -k` and `dmesg | grep -i error`
 
+## Additional Machine Details
+
 ### Dell XPS 15 9510 (Production)
 
 - **Kernel**: Linux 6.12.58-gentoo
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
-- **Key drivers**: i915 (module), nvidia 590.48 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
+- **Key drivers**: i915 (module), nvidia 590.48.01 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-a0-hr-b0-*, intel/ibt-20-*)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
 - **NVIDIA deps**: `DRM_QXL=m` required to pull in `DRM_TTM_HELPER` (nvidia-drivers build dependency on kernel 6.11+)
