@@ -1,6 +1,29 @@
 # Checkpoint - 2026-03-03
 
-## Latest Session: Surface Pro 6 HiDPI Scaling
+## Latest Session: MBP 2015 Install Scripts Gold Standard
+
+### What Was Done
+1. **kernel_config.sh**: Fixed zram compression LZ4→ZSTD (matching zram-init.conf that already specified zstd), fixed stale `kernel_config_mbp121.sh` filename in USAGE header
+2. **gentoo_install_part3_chroot.sh** (new): 13-phase one-shot chroot install modeled on SP6 gold standard. MBP-specific: `--removable` for Apple EFI GRUB, `mbpfan` (not thermald/tlp), BCM43602 WiFi firmware fix, CS4208 audio quirk note, applesmc verification, `libata.force=noncq` + `reboot=pci` boot param checks
+3. **gentoo_install_part2.sh** (rewrite): Added `REPO` variable, rewrote STEP 4 with staging dir `/root/mbp-2015-configs/` (all 9 previously-orphaned configs, shared portage files, restore scripts, local.d scripts, part3 script), replaced STEP 8 with UUID capture + auto-generated fstab (12GB portage tmpfs for 16GB RAM)
+4. **post_install_setup.sh**: Added "SUPERSEDED by part3" notice
+5. **backlog.md**: Marked MBP install scripts upgrade complete
+6. **CLAUDE.md**: Added part3 to file table, updated descriptions
+
+### Files Created/Modified
+- `machines/mbp-2015/kernel_config.sh` (modified — zram ZSTD + filename fix)
+- `machines/mbp-2015/gentoo_install_part3_chroot.sh` (new — 13-phase chroot install)
+- `machines/mbp-2015/gentoo_install_part2.sh` (rewritten — complete staging + fstab gen)
+- `machines/mbp-2015/post_install_setup.sh` (modified — superseded notice)
+- `backlog.md` (modified — marked complete)
+- `CLAUDE.md` (modified — file table update)
+
+### Commits
+- (pending)
+
+---
+
+## Previous Session: Surface Pro 6 HiDPI Scaling
 
 ### What Was Done
 1. **HiDPI scaling at 150% (144 DPI)** for 2736x1824 PixelSense display (267 PPI)

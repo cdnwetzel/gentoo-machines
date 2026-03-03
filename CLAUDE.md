@@ -282,12 +282,13 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/mbp-2015/world` | Installed package set |
 | `machines/mbp-2015/HARDWARE.md` | Full hardware + software environment reference |
 | `machines/mbp-2015/kernel_config.sh` | Programmatic kernel config script (scripts/config based) |
-| `machines/mbp-2015/post_install_setup.sh` | Post-kernel install reference steps |
+| `machines/mbp-2015/post_install_setup.sh` | Post-kernel install reference (superseded by part3) |
 | `machines/mbp-2015/wifi_firmware_fix.sh` | BCM43602 firmware symlink/check script |
 | `machines/mbp-2015/package.env` | Large package tmpdir override (chromium, firefox, llvm, rust, gcc) |
 | `machines/mbp-2015/portage_env_notmpfs.conf` | Fallback PORTAGE_TMPDIR to disk |
 | `machines/mbp-2015/gentoo_install_part1.sh` | Disk partitioning from live USB |
-| `machines/mbp-2015/gentoo_install_part2.sh` | Stage3 + chroot + kernel build |
+| `machines/mbp-2015/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/mbp-2015/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ### Surface Pro 6 (Production)
 

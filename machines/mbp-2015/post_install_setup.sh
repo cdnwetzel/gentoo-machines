@@ -3,6 +3,9 @@
 # post_install_setup.sh - MacBook Pro 12,1 post-kernel Gentoo setup
 # Run AFTER kernel is built and system is bootable
 # ============================================================================
+# NOTICE: This script is SUPERSEDED by gentoo_install_part3_chroot.sh
+# which automates all steps below. Kept as a manual reference.
+# ============================================================================
 
 set -euo pipefail
 
