@@ -210,11 +210,22 @@ if [[ -d "$REPO/shared" ]]; then
         echo "  [OK] shared/package.license"
     fi
 
-    # LightDM config
-    if [[ -f "$REPO/shared/lightdm.conf" ]]; then
+    # LightDM config — Surface-specific (HiDPI: xserver-command=X -dpi 144)
+    if [[ -f "$CONFIGS/lightdm.conf" ]]; then
+        cp "$CONFIGS/lightdm.conf" "$GENTOO/root/surface-pro-6-configs/lightdm.conf"
+        echo "  [OK] lightdm.conf (Surface HiDPI) -> /root/surface-pro-6-configs/"
+    elif [[ -f "$REPO/shared/lightdm.conf" ]]; then
         cp "$REPO/shared/lightdm.conf" "$GENTOO/root/surface-pro-6-configs/lightdm.conf"
-        echo "  [OK] lightdm.conf -> /root/surface-pro-6-configs/"
+        echo "  [WARN] Using shared lightdm.conf (no HiDPI)"
     fi
+
+    # LightDM display-setup and greeter config (HiDPI)
+    for ldmfile in lightdm-display-setup.sh lightdm-gtk-greeter.conf; do
+        if [[ -f "$CONFIGS/$ldmfile" ]]; then
+            cp "$CONFIGS/$ldmfile" "$GENTOO/root/surface-pro-6-configs/"
+            echo "  [OK] $ldmfile -> /root/surface-pro-6-configs/"
+        fi
+    done
 
     # Shared desktop restore scripts
     for script in restore-desktop.sh restore-system.sh xfce4-keybindings.sh xfce4-panel.sh; do
@@ -244,6 +255,34 @@ if [[ -d "$REPO/shared" ]]; then
         chmod +x "$GENTOO/etc/local.d/ksm.start"
         echo "  [OK] ksm.start -> /etc/local.d/"
     fi
+fi
+
+# --- GRUB defaults (HiDPI: GFXMODE=1024x768, console font TER16x32, i915 power) ---
+if [[ -f "$CONFIGS/grub" ]]; then
+    cp "$CONFIGS/grub" "$GENTOO/root/surface-pro-6-configs/grub"
+    echo "  [OK] grub -> /root/surface-pro-6-configs/"
+fi
+
+# --- WiFi power save fix (Marvell 88W8897 hangs after suspend without these) ---
+for wfile in mwifiex.conf wifi-powersave.conf wifi-reload.sh wifi-recover.sh; do
+    if [[ -f "$CONFIGS/$wfile" ]]; then
+        cp "$CONFIGS/$wfile" "$GENTOO/root/surface-pro-6-configs/"
+        echo "  [OK] $wfile -> /root/surface-pro-6-configs/"
+    fi
+done
+
+# --- local.d startup scripts ---
+if [[ -f "$CONFIGS/disable-wakeup.start" ]]; then
+    mkdir -p "$GENTOO/etc/local.d"
+    cp "$CONFIGS/disable-wakeup.start" "$GENTOO/etc/local.d/disable-wakeup.start"
+    chmod +x "$GENTOO/etc/local.d/disable-wakeup.start"
+    echo "  [OK] disable-wakeup.start -> /etc/local.d/"
+fi
+if [[ -f "$CONFIGS/fstrim-weekly.start" ]]; then
+    mkdir -p "$GENTOO/etc/local.d"
+    cp "$CONFIGS/fstrim-weekly.start" "$GENTOO/etc/local.d/fstrim-weekly.start"
+    chmod +x "$GENTOO/etc/local.d/fstrim-weekly.start"
+    echo "  [OK] fstrim-weekly.start -> /etc/local.d/"
 fi
 
 # --- Chroot install script ---

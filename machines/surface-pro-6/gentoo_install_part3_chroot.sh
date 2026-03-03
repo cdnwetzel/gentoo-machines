@@ -146,10 +146,18 @@ emerge --verbose sys-boot/grub
 echo "[3.2] Installing GRUB to EFI..."
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
-echo "[3.3] Generating GRUB config..."
+echo "[3.3] Installing GRUB defaults..."
+if [[ -f "$CONFIGS/grub" ]]; then
+    cp "$CONFIGS/grub" /etc/default/grub
+    echo "  [OK] /etc/default/grub installed (HiDPI + i915 power)"
+else
+    echo "  [WARN] No grub defaults found — GRUB menu may be unreadable"
+fi
+
+echo "[3.4] Generating GRUB config..."
 grub-mkconfig -o /boot/grub/grub.cfg
 
-echo "[3.4] Verifying GRUB sees kernel..."
+echo "[3.5] Verifying GRUB sees kernel..."
 grep menuentry /boot/grub/grub.cfg
 
 echo ""
@@ -411,10 +419,35 @@ labl0="zram_swap"
 EOF
 echo "  [OK] zram-init configured (4GB zstd swap)"
 
-echo "[11.2] No Surface-specific modprobe needed"
-echo "  Audio: ALC298 autoconfig (no model quirk)"
-echo "  WiFi: mwifiex_pcie (mainline)"
-echo "  Touchscreen: Hardware non-functional (skipping IPTS)"
+echo "[11.2] Installing WiFi power save workaround (Marvell 88W8897)..."
+if [[ -f "$CONFIGS/mwifiex.conf" ]]; then
+    cp "$CONFIGS/mwifiex.conf" /etc/modprobe.d/mwifiex.conf
+    echo "  [OK] /etc/modprobe.d/mwifiex.conf (disable power save)"
+else
+    echo "  [WARN] mwifiex.conf not found"
+fi
+if [[ -f "$CONFIGS/wifi-powersave.conf" ]]; then
+    mkdir -p /etc/NetworkManager/conf.d
+    cp "$CONFIGS/wifi-powersave.conf" /etc/NetworkManager/conf.d/wifi-powersave.conf
+    echo "  [OK] /etc/NetworkManager/conf.d/wifi-powersave.conf"
+else
+    echo "  [WARN] wifi-powersave.conf not found"
+fi
+if [[ -f "$CONFIGS/wifi-reload.sh" ]]; then
+    mkdir -p /etc/elogind/system-sleep
+    cp "$CONFIGS/wifi-reload.sh" /etc/elogind/system-sleep/wifi-reload.sh
+    chmod +x /etc/elogind/system-sleep/wifi-reload.sh
+    echo "  [OK] /etc/elogind/system-sleep/wifi-reload.sh (reload on resume)"
+else
+    echo "  [WARN] wifi-reload.sh not found"
+fi
+if [[ -f "$CONFIGS/wifi-recover.sh" ]]; then
+    cp "$CONFIGS/wifi-recover.sh" /usr/local/bin/wifi-recover
+    chmod +x /usr/local/bin/wifi-recover
+    echo "  [OK] /usr/local/bin/wifi-recover (manual recovery)"
+else
+    echo "  [WARN] wifi-recover.sh not found"
+fi
 
 echo "[11.3] Verifying firmware files..."
 ls /lib/firmware/mrvl/pcie8897_uapsta.bin* 2>/dev/null && echo "  [OK] WiFi firmware" || echo "  [FAIL] WiFi firmware!"
