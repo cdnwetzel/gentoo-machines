@@ -1,4 +1,4 @@
-# Checkpoint - 2026-03-03
+# Checkpoint
 
 ## Latest Session: MBP 2015 Install Scripts Gold Standard
 
@@ -47,7 +47,9 @@ All checks pass:
 - `shared/restore-desktop.sh` (HiDPI step 6/7, DMI detection)
 
 ### Commits
-- (pending)
+- `0ed04ed` Surface Pro 6: add HiDPI scaling at 150% (144 DPI)
+- `ef77c1a` Surface Pro 6: persistent HiDPI + GRUB scaling + kernel_config.sh cleanup
+- `5ca1d02` Surface Pro 6: fix 6 install bugs — GRUB, WiFi, LightDM HiDPI, ccache, DPTF, local.d
 
 ---
 
@@ -100,7 +102,7 @@ All checks pass:
 
 ## Previous Session: SP6 Config Validation
 
-Validated Surface Pro 6 configs and fixed bugs before continuing the install (phases 5-13) tomorrow at the office.
+Validated Surface Pro 6 configs and fixed bugs before continuing the install (phases 5-13) on-site.
 
 ### What Was Done
 1. **Fixed filename mismatch bug (CRITICAL)**: `kernel_config_surface_pro6.sh` → `kernel_config.sh` in part2.sh (4 refs), part3_chroot.sh (2 refs), kernel_config.sh USAGE comment, EXEC_SEQUENCE.md — 8 total occurrences. Would have broken install on first run.
@@ -112,8 +114,7 @@ Validated Surface Pro 6 configs and fixed bugs before continuing the install (ph
 
 ### SP6 Install Status
 - Phases 1-4 done on-site: kernel built, GRUB installed, users created
-- Machine is at office — can't verify until tomorrow
-- Phases 5-13 remain: networking, world, services, LightDM, PipeWire, Surface HW, verification
+- Phases 5-13 completed in subsequent session
 
 ### Commits
 - `ba6cb91` Fix SP6 install script bugs: filename mismatch + stale march references

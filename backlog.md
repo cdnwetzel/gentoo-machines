@@ -33,6 +33,6 @@
 - [x] Run kconfig-lint against MBP 2015 / SP6 — 0 FAILs on both (WARNs/INFOs only, kernel version diffs)
 - [x] Rename GitHub repo (gentoo_dell_xps9315 → gentoo-machines) + set description + update 11 files
 - [x] Report ipu-bridge double-brace to Gentoo Bugzilla — Bug 970769 (closed: local corruption, not in official sources)
-- [x] intel_idle Tiger Lake: investigated upstream — intentionally omission, Dell firmware bug, keeping as local patch
+- [x] intel_idle Tiger Lake: investigated upstream — intentional omission, Dell firmware bug, keeping as local patch
 - [x] XPS 9510: install unzip, firefox-bin, flatpak + flathub + xdg-desktop-portal-gtk
 - [x] XPS 9510: enable RMI4 for Synaptics touchpad (two-finger scroll + palm rejection)

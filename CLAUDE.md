@@ -17,7 +17,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
   precision-7960/   Dell Precision 7960 / Xeon W5 (planned)
-  surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - READY TO INSTALL
+  surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
 tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh
 shared/             Common portage files, XFCE desktop config restore scripts
@@ -43,7 +43,7 @@ NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will n
 
 ## Machine-Specific Details
 
-### Dell XPS 13 9315 (Production)
+### Dell XPS 13 9315 (Configs Updated)
 
 - **Kernel**: Linux 6.12.58-gentoo
 - **Architecture**: x86_64, hybrid P-Core/E-Core (Alder Lake)
@@ -187,7 +187,7 @@ Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 - **Profile**: `default/linux/amd64/23.0`
 - **Init**: OpenRC (no systemd)
 - **Desktop**: XFCE with LightDM
-- **Python**: 3.12 / 3.13
+- **Python**: 3.13 / 3.14
 
 ## Config Generation Workflow
 
@@ -340,4 +340,4 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
 - **Precision T5810**: Broadwell-EP Xeon — ECC memory, `-march=broadwell`, older chipset
 - **Precision 7960**: Harvest only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
-- **Surface Pro 6/9**: Need linux-surface kernel patches for touchscreen, cameras, battery, etc.
+- **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).

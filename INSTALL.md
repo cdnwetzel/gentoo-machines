@@ -8,14 +8,14 @@ Before starting, confirm your target machine has a config ready:
 
 | Machine | Directory | Config Status |
 |---------|-----------|---------------|
-| Dell XPS 13 9315 | `machines/xps-9315/` | Production |
 | Dell XPS 15 9510 | `machines/xps-9510/` | Production |
 | MacBook Pro 12,1 (2015) | `machines/mbp-2015/` | Production |
+| Surface Pro 6 | `machines/surface-pro-6/` | Production |
+| Dell XPS 13 9315 | `machines/xps-9315/` | Configs updated |
 | Intel NUC11TNBi5 | `machines/nuc11/` | Ready to build |
-| Surface Pro 6 | `machines/surface-pro-6/` | Ready to install |
 | ASRock B550 / Ryzen 9 5950X | `machines/asrock-b550/` | Planned |
 | Dell Precision T5810 | `machines/precision-t5810/` | Planned |
-| Dell Precision 7960 | `machines/precision-7960/` | Planned |
+| Dell Precision 7960 | `machines/precision-7960/` | Harvest only |
 | Surface Pro 9 | `machines/surface-pro-9/` | Planned |
 
 If your machine isn't listed or is "Planned", you'll need to generate a config first. See [Adding a New Machine](#adding-a-new-machine) at the end.
@@ -271,7 +271,7 @@ ls /mnt/gentoo
 
 ```bash
 # Clone into the new system (will be available inside chroot)
-git clone https://github.com/cdnwetzel/gentoo-machines.git /mnt/gentoo/root/gentoo_config
+git clone https://github.com/cdnwetzel/gentoo-machines.git /mnt/gentoo/root/gentoo-machines
 ```
 
 Or if git isn't available on the live USB, download the ZIP from GitHub and extract it.
@@ -283,16 +283,16 @@ Or if git isn't available on the live USB, download the ZIP from GitHub and extr
 MACHINE=nuc11   # Change to your machine directory name
 
 # Portage build settings (machine-specific compiler flags)
-cp /mnt/gentoo/root/gentoo_config/machines/${MACHINE}/make.conf /mnt/gentoo/etc/portage/make.conf
+cp /mnt/gentoo/root/gentoo-machines/machines/${MACHINE}/make.conf /mnt/gentoo/etc/portage/make.conf
 
 # Shared portage files (same across all machines)
-cp /mnt/gentoo/root/gentoo_config/shared/package.use /mnt/gentoo/etc/portage/package.use
-cp /mnt/gentoo/root/gentoo_config/shared/package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
-cp /mnt/gentoo/root/gentoo_config/shared/package.license /mnt/gentoo/etc/portage/package.license
+cp /mnt/gentoo/root/gentoo-machines/shared/package.use /mnt/gentoo/etc/portage/package.use
+cp /mnt/gentoo/root/gentoo-machines/shared/package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
+cp /mnt/gentoo/root/gentoo-machines/shared/package.license /mnt/gentoo/etc/portage/package.license
 
 # Portage environment overrides
 mkdir -p /mnt/gentoo/etc/portage/env
-cp /mnt/gentoo/root/gentoo_config/shared/portage-env /mnt/gentoo/etc/portage/env/low-memory.conf
+cp /mnt/gentoo/root/gentoo-machines/shared/portage-env /mnt/gentoo/etc/portage/env/low-memory.conf
 ```
 
 ---
@@ -371,7 +371,7 @@ ls -l /usr/src/linux
 
 # Copy the pre-built config for your machine
 MACHINE=nuc11   # Change to your machine
-cp /root/gentoo_config/machines/${MACHINE}/.config /usr/src/linux/
+cp /root/gentoo-machines/machines/${MACHINE}/.config /usr/src/linux/
 
 cd /usr/src/linux
 
@@ -464,8 +464,8 @@ grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gento
 
 # If your machine has a GRUB config in the repo, use it:
 MACHINE=nuc11
-if [ -f /root/gentoo_config/machines/${MACHINE}/grub ]; then
-    cp /root/gentoo_config/machines/${MACHINE}/grub /etc/default/grub
+if [ -f /root/gentoo-machines/machines/${MACHINE}/grub ]; then
+    cp /root/gentoo-machines/machines/${MACHINE}/grub /etc/default/grub
 fi
 
 # Generate GRUB config
@@ -500,7 +500,7 @@ passwd
 
 ```bash
 # Copy the shared world file (common package list)
-cp /root/gentoo_config/shared/world /var/lib/portage/world
+cp /root/gentoo-machines/shared/world /var/lib/portage/world
 
 # Install everything (1-2 hours depending on hardware)
 emerge --ask --update --deep --newuse @world
@@ -579,8 +579,8 @@ After booting into your new Gentoo system:
 ```bash
 # Clone the repo to your home directory
 cd ~
-git clone https://github.com/cdnwetzel/gentoo-machines.git gentoo_config
-cd gentoo_config
+git clone https://github.com/cdnwetzel/gentoo-machines.git gentoo-machines
+cd gentoo-machines
 
 # Run hardware verification
 sudo tools/harvest.sh
@@ -600,10 +600,10 @@ dmesg | grep firmware
 
 ```bash
 # Restore all XFCE settings (keybindings, panels, display profiles, xhost)
-bash ~/gentoo_config/shared/restore-desktop.sh
+bash ~/gentoo-machines/shared/restore-desktop.sh
 
 # Restore system configs (elogind, ACPI lid toggle, LightDM) — requires root
-sudo bash ~/gentoo_config/shared/restore-system.sh
+sudo bash ~/gentoo-machines/shared/restore-system.sh
 ```
 
 ### 12.3 Connect to WiFi
