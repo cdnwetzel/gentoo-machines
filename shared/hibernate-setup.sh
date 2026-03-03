@@ -151,13 +151,24 @@ echo "  GRUB params: $RESUME_PARAM"
 
 info "Phase 5: Updating GRUB defaults"
 
-# Read current GRUB_CMDLINE_LINUX_DEFAULT
-CURRENT_CMDLINE=$(grep '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_DEFAULT" | sed 's/^GRUB_CMDLINE_LINUX_DEFAULT=//' | tr -d '"')
+# Detect which GRUB variable holds kernel params.
+# Some machines use GRUB_CMDLINE_LINUX_DEFAULT, others use GRUB_CMDLINE_LINUX.
+# Prefer _DEFAULT if it exists uncommented; fall back to GRUB_CMDLINE_LINUX.
+if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_DEFAULT"; then
+    GRUB_VAR="GRUB_CMDLINE_LINUX_DEFAULT"
+elif grep -q '^GRUB_CMDLINE_LINUX=' "$GRUB_DEFAULT"; then
+    GRUB_VAR="GRUB_CMDLINE_LINUX"
+else
+    die "Neither GRUB_CMDLINE_LINUX_DEFAULT nor GRUB_CMDLINE_LINUX found in $GRUB_DEFAULT"
+fi
+
+CURRENT_CMDLINE=$(grep "^${GRUB_VAR}=" "$GRUB_DEFAULT" | sed "s/^${GRUB_VAR}=//" | tr -d '"')
+echo "  Using $GRUB_VAR"
+echo "  Current: $CURRENT_CMDLINE"
 
 # Check if resume params already present
 if echo "$CURRENT_CMDLINE" | grep -q "resume="; then
-    echo "  resume= already in GRUB_CMDLINE_LINUX_DEFAULT"
-    echo "  Current: $CURRENT_CMDLINE"
+    echo "  resume= already present"
     if ask_yes_no "  Replace existing resume params?"; then
         # Strip old resume params
         CURRENT_CMDLINE=$(echo "$CURRENT_CMDLINE" | sed -E 's/resume=[^ ]+//g; s/resume_offset=[^ ]+//g; s/  +/ /g; s/^ +//; s/ +$//')
@@ -174,9 +185,9 @@ fi
 cp "$GRUB_DEFAULT" "${GRUB_DEFAULT}.pre-hibernate"
 echo "  Backed up to ${GRUB_DEFAULT}.pre-hibernate"
 
-# Write new GRUB_CMDLINE_LINUX_DEFAULT
-sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"$NEW_CMDLINE\"|" "$GRUB_DEFAULT"
-echo "  Updated: GRUB_CMDLINE_LINUX_DEFAULT=\"$NEW_CMDLINE\""
+# Write updated cmdline
+sed -i "s|^${GRUB_VAR}=.*|${GRUB_VAR}=\"$NEW_CMDLINE\"|" "$GRUB_DEFAULT"
+echo "  Updated: ${GRUB_VAR}=\"$NEW_CMDLINE\""
 
 # ==========================================================================
 # Phase 6: Regenerate GRUB config
