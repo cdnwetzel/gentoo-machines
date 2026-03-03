@@ -1,0 +1,8 @@
+#!/bin/bash
+# Disable spurious wakeup sources to prevent immediate resume from suspend
+# Surface Pro 6 (s2idle only — modern standby)
+for device in LID0 XHC1; do
+    if grep -q "$device.*enabled" /proc/acpi/wakeup; then
+        echo "$device" > /proc/acpi/wakeup
+    fi
+done
