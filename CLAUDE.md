@@ -159,7 +159,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/package.license` | `/etc/portage/package.license/` |
 | `shared/openrc-services` | Reference for `rc-update` commands (machine-conditional annotations) |
 | `shared/portage-env` | `/etc/portage/env/` |
-| `shared/restore-desktop.sh` | User restore: XFCE keybindings, panels, displays, xhost autostart |
+| `shared/restore-desktop.sh` | User restore: XFCE keybindings, panels, displays, HiDPI (auto-detect), xhost autostart |
 | `shared/restore-system.sh` | Root restore: elogind, ACPI lid toggle, LightDM config |
 | `shared/xfce4-keybindings.sh` | Restore script for XFCE keyboard shortcuts (Super+Arrow tiling, Super+Enter maximize, Super+Space search, etc.) |
 | `shared/xfce4-panel.sh` | Restore script for XFCE panel layout (top bar + autohide dock) |
@@ -297,7 +297,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Key drivers**: i915 (module, KBL GT2), mwifiex_pcie (Marvell 88W8897 WiFi), snd_hda_intel (ALC298), surface_aggregator, btmrvl_sdio (Marvell BT)
 - **Firmware**: Loaded from /lib/firmware/ (i915/kbl_dmc_*, mrvl/pcie8897_uapsta.bin, mrvl/usb8897_uapsta.bin)
 - **Critical**: DRM_I915=m (module), WiFi is Marvell NOT Intel, no initramfs
-- **Display**: 2736x1824 PixelSense (267 PPI, 3:2 aspect)
+- **Display**: 2736x1824 PixelSense (267 PPI, 3:2 aspect), 150% HiDPI scaling (144 DPI)
 - **Storage**: SK hynix BC501 NVMe 238GB, no swap partition (4GB zram zstd)
 - **RAM**: 8GB LPDDR3 (soldered), 4GB portage tmpfs with disk fallback for large packages
 - **Input**: Type Cover USB HID (keyboard + touchpad), touchscreen non-functional (HW defect)
@@ -326,6 +326,9 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions explained |
 | `machines/surface-pro-6/gentoo_install_part1.sh` | Partition + format NVMe |
 | `machines/surface-pro-6/gentoo_install_part2.sh` | Stage3 + config copy + chroot prep |
+| `machines/surface-pro-6/lightdm.conf` | LightDM config with HiDPI (xserver-command=X -dpi 144) |
+| `machines/surface-pro-6/lightdm-display-setup.sh` | LightDM display-setup: xrandr --dpi 144 for login screen |
+| `machines/surface-pro-6/hidpi-setup.sh` | XFCE HiDPI: Xft/DPI=144, cursor size 36 (150% scaling) |
 | `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ## Future Machine Notes

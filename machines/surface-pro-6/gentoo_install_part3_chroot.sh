@@ -337,12 +337,21 @@ else
     sed -i 's/^#session-wrapper=.*/session-wrapper=\/etc\/lightdm\/Xsession/' /etc/lightdm/lightdm.conf 2>/dev/null || true
 fi
 
-echo "[9.3] Verifying LightDM configuration..."
+echo "[9.3] Installing HiDPI display-setup script..."
+if [[ -f "$CONFIGS/lightdm-display-setup.sh" ]]; then
+    cp "$CONFIGS/lightdm-display-setup.sh" /etc/lightdm/display-setup.sh
+    chmod +x /etc/lightdm/display-setup.sh
+    echo "  [OK] display-setup.sh installed (150% / 144 DPI)"
+else
+    echo "  [WARN] No lightdm-display-setup.sh found"
+fi
+
+echo "[9.4] Verifying LightDM configuration..."
 grep "user-session=xfce" /etc/lightdm/lightdm.conf && echo "  [OK] user-session=xfce" || echo "  [FAIL] Check user-session!"
 grep "session-wrapper=/etc/lightdm/Xsession" /etc/lightdm/lightdm.conf && echo "  [OK] session-wrapper" || echo "  [WARN] Check session-wrapper"
 ls -la /etc/lightdm/Xsession 2>/dev/null && echo "  [OK] Xsession exists" || echo "  [FAIL] Xsession missing!"
 
-echo "[9.4] Setting display manager..."
+echo "[9.5] Setting display manager..."
 sed -i 's/DISPLAYMANAGER=".*"/DISPLAYMANAGER="lightdm"/' /etc/conf.d/display-manager 2>/dev/null || \
     echo 'DISPLAYMANAGER="lightdm"' > /etc/conf.d/display-manager
 

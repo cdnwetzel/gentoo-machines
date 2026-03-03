@@ -1,6 +1,27 @@
 # Checkpoint - 2026-03-03
 
-## Latest Session: Surface Pro 6 First Boot
+## Latest Session: Surface Pro 6 HiDPI Scaling
+
+### What Was Done
+1. **HiDPI scaling at 150% (144 DPI)** for 2736x1824 PixelSense display (267 PPI)
+2. **LightDM login screen**: `xserver-command=X -dpi 144` + display-setup script with `xrandr --dpi 144` — greeter renders at 150%
+3. **XFCE desktop session**: `hidpi-setup.sh` sets `Xft/DPI=144`, cursor size 36, xrandr DPI
+4. **restore-desktop.sh**: Auto-detects Surface Pro via DMI, applies HiDPI (step 6/7)
+5. **Install script**: Part3 phase 9 installs display-setup.sh during chroot
+
+### Files Created/Modified
+- `machines/surface-pro-6/lightdm-display-setup.sh` (new)
+- `machines/surface-pro-6/hidpi-setup.sh` (new)
+- `machines/surface-pro-6/lightdm.conf` (xserver-command + display-setup-script)
+- `machines/surface-pro-6/gentoo_install_part3_chroot.sh` (phase 9.3 display-setup)
+- `shared/restore-desktop.sh` (HiDPI step 6/7, DMI detection)
+
+### Commits
+- (pending)
+
+---
+
+## Previous Session: Surface Pro 6 First Boot
 
 ### What Was Done
 1. **Surface Pro 6 is LIVE on Gentoo** — booted, all packages installed, first-boot restore complete
@@ -10,7 +31,8 @@
 5. **Remaining**: Reboot/logout to apply touchpad config changes
 
 ### Commits
-- (pending)
+- `c97aff3` Surface Pro 6: mark production — first boot restore complete
+- `9889aee` Surface Pro 6: fix Marvell 88W8897 WiFi power save hang
 
 ---
 
