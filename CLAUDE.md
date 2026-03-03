@@ -36,7 +36,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
 | 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Harvest only | RHEL 10.1 (production AI/ML) |
-| 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Ready to install | Fedora 43 |
+| 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface machines will need **linux-surface** kernel patches.
@@ -289,9 +289,9 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/mbp-2015/gentoo_install_part1.sh` | Disk partitioning from live USB |
 | `machines/mbp-2015/gentoo_install_part2.sh` | Stage3 + chroot + kernel build |
 
-### Surface Pro 6 (Ready to Install)
+### Surface Pro 6 (Production)
 
-- **Kernel**: Target 6.18.x gentoo-sources
+- **Kernel**: Linux 6.18.12-gentoo
 - **Architecture**: x86_64, 4C/8T (Kaby Lake-R)
 - **Compiler flags**: `-march=skylake -O2 -pipe` (GCC has no `-march=kabylake`)
 - **Key drivers**: i915 (module, KBL GT2), mwifiex_pcie (Marvell 88W8897 WiFi), snd_hda_intel (ALC298), surface_aggregator, btmrvl_sdio (Marvell BT)

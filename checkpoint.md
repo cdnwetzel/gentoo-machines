@@ -1,6 +1,20 @@
-# Checkpoint - 2026-03-01
+# Checkpoint - 2026-03-03
 
-## Latest Session: XPS 9510 Touchpad + Bug 970769 Feedback
+## Latest Session: Surface Pro 6 First Boot
+
+### What Was Done
+1. **Surface Pro 6 is LIVE on Gentoo** — booted, all packages installed, first-boot restore complete
+2. **Package check**: All 63 world packages already installed — install scripts covered everything
+3. **Desktop restore** (`restore-desktop.sh`): XFCE keybindings (Super+Enter maximize, Super+Arrow tiling, Ctrl+Alt+T terminal, etc.), panel layout with Remmina launcher, PipeWire autostart, display profiles, xhost autostart
+4. **System restore** (`restore-system.sh`): elogind config, ACPI lid toggle, LightDM display setup, touchpad (tap-to-click), KSM startup, `/dev/ppp` for SSTP VPN, services restarted (elogind + acpid)
+5. **Remaining**: Reboot/logout to apply touchpad config changes
+
+### Commits
+- (pending)
+
+---
+
+## Previous Session: XPS 9510 Touchpad + Bug 970769 Feedback
 
 ### What Was Done
 1. **XPS 9510 touchpad fix**: Enabled RMI4 subsystem (RMI4_CORE, RMI4_I2C, RMI4_SMB, RMI4_F11, RMI4_F12, RMI4_F30) and HID_RMI in both .config and kernel_config.sh. Synaptics touchpad was falling back to generic HID without these — no two-finger scrolling, poor palm rejection causing tap-while-typing. Kernel rebuild in progress on XPS 9510.
@@ -177,7 +191,7 @@ Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that
 |---------|--------|-----------|
 | Dell XPS 15 9510 | **Production — dogfooded kernel verified** | Maintenance only |
 | MacBook Pro 12,1 (2015) | Production | Maintenance only |
-| Surface Pro 6 | Ready to install | Run install scripts from Ventoy |
+| Surface Pro 6 | **Production — first boot restored** | Verify touchpad after reboot |
 | Dell XPS 13 9315 | Configs updated (returned to Windows) | N/A |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
@@ -187,6 +201,6 @@ Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that
 
 ## Next Steps
 
-1. **Surface Pro 6 install** — boot Ventoy, run part1 → part2 → part3
+1. **Surface Pro 6** — verify touchpad after reboot, test RDP/Remmina, test SSTP VPN
 2. **NUC11** — boot live USB, follow INSTALL.md
 3. **ASRock B550 / Precision T5810 / Precision 7960** — harvest on existing OS, generate configs
