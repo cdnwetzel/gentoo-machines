@@ -328,7 +328,10 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/gentoo_install_part2.sh` | Stage3 + config copy + chroot prep |
 | `machines/surface-pro-6/lightdm.conf` | LightDM config with HiDPI (xserver-command=X -dpi 144) |
 | `machines/surface-pro-6/lightdm-display-setup.sh` | LightDM display-setup: xrandr --dpi 144 for login screen |
-| `machines/surface-pro-6/hidpi-setup.sh` | XFCE HiDPI: Xft/DPI=144, cursor size 36 (150% scaling) |
+| `machines/surface-pro-6/hidpi-setup.sh` | XFCE HiDPI: Xft/DPI=144, cursor size 36, .Xresources, xrandr autostart |
+| `machines/surface-pro-6/Xresources` | Persistent X11 DPI config (Xft.dpi=144, Xcursor.size=36) |
+| `machines/surface-pro-6/xrandr-dpi.desktop` | XDG autostart: xrandr --dpi 144 on every login |
+| `machines/surface-pro-6/lightdm-gtk-greeter.conf` | LightDM greeter HiDPI (Sans 16, xft-dpi=144) |
 | `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ## Future Machine Notes

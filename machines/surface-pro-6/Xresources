@@ -1,0 +1,12 @@
+! ~/.Xresources - Surface Pro 6 HiDPI (150% / 144 DPI)
+! Loaded at X session start by /etc/lightdm/Xsession
+! This is the most reliable way to persist DPI across reboots
+
+Xft.dpi: 144
+Xft.antialias: true
+Xft.hinting: true
+Xft.hintstyle: hintslight
+Xft.rgba: rgb
+
+! Cursor size (24 * 1.5 = 36)
+Xcursor.size: 36

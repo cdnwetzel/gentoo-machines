@@ -68,8 +68,8 @@ $SC --disable SND_HDA_CODEC_CS420X
 # Keep AHCI as module for USB docks if needed
 $SC --module SATA_AHCI
 
-# Remove Thunderbolt (Surface Pro 6 has no Thunderbolt)
-$SC --disable THUNDERBOLT
+# Remove Thunderbolt/USB4 (Surface Pro 6 has no Thunderbolt)
+$SC --disable USB4
 $SC --disable INTEL_WMI_THUNDERBOLT
 
 # Remove I2C I801 (MBP SMBus, not on Surface)
@@ -104,7 +104,7 @@ echo "[Phase 3] Processor configuration..."
 
 $SC --enable SMP
 $SC --set-val NR_CPUS 8
-$SC --enable MCORE2
+# CPU tuning via -march=skylake in make.conf CFLAGS (no MCORE2 in vanilla kernel)
 
 $SC --enable SCHED_MC
 $SC --enable SCHED_SMT
@@ -112,14 +112,14 @@ $SC --enable SCHED_AUTOGROUP
 $SC --enable X86_INTEL_PSTATE
 $SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
 $SC --enable INTEL_IDLE
-$SC --enable MICROCODE
+# MICROCODE is def_bool y when CPU_SUP_INTEL is set — no explicit enable needed
 $SC --enable X86_X2APIC
 
 # Kaby Lake-R thermal/power (confirmed via /sys/class/thermal)
 $SC --enable INTEL_RAPL
 $SC --enable X86_PKG_TEMP_THERMAL
 $SC --enable INTEL_POWERCLAMP
-$SC --enable CORETEMP
+$SC --module SENSORS_CORETEMP
 
 # DPTF thermal framework (confirmed: INT3400, INT3403 thermal zones active)
 $SC --module INT340X_THERMAL
@@ -252,6 +252,7 @@ $SC --disable DRM_I915_GVT
 $SC --enable FB
 $SC --enable FB_EFI
 $SC --enable FRAMEBUFFER_CONSOLE
+$SC --enable DRM_CLIENT_SELECTION
 $SC --enable DRM_FBDEV_EMULATION
 
 # Backlight - intel_backlight (raw type, max 7500)
@@ -281,7 +282,7 @@ $SC --enable SND_HDA_RECONFIG
 $SC --enable SND_HDA_INPUT_BEEP
 $SC --set-val SND_HDA_INPUT_BEEP_MODE 0
 $SC --enable SND_HDA_PATCH_LOADER
-$SC --enable SND_HDA_POWER_SAVE
+# SND_HDA_POWER_SAVE removed in 6.18 (always enabled)
 $SC --set-val SND_HDA_POWER_SAVE_DEFAULT 1
 
 # ALSA core
@@ -289,7 +290,7 @@ $SC --enable SOUND
 $SC --module SND
 $SC --module SND_PCM
 $SC --module SND_HWDEP
-$SC --module SND_SEQ
+$SC --module SND_SEQUENCER
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
@@ -343,6 +344,9 @@ echo "[Phase 12] Surface platform (SAM + peripherals)..."
 # Surface Platform base
 $SC --enable SURFACE_PLATFORMS
 
+# Serial device bus (required by Surface Aggregator)
+$SC --enable SERIAL_DEV_BUS
+
 # Surface Aggregator Module (SAM) — the main Surface hub
 # BUS must be built-in, rest as modules (from KERNEL_CONFIG_CROSSREF.md)
 $SC --module SURFACE_AGGREGATOR
@@ -369,7 +373,8 @@ $SC --module SURFACE_PRO3_BUTTON
 # Surface DTX (clipboard detach — N/A for Pro 6, but harmless)
 $SC --module SURFACE_DTX
 
-# Surface battery/charger
+# Surface battery/charger (needs POWER_SUPPLY parent)
+$SC --enable POWER_SUPPLY
 $SC --module BATTERY_SURFACE
 $SC --module CHARGER_SURFACE
 
@@ -434,16 +439,18 @@ $SC --module IPU_BRIDGE
 # Camera PMIC (TPS68470 via INT3472)
 $SC --module INTEL_SKL_INT3472
 
-# Camera sensors
-$SC --module VIDEO_OV5693     # rear 5MP
-$SC --module VIDEO_OV8865     # front 8MP
-$SC --module VIDEO_OV7251     # IR camera
-$SC --module VIDEO_DW9719     # VCM autofocus
-
-# Media/V4L2 framework
+# Media/V4L2 framework (must be before camera sensors)
 $SC --enable MEDIA_SUPPORT
 $SC --enable MEDIA_CAMERA_SUPPORT
 $SC --enable VIDEO_DEV
+
+# Camera sensors
+$SC --enable VIDEO_CAMERA_SENSOR
+$SC --module VIDEO_OV5693     # rear 5MP
+$SC --module VIDEO_OV8865     # front 8MP
+$SC --module VIDEO_OV7251     # IR camera
+$SC --enable VIDEO_CAMERA_LENS
+$SC --module VIDEO_DW9719     # VCM autofocus
 
 echo "  [OK] Cameras"
 
@@ -468,6 +475,8 @@ $SC --enable PINCTRL_INTEL
 $SC --enable PINCTRL_SUNRISEPOINT
 
 # SOC button array (power/volume buttons)
+$SC --enable INPUT_KEYBOARD
+$SC --enable KEYBOARD_GPIO
 $SC --module INPUT_SOC_BUTTON_ARRAY
 
 echo "  [OK] I2C/Serial IO"
@@ -530,7 +539,7 @@ $SC --module INTEL_MEI_PXP
 
 # Watchdog
 $SC --module ITCO_WDT
-$SC --module ITCO_VENDOR_SUPPORT
+$SC --enable ITCO_VENDOR_SUPPORT
 
 echo "  [OK] ACPI"
 
@@ -643,10 +652,6 @@ $SC --disable PARPORT
 
 # iSCSI initiators (not needed)
 $SC --disable BE2ISCSI
-$SC --disable BNX2I
-$SC --disable CXGB4I
-$SC --disable CXGB3I
-$SC --disable QLA4XXX
 $SC --disable SCSI_CXGB3_ISCSI
 $SC --disable SCSI_CXGB4_ISCSI
 
@@ -659,6 +664,22 @@ $SC --disable IWLDVM
 $SC --disable SND_SOC_SOF_TOPLEVEL
 
 echo "  [OK] Disabled"
+
+# ==========================================================================
+# PHASE 26: CONSOLE FONTS (HiDPI)
+# ==========================================================================
+echo "[Phase 26] Console fonts for HiDPI..."
+
+# Terminus 16x32 — largest built-in font, readable on 2736x1824
+# Used via: fbcon=font:TER16x32 kernel cmdline
+$SC --enable FONT_SUPPORT
+$SC --enable FONTS
+$SC --enable FONT_TER16x32
+$SC --enable FONT_SUN12x22
+$SC --enable FONT_8x16
+$SC --enable FONT_8x8
+
+echo "  [OK] Console fonts"
 
 # ==========================================================================
 # DONE

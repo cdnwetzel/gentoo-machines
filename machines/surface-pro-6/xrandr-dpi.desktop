@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Set HiDPI
+Exec=xrandr --dpi 144
+Hidden=false
+X-XFCE-Autostart-Override=true
