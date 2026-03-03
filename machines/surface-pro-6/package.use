@@ -9,3 +9,4 @@ sys-kernel/installkernel grub
 
 # networkmanager-sstp needs these for the GUI
 net-vpn/networkmanager-sstp gui
+>=gui-libs/libwlembed-0.0.0_pre20250715 gtk
