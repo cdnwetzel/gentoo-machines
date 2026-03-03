@@ -170,6 +170,8 @@ Shared files in `shared/` apply to all machines:
 | `shared/lightdm.conf` | Full LightDM config with display-setup-script wired in |
 | `shared/logind.conf` | elogind config (lid-close-docked=ignore for clamshell mode) |
 | `shared/30-touchpad.conf` | Xorg libinput: tap-to-click, natural scroll, disable-while-typing |
+| `shared/hibernate-setup.sh` | One-time swap file + GRUB resume setup for hibernate (interactive, idempotent) |
+| `shared/low-battery-hibernate.sh` | Cron monitor: auto-hibernate at 5% battery (laptops); desktops use apcupsd |
 | `shared/ksm.start` | KSM enable script, installed to `/etc/local.d/ksm.start` |
 | `shared/fstrim-weekly` | Weekly SSD TRIM maintenance script |
 | `shared/xhost-local.desktop` | XDG autostart: `xhost +local:` for X11 access |

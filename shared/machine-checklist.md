@@ -126,7 +126,20 @@ nmtui                                      # WiFi?
 pactl info | grep "Server Name"            # PipeWire?
 ```
 
-## Step 8: Document & Commit
+## Step 8: Hibernate Setup (Laptops)
+
+```bash
+# One-time: create swap file + configure GRUB resume params
+sudo bash shared/hibernate-setup.sh
+# Reboot to activate resume params, then test:
+echo disk > /sys/power/state
+```
+
+This creates a swap file (size = RAM) for hibernate alongside zram, and installs
+a cron job that auto-hibernates at 5% battery. Desktops with APC UPS use apcupsd
+instead — see shared/hibernate-setup.sh header for details.
+
+## Step 9: Document & Commit
 
 1. Update HARDWARE.md with any new findings from live verification
 2. Update CLAUDE.md with new machine entry

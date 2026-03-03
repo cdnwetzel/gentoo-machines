@@ -253,3 +253,22 @@ Missing flags = missing hardware acceleration = slower everything.
 
 **Prevention**: The generate-config.sh tool and all machine make.conf templates
 include CPU_FLAGS_X86. Every new machine checklist includes running cpuid2cpuflags.
+
+## 26. Hibernate Requires a Swap File (zram Alone Can't Hibernate)
+**Problem**: All machines use zram-only swap (compressed RAM). Hibernate writes
+RAM contents to disk, but zram IS RAM — there's nowhere to write.
+**Fix**: Create a swap file on the root ext4 partition alongside zram:
+```bash
+# One-time setup (interactive, idempotent)
+sudo bash shared/hibernate-setup.sh
+```
+The setup script creates `/var/swapfile` (size = RAM), adds GRUB `resume=` and
+`resume_offset=` params, and installs a low-battery cron monitor for laptops.
+zram stays active for daily swap pressure; the swap file (pri=-1) is only used
+for hibernate. Kernel 5.0+ supports hibernate-to-swap-file on ext4 natively.
+**Verification**:
+```bash
+swapon --show                          # should show zram0 AND /var/swapfile
+grep resume /etc/default/grub          # resume=UUID=... resume_offset=...
+cat /sys/power/disk                    # should show [platform]
+```
