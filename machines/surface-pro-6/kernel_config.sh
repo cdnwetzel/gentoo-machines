@@ -122,6 +122,7 @@ $SC --enable INTEL_POWERCLAMP
 $SC --module SENSORS_CORETEMP
 
 # DPTF thermal framework (confirmed: INT3400, INT3403 thermal zones active)
+$SC --enable ACPI_DPTF
 $SC --module INT340X_THERMAL
 $SC --module ACPI_THERMAL_REL
 $SC --module INTEL_PCH_THERMAL
