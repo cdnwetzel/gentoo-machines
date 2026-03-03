@@ -10,10 +10,11 @@ THRESHOLD=5  # percent
 
 BATTERY=""
 
-# Auto-detect battery: BAT0 (most laptops) or BAT1 (Surface Pro 6)
-for bat in BAT0 BAT1; do
-    if [[ -d "/sys/class/power_supply/$bat" ]]; then
-        BATTERY="$bat"
+# Auto-detect battery: find any power supply with type=Battery
+# Covers BAT0, BAT1, BATT, surface-battery, etc.
+for ps in /sys/class/power_supply/*; do
+    if [[ -f "$ps/type" ]] && [[ "$(cat "$ps/type")" == "Battery" ]]; then
+        BATTERY="$(basename "$ps")"
         break
     fi
 done

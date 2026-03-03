@@ -205,9 +205,10 @@ echo "  GRUB config regenerated"
 info "Phase 7: Low-battery hibernate monitor"
 
 # Detect if this is a laptop (has a battery)
+# Check any power supply with type=Battery (covers BAT0, BAT1, BATT, surface-battery, etc.)
 HAS_BATTERY=false
-for bat in BAT0 BAT1; do
-    if [[ -d "/sys/class/power_supply/$bat" ]]; then
+for ps in /sys/class/power_supply/*/type; do
+    if [[ -f "$ps" ]] && [[ "$(cat "$ps")" == "Battery" ]]; then
         HAS_BATTERY=true
         break
     fi
@@ -255,7 +256,7 @@ if [[ -f /sys/power/disk ]]; then
 fi
 
 echo "  GRUB resume params:"
-grep "^GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_DEFAULT"
+grep "^${GRUB_VAR}=" "$GRUB_DEFAULT"
 echo ""
 
 # Verify resume appears in generated grub.cfg
