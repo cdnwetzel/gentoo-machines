@@ -1,11 +1,13 @@
 #!/bin/bash
 # ============================================================================
-# gentoo_install_part2.sh - Download stage3, extract, configure, chroot
-# MacBook Pro 12,1 - Run from Fedora 43 Live USB
+# gentoo_install_part2.sh - Download stage3, extract, configure, chroot prep
+# MacBook Pro 12,1 - Run from Fedora 43 Live USB (Ventoy)
 # ============================================================================
 # Prerequisites: part1 completed, /mnt/gentoo mounted
 #
 # Uses: wget (confirmed available), tar, mount, chroot
+#
+# After this script: enter chroot and run gentoo_install_part3_chroot.sh
 # ============================================================================
 
 set -euo pipefail
@@ -13,14 +15,17 @@ set -euo pipefail
 GENTOO="/mnt/gentoo"
 MIRROR="https://gentoo.osuosl.org"
 STAGE3_DIR="releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc"
+# UPDATE THIS URL — check ${MIRROR}/${STAGE3_DIR}/ for latest tarball
 STAGE3_FILE="stage3-amd64-desktop-openrc-20260222T170100Z.tar.xz"
 STAGE3_URL="${MIRROR}/${STAGE3_DIR}/${STAGE3_FILE}"
 DIGESTS_URL="${STAGE3_URL}.DIGESTS"
 
 # Where our config files live (on the Ventoy USB)
 CONFIGS="/run/media/liveuser/VTOYEFI/mbp2015"
+REPO="/home/liveuser/gentoo-machines"
 
-echo "=== Gentoo Install Part 2: Stage3 + Chroot ==="
+echo "=== Gentoo Install Part 2: Stage3 + Chroot Prep ==="
+echo "    Machine: MacBook Pro 12,1"
 echo ""
 
 # ============================================================================
@@ -39,10 +44,11 @@ echo "[OK] Filesystems mounted."
 
 # Verify config files exist
 if [[ ! -d "$CONFIGS" ]]; then
-    echo "WARNING: Config directory $CONFIGS not found."
-    echo "Config files will need to be copied manually."
-    CONFIGS=""
+    echo "ERROR: Config directory $CONFIGS not found."
+    echo "Mount the Ventoy USB and try again."
+    exit 1
 fi
+echo "[OK] Config files found at $CONFIGS."
 echo ""
 
 # ============================================================================
@@ -111,53 +117,171 @@ echo ""
 # ============================================================================
 echo "[STEP 4] Installing configuration files..."
 
-if [[ -n "$CONFIGS" ]]; then
-    # make.conf
-    if [[ -f "$CONFIGS/make.conf" ]]; then
-        cp "$CONFIGS/make.conf" "$GENTOO/etc/portage/make.conf"
-        echo "  [OK] make.conf"
-    fi
+STAGING="$GENTOO/root/mbp-2015-configs"
+mkdir -p "$STAGING"
 
-    # package.env + env directory
-    if [[ -f "$CONFIGS/package.env" ]]; then
-        cp "$CONFIGS/package.env" "$GENTOO/etc/portage/package.env"
-        echo "  [OK] package.env"
-    fi
-    if [[ -f "$CONFIGS/portage_env_notmpfs.conf" ]]; then
-        mkdir -p "$GENTOO/etc/portage/env"
-        cp "$CONFIGS/portage_env_notmpfs.conf" "$GENTOO/etc/portage/env/notmpfs.conf"
-        echo "  [OK] env/notmpfs.conf"
-    fi
+# --- Direct /etc installs (needed before chroot) ---
 
-    # mbpfan config
-    if [[ -f "$CONFIGS/mbpfan.conf" ]]; then
-        cp "$CONFIGS/mbpfan.conf" "$GENTOO/etc/mbpfan.conf"
-        echo "  [OK] mbpfan.conf"
-    fi
-
-    # Kernel config script
-    if [[ -f "$CONFIGS/kernel_config_mbp121.sh" ]]; then
-        cp "$CONFIGS/kernel_config_mbp121.sh" "$GENTOO/root/kernel_config_mbp121.sh"
-        chmod +x "$GENTOO/root/kernel_config_mbp121.sh"
-        echo "  [OK] kernel_config_mbp121.sh -> /root/"
-    fi
-
-    # WiFi firmware fix
-    if [[ -f "$CONFIGS/wifi_firmware_fix.sh" ]]; then
-        cp "$CONFIGS/wifi_firmware_fix.sh" "$GENTOO/root/wifi_firmware_fix.sh"
-        chmod +x "$GENTOO/root/wifi_firmware_fix.sh"
-        echo "  [OK] wifi_firmware_fix.sh -> /root/"
-    fi
-
-    # Post-install reference
-    if [[ -f "$CONFIGS/post_install_setup.sh" ]]; then
-        cp "$CONFIGS/post_install_setup.sh" "$GENTOO/root/post_install_setup.sh"
-        chmod +x "$GENTOO/root/post_install_setup.sh"
-        echo "  [OK] post_install_setup.sh -> /root/"
-    fi
+# make.conf
+if [[ -f "$CONFIGS/make.conf" ]]; then
+    cp "$CONFIGS/make.conf" "$GENTOO/etc/portage/make.conf"
+    echo "  [OK] make.conf"
 else
-    echo "  WARNING: No config directory found. Copy files manually."
+    echo "  [FAIL] make.conf not found!"
 fi
+
+# package.env + env directory
+if [[ -f "$CONFIGS/package.env" ]]; then
+    cp "$CONFIGS/package.env" "$GENTOO/etc/portage/package.env"
+    echo "  [OK] package.env"
+fi
+if [[ -f "$CONFIGS/portage_env_notmpfs.conf" ]]; then
+    mkdir -p "$GENTOO/etc/portage/env"
+    cp "$CONFIGS/portage_env_notmpfs.conf" "$GENTOO/etc/portage/env/notmpfs.conf"
+    echo "  [OK] env/notmpfs.conf"
+fi
+
+# mbpfan config (needs to exist before mbpfan service starts)
+if [[ -f "$CONFIGS/mbpfan.conf" ]]; then
+    cp "$CONFIGS/mbpfan.conf" "$GENTOO/etc/mbpfan.conf"
+    echo "  [OK] mbpfan.conf -> /etc/"
+fi
+
+# --- Machine configs -> staging dir (used by part3) ---
+
+# Kernel config script (correct filename — NOT kernel_config_mbp121.sh)
+if [[ -f "$CONFIGS/kernel_config.sh" ]]; then
+    cp "$CONFIGS/kernel_config.sh" "$STAGING/"
+    chmod +x "$STAGING/kernel_config.sh"
+    echo "  [OK] kernel_config.sh -> staging"
+fi
+
+# World file
+if [[ -f "$CONFIGS/world" ]]; then
+    cp "$CONFIGS/world" "$STAGING/"
+    echo "  [OK] world -> staging"
+fi
+
+# GRUB defaults
+if [[ -f "$CONFIGS/grub" ]]; then
+    cp "$CONFIGS/grub" "$STAGING/"
+    echo "  [OK] grub -> staging"
+fi
+
+# zram-init config
+if [[ -f "$CONFIGS/zram-init.conf" ]]; then
+    cp "$CONFIGS/zram-init.conf" "$STAGING/"
+    echo "  [OK] zram-init.conf -> staging"
+fi
+
+# WiFi firmware fix
+if [[ -f "$CONFIGS/wifi_firmware_fix.sh" ]]; then
+    cp "$CONFIGS/wifi_firmware_fix.sh" "$STAGING/"
+    chmod +x "$STAGING/wifi_firmware_fix.sh"
+    echo "  [OK] wifi_firmware_fix.sh -> staging"
+fi
+
+# Setup hotkeys
+if [[ -f "$CONFIGS/setup-hotkeys.sh" ]]; then
+    cp "$CONFIGS/setup-hotkeys.sh" "$STAGING/"
+    chmod +x "$STAGING/setup-hotkeys.sh"
+    echo "  [OK] setup-hotkeys.sh -> staging"
+fi
+
+# Post-install reference (superseded by part3, kept for reference)
+if [[ -f "$CONFIGS/post_install_setup.sh" ]]; then
+    cp "$CONFIGS/post_install_setup.sh" "$STAGING/"
+    echo "  [OK] post_install_setup.sh -> staging (reference)"
+fi
+
+# --- Shared portage files from git repo ---
+if [[ -d "$REPO/shared" ]]; then
+    # package.use (shared + machine-specific)
+    mkdir -p "$GENTOO/etc/portage/package.use"
+    if [[ -f "$REPO/shared/package.use" ]]; then
+        cp "$REPO/shared/package.use" "$GENTOO/etc/portage/package.use/shared"
+        echo "  [OK] shared/package.use -> package.use/shared"
+    fi
+    if [[ -f "$CONFIGS/package.use" ]]; then
+        cp "$CONFIGS/package.use" "$GENTOO/etc/portage/package.use/mbp-2015"
+        echo "  [OK] mbp-2015 package.use -> package.use/mbp-2015"
+    fi
+
+    # package.accept_keywords (shared + machine-specific)
+    mkdir -p "$GENTOO/etc/portage/package.accept_keywords"
+    if [[ -f "$REPO/shared/package.accept_keywords" ]]; then
+        cp "$REPO/shared/package.accept_keywords" "$GENTOO/etc/portage/package.accept_keywords/shared"
+        echo "  [OK] shared/package.accept_keywords -> package.accept_keywords/shared"
+    fi
+    if [[ -f "$CONFIGS/package.accept_keywords" ]]; then
+        cp "$CONFIGS/package.accept_keywords" "$GENTOO/etc/portage/package.accept_keywords/mbp-2015"
+        echo "  [OK] mbp-2015 package.accept_keywords -> package.accept_keywords/mbp-2015"
+    fi
+
+    # package.license
+    if [[ -f "$REPO/shared/package.license" ]]; then
+        mkdir -p "$GENTOO/etc/portage/package.license"
+        cp "$REPO/shared/package.license" "$GENTOO/etc/portage/package.license/shared"
+        echo "  [OK] shared/package.license"
+    fi
+
+    # LightDM config (shared — no HiDPI needed for MBP 2015)
+    if [[ -f "$REPO/shared/lightdm.conf" ]]; then
+        cp "$REPO/shared/lightdm.conf" "$STAGING/lightdm.conf"
+        echo "  [OK] lightdm.conf -> staging"
+    fi
+
+    # Shared desktop restore scripts
+    for script in restore-desktop.sh restore-system.sh xfce4-keybindings.sh xfce4-panel.sh; do
+        if [[ -f "$REPO/shared/$script" ]]; then
+            cp "$REPO/shared/$script" "$STAGING/"
+            echo "  [OK] $script -> staging"
+        fi
+    done
+
+    # OpenRC services reference
+    if [[ -f "$REPO/shared/openrc-services" ]]; then
+        cp "$REPO/shared/openrc-services" "$STAGING/"
+        echo "  [OK] openrc-services -> staging"
+    fi
+
+    # Touchpad config -> direct install
+    if [[ -f "$REPO/shared/30-touchpad.conf" ]]; then
+        mkdir -p "$GENTOO/etc/X11/xorg.conf.d"
+        cp "$REPO/shared/30-touchpad.conf" "$GENTOO/etc/X11/xorg.conf.d/"
+        echo "  [OK] 30-touchpad.conf -> /etc/X11/xorg.conf.d/"
+    fi
+
+    # KSM startup script -> direct install
+    if [[ -f "$REPO/shared/ksm.start" ]]; then
+        mkdir -p "$GENTOO/etc/local.d"
+        cp "$REPO/shared/ksm.start" "$GENTOO/etc/local.d/ksm.start"
+        chmod +x "$GENTOO/etc/local.d/ksm.start"
+        echo "  [OK] ksm.start -> /etc/local.d/"
+    fi
+fi
+
+# --- Machine-specific local.d scripts ---
+if [[ -f "$CONFIGS/disable-wakeup.start" ]]; then
+    mkdir -p "$GENTOO/etc/local.d"
+    cp "$CONFIGS/disable-wakeup.start" "$GENTOO/etc/local.d/disable-wakeup.start"
+    chmod +x "$GENTOO/etc/local.d/disable-wakeup.start"
+    echo "  [OK] disable-wakeup.start -> /etc/local.d/"
+fi
+if [[ -f "$REPO/shared/fstrim-weekly" ]]; then
+    mkdir -p "$GENTOO/etc/local.d"
+    cp "$REPO/shared/fstrim-weekly" "$GENTOO/etc/local.d/fstrim-weekly.start"
+    chmod +x "$GENTOO/etc/local.d/fstrim-weekly.start"
+    echo "  [OK] fstrim-weekly -> /etc/local.d/fstrim-weekly.start"
+fi
+
+# --- Part3 chroot install script ---
+if [[ -f "$CONFIGS/gentoo_install_part3_chroot.sh" ]]; then
+    cp "$CONFIGS/gentoo_install_part3_chroot.sh" "$GENTOO/root/"
+    chmod +x "$GENTOO/root/gentoo_install_part3_chroot.sh"
+    echo "  [OK] gentoo_install_part3_chroot.sh -> /root/"
+fi
+
 echo ""
 
 # ============================================================================
@@ -191,7 +315,7 @@ echo "  [OK] /run"
 echo ""
 
 # ============================================================================
-# STEP 7: CREATE PORTAGE TMPFS DIRECTORIES
+# STEP 7: CREATE PORTAGE BUILD DIRECTORIES
 # ============================================================================
 echo "[STEP 7] Creating portage build directories..."
 mkdir -p "$GENTOO/var/tmp/portage"
@@ -200,12 +324,46 @@ echo "  [OK] /var/tmp/portage and /var/tmp/portage-disk created."
 echo ""
 
 # ============================================================================
-# STEP 8: GRAB UUIDs (retry now that disk has settled)
+# STEP 8: GRAB UUIDs
 # ============================================================================
 echo "[STEP 8] Partition UUIDs for fstab:"
-echo "  EFI  (sda1): $(blkid -s UUID -o value /dev/sda1 2>/dev/null || echo 'run blkid manually')"
-echo "  BOOT (sda2): $(blkid -s UUID -o value /dev/sda2 2>/dev/null || echo 'run blkid manually')"
-echo "  ROOT (sda3): $(blkid -s UUID -o value /dev/sda3 2>/dev/null || echo 'run blkid manually')"
+UUID_EFI=$(blkid -s UUID -o value /dev/sda1 2>/dev/null || echo 'UNKNOWN')
+UUID_BOOT=$(blkid -s UUID -o value /dev/sda2 2>/dev/null || echo 'UNKNOWN')
+UUID_ROOT=$(blkid -s UUID -o value /dev/sda3 2>/dev/null || echo 'UNKNOWN')
+echo "  EFI  (sda1): $UUID_EFI"
+echo "  BOOT (sda2): $UUID_BOOT"
+echo "  ROOT (sda3): $UUID_ROOT"
+echo ""
+
+# Save UUIDs for use inside chroot
+cat > "$STAGING/disk-uuids.txt" << EOF
+UUID_EFI=$UUID_EFI
+UUID_BOOT=$UUID_BOOT
+UUID_ROOT=$UUID_ROOT
+EOF
+echo "  [OK] UUIDs saved to /root/mbp-2015-configs/disk-uuids.txt"
+echo ""
+
+# ============================================================================
+# STEP 9: GENERATE FSTAB
+# ============================================================================
+echo "[STEP 9] Generating /etc/fstab..."
+
+cat > "$GENTOO/etc/fstab" << FSTAB
+# /etc/fstab - MacBook Pro 12,1 Gentoo
+# Generated by gentoo_install_part2.sh
+
+# <device>                                <mount>          <fs>   <opts>                                                 <dump> <pass>
+UUID=$UUID_EFI                             /boot/efi        vfat   defaults,noatime,umask=0077                             0      0
+UUID=$UUID_BOOT                            /boot            ext4   defaults,noatime                                        0      2
+UUID=$UUID_ROOT                            /                ext4   defaults,noatime                                        0      1
+
+# Portage tmpfs — 12GB (16GB RAM machine)
+# Large packages redirected to disk via package.env
+tmpfs                                      /var/tmp/portage tmpfs  size=12G,uid=portage,gid=portage,mode=775,nosuid,noatime,nodev 0 0
+FSTAB
+
+echo "  [OK] /etc/fstab generated with UUIDs."
 echo ""
 
 # ============================================================================
@@ -218,16 +376,25 @@ echo ""
 echo "Enter the chroot with:"
 echo "  sudo chroot /mnt/gentoo /bin/bash"
 echo "  source /etc/profile"
-echo "  export PS1='(chroot) \[\033[0;31m\]\u@\h \[\033[0;36m\]\w \$ \[\033[0m\]'"
+echo '  export PS1="(chroot) \[\033[0;31m\]\u@\h \[\033[0;36m\]\w \$ \[\033[0m\]"'
 echo ""
-echo "Once inside the chroot, the next steps are:"
-echo "  1. emerge-webrsync              # sync portage tree"
-echo "  2. eselect profile list         # verify desktop/openrc profile"
-echo "  3. emerge --ask --verbose --update --deep --newuse @world"
-echo "  4. Set timezone, locale, fstab"
-echo "  5. emerge gentoo-sources        # kernel source"
-echo "  6. cd /usr/src/linux && make defconfig"
-echo "  7. bash /root/kernel_config_mbp121.sh"
-echo "  8. make menuconfig && make -j5"
-echo "  9. Install bootloader (rEFInd or GRUB)"
+echo "Config files staged at /root/mbp-2015-configs/:"
+ls -la "$STAGING/" 2>/dev/null || true
 echo ""
+echo "Once inside the chroot, run:"
+echo "  bash /root/gentoo_install_part3_chroot.sh"
+echo ""
+echo "Key phases:"
+echo "  Phase 1:  emerge-webrsync + profile"
+echo "  Phase 2:  Kernel (gentoo-sources + linux-firmware + build)"
+echo "  Phase 3:  GRUB bootloader (Apple: --removable)"
+echo "  Phase 4:  System config (locale, timezone, hostname, user)"
+echo "  Phase 5:  Networking (wpa_supplicant + NetworkManager) — CRITICAL"
+echo "  Phase 6:  All packages (world file)"
+echo "  Phase 7:  Portage infrastructure"
+echo "  Phase 8:  OpenRC services (mbpfan, NOT thermald)"
+echo "  Phase 9:  LightDM + XFCE"
+echo "  Phase 10: PipeWire audio (CS4208)"
+echo "  Phase 11: Apple-specific hardware (zram, WiFi firmware, applesmc)"
+echo "  Phase 12: fstab (already generated!)"
+echo "  Phase 13: VERIFICATION — check everything before reboot"

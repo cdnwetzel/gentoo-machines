@@ -11,7 +11,7 @@
 # USAGE:
 #   cd /usr/src/linux
 #   make defconfig
-#   bash /path/to/kernel_config_mbp121.sh
+#   bash /path/to/kernel_config.sh
 #   make menuconfig    # review
 #   make -j5 && make modules_install && make install
 # ============================================================================
@@ -64,15 +64,23 @@ $SC --module KVM
 $SC --module KVM_INTEL
 
 # --------------------------------------------------------------------------
-# MEMORY / SWAP - 16GB RAM + zram
+# MEMORY / SWAP - 16GB RAM + zram (4GB zstd)
 # --------------------------------------------------------------------------
+# zram built-in (no initramfs); zram-init: load_on_start=no
 $SC --enable ZRAM
-$SC --enable ZRAM_DEF_COMP_LZ4
+$SC --enable ZRAM_BACKEND_ZSTD
+$SC --enable CRYPTO_ZSTD
+$SC --enable ZSTD_COMPRESS
+$SC --enable ZSTD_DECOMPRESS
+$SC --set-str ZRAM_DEF_COMP "zstd"
+
+$SC --enable SWAP
+$SC --enable ZSWAP
+$SC --enable KSM
+
+# LZ4 still useful for other compression
 $SC --enable LZ4_COMPRESS
 $SC --enable LZ4HC_COMPRESS
-$SC --enable ZSWAP
-$SC --enable SWAP
-$SC --enable KSM
 
 # --------------------------------------------------------------------------
 # ACPI / PLATFORM - Apple EFI v1.1
