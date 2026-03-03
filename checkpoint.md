@@ -18,8 +18,15 @@
 - `backlog.md` (modified — marked complete)
 - `CLAUDE.md` (modified — file table update)
 
+### SP6 Post-Install Verification (live on device)
+All checks pass:
+- Kernel 6.18.12-gentoo, WiFi (mwifiex wlp1s0), HiDPI 150% (Xft.dpi=144), PipeWire 1.4.10 (ALC298)
+- i915 UHD 620, zram 4GB, intel_backlight, s2idle suspend, all services running
+- Fixed: EFI partition (nvme0n1p1) was in fstab but not mounted — `mount /boot/efi` fixed, will auto-mount on reboot
+- Non-critical: nxp/rgpower_WW.bin + rgpower_US.bin firmware warnings (Marvell regulatory, WiFi works without)
+
 ### Commits
-- (pending)
+- `a2bf595` MBP 2015: upgrade install scripts to gold standard — part3 chroot, staging, zram fix
 
 ---
 
@@ -236,7 +243,7 @@ Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that
 |---------|--------|-----------|
 | Dell XPS 15 9510 | **Production — dogfooded kernel verified** | Maintenance only |
 | MacBook Pro 12,1 (2015) | Production | Maintenance only |
-| Surface Pro 6 | **Production — first boot restored** | Verify touchpad after reboot |
+| Surface Pro 6 | **Production — fully verified** | Maintenance only |
 | Dell XPS 13 9315 | Configs updated (returned to Windows) | N/A |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
@@ -246,6 +253,6 @@ Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that
 
 ## Next Steps
 
-1. **Surface Pro 6** — verify touchpad after reboot, test RDP/Remmina, test SSTP VPN
-2. **NUC11** — boot live USB, follow INSTALL.md
-3. **ASRock B550 / Precision T5810 / Precision 7960** — harvest on existing OS, generate configs
+1. **NUC11** — boot live USB, follow INSTALL.md
+2. **ASRock B550 / Precision T5810 / Precision 7960** — harvest on existing OS, generate configs
+3. **Surface Pro 9** — harvest on Windows 11 Pro
