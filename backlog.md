@@ -37,7 +37,7 @@
 - [ ] SP6: install `sys-power/powertop` for battery profiling [hardware]
 
 ## Medium Priority — Other
-- [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) [repo+hardware]
+- [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
 - [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, ~~MBP 2015~~, NUC11, Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
