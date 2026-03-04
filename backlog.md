@@ -28,7 +28,7 @@
 - [x] MBP 2015: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP [repo]
 - [x] MBP 2015: install `sys-power/powertop` — profile actual power draw after reboot [hardware]
 - [x] MBP 2015: investigate Apple SMC battery charge threshold — not supported (no charge_control_* sysfs) [hardware]
-- [ ] MBP 2015: kernel rebuild needed — repo .config has SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT but running kernel doesn't [hardware]
+- [x] MBP 2015: kernel rebuild needed — repo .config has SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT but running kernel doesn't [hardware]
 
 ### SP6 Power & Tuning
 - [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
