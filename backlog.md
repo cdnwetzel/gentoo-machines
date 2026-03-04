@@ -11,8 +11,8 @@
 - [x] Enable `CONFIG_SCHED_AUTOGROUP=y` on MBP 2015 — needs rebuild; XPS 9510 + SP6 still pending [repo]
 - [x] Enable `CONFIG_KSM=y` on MBP 2015 — needs rebuild; SP6 still pending [repo]
 - [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 + SP6 — NVMe thermal monitoring [repo]
-- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on all machines — battery monitoring via hwmon [repo]
-- [ ] Enable `CONFIG_THERMAL_HWMON=y` on all machines — thermal zone sysfs export [repo]
+- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on all machines — battery monitoring via hwmon (MBP done) [repo]
+- [ ] Enable `CONFIG_THERMAL_HWMON=y` on all machines — thermal zone sysfs export (MBP done) [repo]
 - [x] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` to SCHEDUTIL on MBP 2015 — needs rebuild; XPS 9510 still pending [repo]
 - [ ] Enable `CONFIG_INTEL_RAPL=y` on XPS 9510 — currently only RAPL_CORE enabled [repo]
 - [ ] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
@@ -26,7 +26,7 @@
 - [x] MBP 2015: install `sys-power/thermald` — CPU freq management via RAPL [hardware]
 - [x] MBP 2015: create `/etc/modprobe.d/brcmfmac.conf` with `power_save=1` — saves 2-5W [repo+hardware]
 - [x] MBP 2015: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP [repo]
-- [ ] MBP 2015: install `app-laptop/powertop` — profile actual power draw after reboot [hardware]
+- [x] MBP 2015: install `sys-power/powertop` — profile actual power draw after reboot [hardware]
 - [x] MBP 2015: investigate Apple SMC battery charge threshold — not supported (no charge_control_* sysfs) [hardware]
 
 ### SP6 Power & Tuning
