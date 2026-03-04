@@ -224,7 +224,7 @@ if $HAS_BATTERY; then
         if crontab -l 2>/dev/null | grep -q "low-battery-hibernate"; then
             echo "  Cron job already exists, skipping"
         else
-            (crontab -l 2>/dev/null; echo "*/2 * * * * $MONITOR_DST") | crontab -
+            (crontab -l 2>/dev/null || true; echo "*/2 * * * * $MONITOR_DST") | crontab -
             echo "  Added cron job: */2 * * * * $MONITOR_DST"
         fi
     else
