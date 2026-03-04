@@ -27,6 +27,8 @@ sys-power/acpid
 sys-power/acpilight
 sys-process/cronie
 www-client/firefox-bin
+x11-apps/xhost
+x11-apps/xrandr
 x11-base/xorg-server
 x11-misc/lightdm
 x11-terms/xfce4-terminal
