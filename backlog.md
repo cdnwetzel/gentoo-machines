@@ -8,12 +8,12 @@
 ## Medium Priority — Kernel & Power Optimization (All Machines)
 
 ### Cross-Machine Kernel Config (next rebuild)
-- [ ] Enable `CONFIG_SCHED_AUTOGROUP=y` on all machines — desktop responsiveness during builds [repo]
-- [ ] Enable `CONFIG_KSM=y` on MBP 2015 + SP6 — script enables it but .config has it disabled [repo]
+- [x] Enable `CONFIG_SCHED_AUTOGROUP=y` on MBP 2015 — needs rebuild; XPS 9510 + SP6 still pending [repo]
+- [x] Enable `CONFIG_KSM=y` on MBP 2015 — needs rebuild; SP6 still pending [repo]
 - [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 + SP6 — NVMe thermal monitoring [repo]
 - [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on all machines — battery monitoring via hwmon [repo]
 - [ ] Enable `CONFIG_THERMAL_HWMON=y` on all machines — thermal zone sysfs export [repo]
-- [ ] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` from USERSPACE to SCHEDUTIL on XPS 9510 + MBP 2015 [repo]
+- [x] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` to SCHEDUTIL on MBP 2015 — needs rebuild; XPS 9510 still pending [repo]
 - [ ] Enable `CONFIG_INTEL_RAPL=y` on XPS 9510 — currently only RAPL_CORE enabled [repo]
 - [ ] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
 - [ ] Fix XPS 9510 kernel_config.sh mismatches — `SCHED_AUTOGROUP`, `BLK_DEV_THROTTLING` in script but disabled in .config [repo]
