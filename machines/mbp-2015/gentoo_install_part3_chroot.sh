@@ -430,6 +430,25 @@ echo "[11.5] Verifying applesmc module..."
 find /lib/modules/ -name "applesmc.ko*" 2>/dev/null | head -1 | \
     xargs -I{} echo "  [OK] applesmc module: {}" || echo "  [WARN] applesmc module not found (check kernel config)"
 
+echo "[11.6] Installing sysctl performance tuning..."
+if [[ -f "$CONFIGS/sysctl-performance.conf" ]]; then
+    cp "$CONFIGS/sysctl-performance.conf" /etc/sysctl.d/99-mbp2015-performance.conf
+    echo "  [OK] sysctl tuning installed (swappiness=10, sched_autogroup, TCP)"
+else
+    echo "  [WARN] sysctl-performance.conf not found in configs"
+fi
+
+echo "[11.7] Installing WiFi power save..."
+if [[ -f "$CONFIGS/modprobe-brcmfmac.conf" ]]; then
+    cp "$CONFIGS/modprobe-brcmfmac.conf" /etc/modprobe.d/brcmfmac.conf
+    echo "  [OK] brcmfmac power_save=1 installed (saves 2-5W on battery)"
+else
+    echo "  [WARN] modprobe-brcmfmac.conf not found in configs"
+fi
+
+echo "[11.8] Configuring thermald..."
+rc-update add thermald default 2>/dev/null && echo "  [OK] thermald added to default runlevel" || echo "  [WARN] thermald not installed yet — emerge sys-power/thermald"
+
 echo ""
 echo "[OK] Phase 11 complete."
 echo ""
