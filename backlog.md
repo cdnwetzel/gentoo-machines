@@ -23,9 +23,9 @@
 - [ ] XPS 9510: add Dell battery charge thresholds to tlp.conf — `START_CHARGE_THRESH_BAT0=40` / `STOP_CHARGE_THRESH_BAT0=80` [repo+hardware]
 
 ### MBP 2015 Power & Tuning
-- [ ] MBP 2015: install `sys-power/thermald` — no power management daemon currently, CPU freq governor is USERSPACE with nothing controlling it [hardware]
-- [ ] MBP 2015: create `/etc/modprobe.d/brcmfmac.conf` with `power_save=1` — WiFi at full power always, saves 2-5W [repo+hardware]
-- [ ] MBP 2015: create sysctl tuning file — vm.swappiness=10, dirty_ratio, sched_autogroup, TCP tuning (critical on 2C/4T during emerges) [repo]
+- [x] MBP 2015: install `sys-power/thermald` — CPU freq management via RAPL [hardware]
+- [x] MBP 2015: create `/etc/modprobe.d/brcmfmac.conf` with `power_save=1` — saves 2-5W [repo+hardware]
+- [x] MBP 2015: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP [repo]
 - [ ] MBP 2015: install `app-laptop/powertop` — profile actual power draw [hardware]
 - [ ] MBP 2015: investigate Apple SMC battery charge threshold support [hardware]
 

@@ -25,6 +25,7 @@ sys-kernel/installkernel
 sys-kernel/linux-firmware
 sys-power/acpid
 sys-power/acpilight
+sys-power/thermald
 sys-process/cronie
 www-client/firefox-bin
 x11-apps/xhost
