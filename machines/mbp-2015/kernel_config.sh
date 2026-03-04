@@ -48,6 +48,7 @@ $SC --enable SCHED_MC
 $SC --enable SCHED_SMT
 $SC --enable SCHED_AUTOGROUP
 $SC --enable X86_INTEL_PSTATE
+$SC --enable CPU_FREQ_STAT
 $SC --enable CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 $SC --enable INTEL_IDLE
 $SC --enable MICROCODE
