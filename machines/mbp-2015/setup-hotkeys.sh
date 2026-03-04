@@ -44,31 +44,10 @@ xfconf-query -c "$XKS" -n -t string -p "$CMD/XF86AudioMute" -s "amixer set Maste
 # NOTE: Do NOT bind XF86AudioLowerVolume / XF86AudioRaiseVolume —
 # xfce4-pulseaudio-plugin handles F11/F12 natively and custom bindings conflict.
 
-echo "=== Adding pulseaudio plugin to top panel ==="
-# Find next available plugin ID
-MAX_ID=$(xfconf-query -c xfce4-panel -l | grep '/plugins/plugin-' | sed 's|.*/plugin-||' | sed 's|/.*||' | sort -n -u | tail -1)
-if [ -z "$MAX_ID" ] || [ "$MAX_ID" -eq 0 ]; then
-    echo "ERROR: Could not read panel plugin IDs" >&2
-    exit 1
-fi
-NEXT_ID=$((MAX_ID + 1))
-echo "Max plugin ID: $MAX_ID, creating plugin-${NEXT_ID}"
-
-# Create the pulseaudio plugin
-xfconf-query -c xfce4-panel -n -t string -p "/plugins/plugin-${NEXT_ID}" -s "pulseaudio"
-
-# Insert before clock (plugin-8) — between systray-6 and separator-7
-# Current: [1,2,3,4,5,6,7,8,9,10] → [1,2,3,4,5,6,NEXT,7,8,9,10]
-xfconf-query -c xfce4-panel -n -t int -t int -t int -t int -t int -t int -t int -t int -t int -t int -t int \
-  -p /panels/panel-1/plugin-ids \
-  -s 1 -s 2 -s 3 -s 4 -s 5 -s 6 -s "${NEXT_ID}" -s 7 -s 8 -s 9 -s 10
-
 echo ""
 echo "=== Done! ==="
-echo "Plugin ${NEXT_ID} (pulseaudio) added to panel."
-echo ""
-echo "Restart the panel to apply:"
-echo "  xfce4-panel -r"
-echo ""
 echo "Brightness keys require acpilight + video group membership."
 echo "Log out and back in if you just got added to the video group."
+echo ""
+echo "NOTE: PulseAudio and battery plugins are configured by shared/xfce4-panel.sh"
+echo "      (run via shared/restore-desktop.sh)."

@@ -8,7 +8,7 @@ set -euo pipefail
 echo "Restoring XFCE4 panel configuration..."
 
 # --- Panel layout ---
-# Panel 1: top bar (app menu, tasklist, pager, systray, clock, actions)
+# Panel 1: top bar (app menu, tasklist, pager, systray, volume, battery, clock, actions)
 # Panel 2: bottom dock (show desktop, launchers, directory menu) - autohide
 
 xfconf-query -c xfce4-panel -p /configver -n -t int -s 2
@@ -20,7 +20,7 @@ xfconf-query -c xfce4-panel -p /panels/panel-1/icon-size -n -t int -s 16
 xfconf-query -c xfce4-panel -p /panels/panel-1/length -n -t int -s 100
 xfconf-query -c xfce4-panel -p /panels/panel-1/plugin-ids -n -a \
     -t int -s 1 -t int -s 2 -t int -s 3 -t int -s 4 -t int -s 5 \
-    -t int -s 6 -t int -s 19 -t int -s 7 -t int -s 8 -t int -s 9 -t int -s 10
+    -t int -s 6 -t int -s 19 -t int -s 22 -t int -s 7 -t int -s 8 -t int -s 9 -t int -s 10
 xfconf-query -c xfce4-panel -p /panels/panel-1/position -n -t string -s "p=6;x=0;y=0"
 xfconf-query -c xfce4-panel -p /panels/panel-1/position-locked -n -t bool -s true
 xfconf-query -c xfce4-panel -p /panels/panel-1/size -n -t int -s 26
@@ -58,6 +58,8 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -n -t bool -s true
 # 19: PulseAudio (volume control — works with PipeWire-pulse)
 xfconf-query -c xfce4-panel -p /plugins/plugin-19 -n -t string -s "pulseaudio"
 xfconf-query -c xfce4-panel -p /plugins/plugin-19/enable-keyboard-shortcuts -n -t bool -s true
+# 22: Battery (laptops — gracefully hidden on desktops without battery)
+xfconf-query -c xfce4-panel -p /plugins/plugin-22 -n -t string -s "battery"
 # 7: Separator
 xfconf-query -c xfce4-panel -p /plugins/plugin-7 -n -t string -s "separator"
 xfconf-query -c xfce4-panel -p /plugins/plugin-7/style -n -t int -s 0
