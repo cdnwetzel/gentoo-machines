@@ -28,6 +28,7 @@
 - [x] MBP 2015: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP [repo]
 - [x] MBP 2015: install `sys-power/powertop` — profile actual power draw after reboot [hardware]
 - [x] MBP 2015: investigate Apple SMC battery charge threshold — not supported (no charge_control_* sysfs) [hardware]
+- [ ] MBP 2015: kernel rebuild needed — repo .config has SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT but running kernel doesn't [hardware]
 
 ### SP6 Power & Tuning
 - [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
@@ -45,7 +46,7 @@
 ## Low Priority
 - [ ] Harvest ASRock B550 / Ryzen 9 5950X (Fedora 42) [hardware]
 - [ ] Harvest Dell Precision T5810 (Fedora 42) [hardware]
-- [ ] Harvest Dell Precision 7960 (RHEL 10.1, harvest only — stays production AI/ML) [hardware]
+- [ ] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]
 - [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]

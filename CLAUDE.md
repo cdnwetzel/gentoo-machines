@@ -10,13 +10,13 @@ Multi-machine Gentoo Linux kernel configuration framework. Each machine director
 
 ```
 machines/           Per-machine kernel configs, make.conf, hardware docs
-  xps-9315/         Dell XPS 13 9315 (Alder Lake) - CONFIGS UPDATED (returned to Windows)
+  xps-9315/         Dell XPS 13 9315 (Alder Lake) - PRODUCTION (config maintained)
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
-  precision-7960/   Dell Precision 7960 / Xeon W5 (harvest only)
+  precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
 tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh
@@ -29,13 +29,13 @@ INSTALL.md          General-purpose installation guide (any machine)
 
 | # | Machine | CPU | GPU | Kernel Status | Current OS |
 |---|---------|-----|-----|---------------|------------|
-| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Configs updated | Windows (returned) |
+| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production (config maintained) | Windows (returned) |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| 6 | Dell Precision T5810 | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
-| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Harvest only | RHEL 10.1 (production AI/ML) |
+| 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Planned | Fedora 42 |
+| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
@@ -342,6 +342,6 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 ## Future Machine Notes
 
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
-- **Precision T5810**: Broadwell-EP Xeon — ECC memory, `-march=broadwell`, older chipset
-- **Precision 7960**: Harvest only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
+- **Precision T5810**: Broadwell-EP Xeon — ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older chipset
+- **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
 - **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).
