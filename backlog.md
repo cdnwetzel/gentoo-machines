@@ -47,7 +47,7 @@
 - [ ] Harvest Dell Precision T5810 (Fedora 42) [hardware]
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1, harvest only — stays production AI/ML) [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
-- [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional) [repo+hardware]
+- [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]
 - [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]
 - [ ] All machines: consider `CONFIG_SECURITY_LOCKDOWN_LSM=y` for defense-in-depth [repo]
 - [ ] XPS 9510: add NVMe APST latency tuning (`nvme_core.default_ps_max_latency_us=5000`) [repo]
