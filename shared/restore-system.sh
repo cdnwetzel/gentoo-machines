@@ -28,25 +28,36 @@ cp "${SCRIPT_DIR}/acpi-default.sh" /etc/acpi/default.sh
 echo "Done."
 echo
 
-# LightDM display setup
-echo "[3/8] Installing LightDM display setup..."
-cp "${SCRIPT_DIR}/lightdm-display-setup.sh" /etc/lightdm/display-setup.sh
-chmod +x /etc/lightdm/display-setup.sh
-cp "${SCRIPT_DIR}/lightdm.conf" /etc/lightdm/lightdm.conf
-echo "Done."
-echo
-
-# LightDM GTK greeter config (machine-specific HiDPI)
+# LightDM display setup (use machine-specific HiDPI config if available)
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PRODUCT=$(cat /sys/class/dmi/id/product_name 2>/dev/null || true)
 case "$PRODUCT" in
-    *"Surface Pro 6"*)  GREETER_MACHINE_DIR="${REPO_DIR}/machines/surface-pro-6" ;;
-    *"Surface Pro 9"*)  GREETER_MACHINE_DIR="${REPO_DIR}/machines/surface-pro-9" ;;
-    *)                  GREETER_MACHINE_DIR="" ;;
+    *"Surface Pro 6"*)  HIDPI_MACHINE_DIR="${REPO_DIR}/machines/surface-pro-6" ;;
+    *"Surface Pro 9"*)  HIDPI_MACHINE_DIR="${REPO_DIR}/machines/surface-pro-9" ;;
+    *"MacBookPro12,1"*) HIDPI_MACHINE_DIR="${REPO_DIR}/machines/mbp-2015" ;;
+    *)                  HIDPI_MACHINE_DIR="" ;;
 esac
-if [[ -n "$GREETER_MACHINE_DIR" && -f "$GREETER_MACHINE_DIR/lightdm-gtk-greeter.conf" ]]; then
+
+echo "[3/8] Installing LightDM config..."
+if [[ -n "$HIDPI_MACHINE_DIR" && -f "$HIDPI_MACHINE_DIR/lightdm.conf" ]]; then
+    cp "$HIDPI_MACHINE_DIR/lightdm.conf" /etc/lightdm/lightdm.conf
+    echo "  Using HiDPI lightdm.conf (X -dpi 144)"
+else
+    cp "${SCRIPT_DIR}/lightdm.conf" /etc/lightdm/lightdm.conf
+fi
+if [[ -n "$HIDPI_MACHINE_DIR" && -f "$HIDPI_MACHINE_DIR/lightdm-display-setup.sh" ]]; then
+    cp "$HIDPI_MACHINE_DIR/lightdm-display-setup.sh" /etc/lightdm/display-setup.sh
+    echo "  Using HiDPI display-setup.sh (xrandr --dpi 144)"
+else
+    cp "${SCRIPT_DIR}/lightdm-display-setup.sh" /etc/lightdm/display-setup.sh
+fi
+chmod +x /etc/lightdm/display-setup.sh
+echo "Done."
+echo
+
+if [[ -n "$HIDPI_MACHINE_DIR" && -f "$HIDPI_MACHINE_DIR/lightdm-gtk-greeter.conf" ]]; then
     echo "[4/8] Installing LightDM greeter HiDPI config..."
-    cp "$GREETER_MACHINE_DIR/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
+    cp "$HIDPI_MACHINE_DIR/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
     echo "Done."
 else
     echo "[4/8] LightDM greeter HiDPI: not needed for this display."

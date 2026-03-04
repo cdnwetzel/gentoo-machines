@@ -45,6 +45,7 @@ PRODUCT=$(cat /sys/class/dmi/id/product_name 2>/dev/null || true)
 case "$PRODUCT" in
     *"Surface Pro 6"*)  MACHINE_DIR="${REPO_DIR}/machines/surface-pro-6" ;;
     *"Surface Pro 9"*)  MACHINE_DIR="${REPO_DIR}/machines/surface-pro-9" ;;
+    *"MacBookPro12,1"*) MACHINE_DIR="${REPO_DIR}/machines/mbp-2015" ;;
     *)                  MACHINE_DIR="" ;;
 esac
 if [[ -n "$MACHINE_DIR" && -f "$MACHINE_DIR/hidpi-setup.sh" ]]; then
