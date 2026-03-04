@@ -9,11 +9,11 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
 | [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Production** | Gentoo |
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
-| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Configs updated | Windows (returned) |
+| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Production (config maintained) | Windows (returned) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | TBD | Planned | Fedora 42 |
-| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Harvest only | RHEL 10.1 |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Planned | Fedora 42 |
+| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
 NVIDIA machines use **proprietary nvidia-drivers**. The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads.
@@ -44,7 +44,7 @@ gentoo-machines/
 │   │   ├── kernel_config.sh  # Programmatic kernel config (Marvell WiFi, Surface HW)
 │   │   ├── HARDWARE.md    # Hardware reference (5 harvest rounds)
 │   │   └── ...            # 3-phase install scripts, HiDPI, IPTSD, WiFi power save fix
-│   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - CONFIGS UPDATED
+│   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - PRODUCTION (config maintained)
 │   │   ├── .config        # Kernel config
 │   │   ├── make.conf      # Portage build settings (-march=alderlake)
 │   │   └── HARDWARE.md    # Hardware reference
@@ -54,7 +54,7 @@ gentoo-machines/
 │   │   └── HARDWARE.md    # Hardware reference
 │   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PLANNED
 │   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PLANNED
-│   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - HARVEST ONLY
+│   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
 │   └── surface-pro-9/     # Surface Pro 9 - PLANNED
 ├── tools/
 │   ├── harvest.sh         # General-purpose hardware inventory (15 sections)
@@ -174,11 +174,11 @@ Broadwell i7 with full Apple hardware support: applesmc (35 sensors), mbpfan (fa
 ### Production: Surface Pro 6
 Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense display with 150% HiDPI scaling. WiFi power save workarounds for suspend reliability. Full 3-phase automated install with HiDPI configuration throughout (LightDM, XFCE, GTK greeter).
 
-### Harvest Only: Precision 7960 (Multi-GPU Xeon W)
+### Reference Only: Precision 7960 (Multi-GPU Xeon W)
 Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
 
 ### Planned: ASRock B550 (First AMD)
 Ryzen 9 5950X with SATA SSDs. First AMD build — needs `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`.
 
 ### Planned: Precision T5810 (Xeon Broadwell-EP)
-ECC memory, `-march=broadwell`, older PCH. Currently runs Fedora 42.
+ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older PCH. Currently runs Fedora 42.
