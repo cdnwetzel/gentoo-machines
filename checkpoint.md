@@ -1,14 +1,31 @@
 # Checkpoint
 
-## Latest Session: MBP 2015 Install Scripts Gold Standard
+## Latest Session: MBP 2015 Kernel Rebuild + Inventory Updates
 
 ### What Was Done
-1. **kernel_config.sh**: Fixed zram compression LZ4→ZSTD (matching zram-init.conf that already specified zstd), fixed stale `kernel_config_mbp121.sh` filename in USAGE header
-2. **gentoo_install_part3_chroot.sh** (new): 13-phase one-shot chroot install modeled on SP6 gold standard. MBP-specific: `--removable` for Apple EFI GRUB, `mbpfan` (not thermald/tlp), BCM43602 WiFi firmware fix, CS4208 audio quirk note, applesmc verification, `libata.force=noncq` + `reboot=pci` boot param checks
-3. **gentoo_install_part2.sh** (rewrite): Added `REPO` variable, rewrote STEP 4 with staging dir `/root/mbp-2015-configs/` (all 9 previously-orphaned configs, shared portage files, restore scripts, local.d scripts, part3 script), replaced STEP 8 with UUID capture + auto-generated fstab (12GB portage tmpfs for 16GB RAM)
-4. **post_install_setup.sh**: Added "SUPERSEDED by part3" notice
-5. **backlog.md**: Marked MBP install scripts upgrade complete
-6. **CLAUDE.md**: Added part3 to file table, updated descriptions
+1. **MBP 2015 kernel rebuild**: Applied repo .config with SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT — all now live and verified
+2. **FaceTime camera (facetimehd)**: Researched — works but high-maintenance (manual rebuild every kernel update, no Gentoo ebuild, suspend issues). Closed as not worth it.
+3. **Machine inventory sync across all docs**:
+   - XPS 9315: "Configs updated" → "Production (config maintained)"
+   - Precision T5810: GPU from TBD → 2x NVIDIA GTX 1050 Ti
+   - Precision 7960: "Harvest only" → "Reference only"
+4. **Memory rule added**: Always keep CLAUDE.md, README.md, backlog.md, MEMORY.md in sync
+
+### Commits
+- `2fe503c` Update machine inventory: T5810 GPU, 7960 reference only, XPS 9315 status
+- `b44fd3e` Mark MBP 2015 kernel rebuild complete
+- `8dabb87` Close FaceTime camera item
+
+### Next Session: XPS 9510
+Open items:
+- Kernel: NVME_HWMON, INTEL_RAPL, kernel_config.sh mismatches
+- Power: hibernate-setup.sh, Dell battery charge thresholds in tlp.conf
+- Hardware: USB-C hub test, clamshell mode test
+- Low: NVMe APST tuning, vm.max_map_count for PyTorch
+
+---
+
+## Previous Session: MBP 2015 Install Scripts Gold Standard
 
 ### Files Created/Modified
 - `machines/mbp-2015/kernel_config.sh` (modified — zram ZSTD + filename fix)
@@ -242,14 +259,14 @@ Built 3 future-proof kernel config tools: kconfig-lint.sh (static validator that
 ### Machine Status
 | Machine | Status | Next Step |
 |---------|--------|-----------|
-| Dell XPS 15 9510 | **Production — dogfooded kernel verified** | Maintenance only |
-| MacBook Pro 12,1 (2015) | Production | Maintenance only |
-| Surface Pro 6 | **Production — fully verified** | Maintenance only |
-| Dell XPS 13 9315 | Configs updated (returned to Windows) | N/A |
+| Dell XPS 15 9510 | **Production** | Kernel config fixes, hibernate, battery thresholds |
+| MacBook Pro 12,1 (2015) | **Production — fully complete** | No open items |
+| Surface Pro 6 | **Production — fully verified** | SP6 power tuning (WiFi, sysctl, powertop) |
+| Dell XPS 13 9315 | Production (config maintained) | N/A (returned) |
 | Intel NUC11TNBi5 | Config ready | Boot live USB, follow INSTALL.md |
 | ASRock B550 / Ryzen 9 5950X | Placeholder | Harvest on Fedora 42 |
-| Dell Precision T5810 | Placeholder | Harvest on Fedora 42 |
-| Dell Precision 7960 | Placeholder | Harvest on RHEL 10.1 |
+| Dell Precision T5810 | Placeholder | Harvest on Fedora 42 (2x GTX 1050 Ti) |
+| Dell Precision 7960 | Reference only | Harvest on RHEL 10.1 |
 | Surface Pro 9 | Placeholder | Harvest on Windows 11 Pro |
 
 ## Next Steps
