@@ -5,7 +5,37 @@
 - [x] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU [hardware]
 - [x] MBP 2015: upgrade install scripts to XPS/SP6 standard — 9 orphaned files, filename mismatch, zram algo inconsistency [repo]
 
-## Medium Priority
+## Medium Priority — Kernel & Power Optimization (All Machines)
+
+### Cross-Machine Kernel Config (next rebuild)
+- [ ] Enable `CONFIG_SCHED_AUTOGROUP=y` on all machines — desktop responsiveness during builds [repo]
+- [ ] Enable `CONFIG_KSM=y` on MBP 2015 + SP6 — script enables it but .config has it disabled [repo]
+- [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 + SP6 — NVMe thermal monitoring [repo]
+- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on all machines — battery monitoring via hwmon [repo]
+- [ ] Enable `CONFIG_THERMAL_HWMON=y` on all machines — thermal zone sysfs export [repo]
+- [ ] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` from USERSPACE to SCHEDUTIL on XPS 9510 + MBP 2015 [repo]
+- [ ] Enable `CONFIG_INTEL_RAPL=y` on XPS 9510 — currently only RAPL_CORE enabled [repo]
+- [ ] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
+- [ ] Fix XPS 9510 kernel_config.sh mismatches — `SCHED_AUTOGROUP`, `BLK_DEV_THROTTLING` in script but disabled in .config [repo]
+
+### XPS 9510 Power & Battery
+- [ ] XPS 9510: run `shared/hibernate-setup.sh` — 32GB swap file + GRUB resume + low-battery monitor [hardware]
+- [ ] XPS 9510: add Dell battery charge thresholds to tlp.conf — `START_CHARGE_THRESH_BAT0=40` / `STOP_CHARGE_THRESH_BAT0=80` [repo+hardware]
+
+### MBP 2015 Power & Tuning
+- [ ] MBP 2015: install `sys-power/thermald` — no power management daemon currently, CPU freq governor is USERSPACE with nothing controlling it [hardware]
+- [ ] MBP 2015: create `/etc/modprobe.d/brcmfmac.conf` with `power_save=1` — WiFi at full power always, saves 2-5W [repo+hardware]
+- [ ] MBP 2015: create sysctl tuning file — vm.swappiness=10, dirty_ratio, sched_autogroup, TCP tuning (critical on 2C/4T during emerges) [repo]
+- [ ] MBP 2015: install `app-laptop/powertop` — profile actual power draw [hardware]
+- [ ] MBP 2015: investigate Apple SMC battery charge threshold support [hardware]
+
+### SP6 Power & Tuning
+- [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
+- [ ] SP6: create sysctl tuning file — even more critical with 8GB RAM + zram [repo]
+- [ ] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — reduce s2idle power drain [hardware]
+- [ ] SP6: install `sys-power/powertop` for battery profiling [hardware]
+
+## Medium Priority — Other
 - [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) [repo+hardware]
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
 - [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, MBP 2015, NUC11, Precision 7960 [hardware]
@@ -19,8 +49,18 @@
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional) [repo+hardware]
 - [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power [repo+hardware]
+- [ ] All machines: consider `CONFIG_SECURITY_LOCKDOWN_LSM=y` for defense-in-depth [repo]
+- [ ] XPS 9510: add NVMe APST latency tuning (`nvme_core.default_ps_max_latency_us=5000`) [repo]
+- [ ] XPS 9510: add `vm.max_map_count=262144` to sysctl for PyTorch/CUDA large models [repo]
 
 ## Completed
+- [x] MBP 2015: hibernate setup — 16GB swap file, GRUB resume params, low-battery cron monitor (5%)
+- [x] MBP 2015: HiDPI setup (150%/144 DPI) — Xresources, xrandr autostart, LightDM, greeter, GRUB_GFXMODE
+- [x] MBP 2015: run restore-desktop.sh + restore-system.sh + setup-hotkeys.sh
+- [x] Add battery plugin (plugin-22) to shared xfce4-panel.sh
+- [x] Update restore-system.sh to use machine-specific LightDM/greeter for HiDPI machines
+- [x] Fix hibernate-setup.sh: crontab -l fails under set -e with no existing crontab
+- [x] MBP 2015: add xrandr + xhost to world file
 - [x] Audit XPS 9510 + MBP 2015 install scripts for orphaned files (XPS clean, MBP needs work)
 - [x] SP6: fix 6 install bugs — GRUB defaults, WiFi power save, LightDM HiDPI staging, ccache, ACPI_DPTF, local.d scripts
 - [x] Rename local directory ~/ai/gentoo_dell_xps9315 → ~/ai/gentoo-machines (already done)
