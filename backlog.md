@@ -26,8 +26,8 @@
 - [x] MBP 2015: install `sys-power/thermald` — CPU freq management via RAPL [hardware]
 - [x] MBP 2015: create `/etc/modprobe.d/brcmfmac.conf` with `power_save=1` — saves 2-5W [repo+hardware]
 - [x] MBP 2015: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP [repo]
-- [ ] MBP 2015: install `app-laptop/powertop` — profile actual power draw [hardware]
-- [ ] MBP 2015: investigate Apple SMC battery charge threshold support [hardware]
+- [ ] MBP 2015: install `app-laptop/powertop` — profile actual power draw after reboot [hardware]
+- [x] MBP 2015: investigate Apple SMC battery charge threshold — not supported (no charge_control_* sysfs) [hardware]
 
 ### SP6 Power & Tuning
 - [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
@@ -38,7 +38,7 @@
 ## Medium Priority — Other
 - [ ] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) [repo+hardware]
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
-- [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, MBP 2015, NUC11, Precision 7960 [hardware]
+- [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, ~~MBP 2015~~, NUC11, Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external [hardware]
 
@@ -48,7 +48,7 @@
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1, harvest only — stays production AI/ML) [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [ ] MBP 2015: add WiFi NVRAM txt file for full 5GHz channel support (optional) [repo+hardware]
-- [ ] MBP 2015: consider blacklisting thunderbolt module to save ~2W idle power [repo+hardware]
+- [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]
 - [ ] All machines: consider `CONFIG_SECURITY_LOCKDOWN_LSM=y` for defense-in-depth [repo]
 - [ ] XPS 9510: add NVMe APST latency tuning (`nvme_core.default_ps_max_latency_us=5000`) [repo]
 - [ ] XPS 9510: add `vm.max_map_count=262144` to sysctl for PyTorch/CUDA large models [repo]
