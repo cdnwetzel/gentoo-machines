@@ -446,7 +446,15 @@ else
     echo "  [WARN] modprobe-brcmfmac.conf not found in configs"
 fi
 
-echo "[11.8] Configuring thermald..."
+echo "[11.8] Installing Apple keyboard mapping..."
+if [[ -f "$CONFIGS/modprobe-hid-apple.conf" ]]; then
+    cp "$CONFIGS/modprobe-hid-apple.conf" /etc/modprobe.d/hid-apple.conf
+    echo "  [OK] hid_apple: fnmode=2 (F1-F12 default), swap_opt_cmd=1 (Cmd=Super)"
+else
+    echo "  [WARN] modprobe-hid-apple.conf not found in configs"
+fi
+
+echo "[11.9] Configuring thermald..."
 rc-update add thermald default 2>/dev/null && echo "  [OK] thermald added to default runlevel" || echo "  [WARN] thermald not installed yet — emerge sys-power/thermald"
 
 echo ""
