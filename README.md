@@ -61,7 +61,7 @@ gentoo-machines/
 │   ├── deep_harvest.sh    # Deep hardware discovery with module/firmware detection
 │   ├── kconfig-lint.sh    # Static kernel config validator (5 checks, 19K symbols)
 │   ├── kernel-config-template.sh  # Auto-generate kernel_config.sh from harvest data
-│   ├── update-kernel.sh            # Local kernel update tool (check/prepare/build/install/verify)
+│   ├── update-kernel.sh            # Prompted kernel + system update workflow with resume
 │   ├── build-kernel-remote.sh     # Cross-compile and deploy kernels over SSH
 │   └── generate-config.sh         # AI-powered config generation (uses Claude CLI)
 ├── shared/
@@ -120,18 +120,42 @@ Uses Claude CLI to analyze harvest data against a base config and generate `.con
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 ```
 
-### update-kernel.sh — Local Kernel Update Tool
-Guided kernel update workflow for production machines. Auto-detects machine via hostname + DMI. Handles same-series updates (copy .config + olddefconfig) and cross-series migrations (defconfig + kernel_config.sh + olddefconfig). Includes portage sync, NVIDIA module rebuild, patch application, post-reboot verification, and old kernel cleanup.
+### update-kernel.sh — Kernel and System Update Tool
+
+End-to-end update workflow for production machines. Auto-detects machine via hostname + DMI fallback. Handles portage sync, system package updates, kernel config migration, build, install, NVIDIA module rebuild, post-reboot verification, and old kernel cleanup.
+
+**Default usage** — prompted step-by-step with resume:
 
 ```bash
-sudo tools/update-kernel.sh fetch       # emerge --sync + gentoo-sources + eselect kernel
-tools/update-kernel.sh check            # pre-flight: versions, disk, patches, config strategy
-tools/update-kernel.sh prepare           # backup .config, migrate config, apply patches, lint
-tools/update-kernel.sh build             # compile with make -j$(nproc)
-sudo tools/update-kernel.sh install      # modules_install + make install + NVIDIA rebuild
-tools/update-kernel.sh verify            # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
-sudo tools/update-kernel.sh clean        # eclean-kernel -n 3, keep current + 2 rollback
+sudo tools/update-kernel.sh           # walks through all phases, prompts Y/n/skip at each step
+# reboot when prompted
+sudo tools/update-kernel.sh           # resumes with verify + clean
 ```
+
+The `full` workflow runs 9 phases in order: `fetch` → `world` → `check` → `prepare` → `build` → `install` → reboot → `verify` → `clean`. Progress is saved to `/var/lib/kernel-update/full-progress`, so the workflow survives interruption and reboot. On resume, completed phases are skipped. Type `reset` at the resume prompt to start over.
+
+**Individual subcommands** — run any phase standalone:
+
+```bash
+sudo tools/update-kernel.sh fetch     # sync portage + install gentoo-sources + eselect kernel
+sudo tools/update-kernel.sh world     # emerge @world + preserved-rebuild + depclean
+tools/update-kernel.sh check          # pre-flight: versions, disk, patches, config strategy
+tools/update-kernel.sh prepare        # backup .config, migrate config, apply patches, lint
+tools/update-kernel.sh build          # compile with make -j$(nproc)
+sudo tools/update-kernel.sh install   # modules_install + make install + NVIDIA rebuild
+tools/update-kernel.sh verify         # post-reboot: dmesg, drivers, GPU, WiFi, zram, services
+sudo tools/update-kernel.sh clean     # eclean-kernel -n 3 (keep current + 2 rollback)
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview what each phase would do without making changes |
+| `--machine NAME` | Override auto-detection (valid: xps-9510, mbp-2015, surface-pro-6, nuc11) |
+| `-h`, `--help` | Show usage |
+
+**Config strategy:** same-series updates (e.g., 6.18.12 → 6.18.16) copy the running `.config` and run `make olddefconfig`. Cross-series migrations (e.g., 6.12 → 6.18) start from `make defconfig`, apply the machine's `kernel_config.sh`, then run `make olddefconfig`.
 
 ### build-kernel-remote.sh — Cross-Compile and Deploy
 Build kernels on a powerful host and deploy over SSH. Auto-detects kernel version from target.
@@ -142,7 +166,15 @@ tools/build-kernel-remote.sh <target> {pull|build|deploy|all}
 
 ## Quick Start
 
-### Deploy an existing config
+### Update an existing machine
+
+```bash
+sudo tools/update-kernel.sh           # prompted workflow: sync, update, build, install
+# reboot
+sudo tools/update-kernel.sh           # resume: verify + clean
+```
+
+### Deploy a kernel config manually
 
 ```bash
 cp machines/<machine>/.config /usr/src/linux/.config
@@ -154,9 +186,9 @@ make install
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-### Full installation
+### Initial Gentoo installation
 
-See **[INSTALL.md](INSTALL.md)** for the complete step-by-step guide. Each production machine also has 3-phase automated install scripts (`gentoo_install_part{1,2,3}_chroot.sh`) for reproducible installs.
+See **[INSTALL.md](INSTALL.md)** for the complete step-by-step guide. Each production machine has 3-phase automated install scripts (`gentoo_install_part{1,2,3}_chroot.sh`) for reproducible installs from a live USB.
 
 ## Portage Configuration
 
