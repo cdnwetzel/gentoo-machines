@@ -141,11 +141,11 @@ sudo tools/update-system.sh fetch          # sync portage + install gentoo-sourc
 sudo tools/update-system.sh world          # emerge @world + preserved-rebuild + depclean
 sudo tools/update-system.sh config-update  # merge updated config files via dispatch-conf
 tools/update-system.sh check               # pre-flight: versions, disk, patches, config strategy
-tools/update-system.sh prepare        # backup .config, migrate config, apply patches, lint
-tools/update-system.sh build          # compile with make -j$(nproc)
-sudo tools/update-system.sh install   # modules_install + make install + NVIDIA rebuild
-tools/update-system.sh verify         # post-reboot: dmesg, drivers, GPU, WiFi, zram, services
-sudo tools/update-system.sh clean     # eclean-kernel -n 3 (keep current + 2 rollback)
+tools/update-system.sh prepare             # backup .config, migrate config, apply patches, lint
+tools/update-system.sh build               # compile with make -j$(nproc)
+sudo tools/update-system.sh install        # modules_install + make install + NVIDIA rebuild
+tools/update-system.sh verify              # post-reboot: dmesg, drivers, GPU, WiFi, zram, services
+sudo tools/update-system.sh clean          # eclean-kernel -n 3 (keep current + 2 rollback)
 ```
 
 **Options:**

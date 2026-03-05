@@ -794,19 +794,21 @@ This repository uses `gentoo-sources` with manual configuration via `kernel_conf
 ### Quick Reference — Minor Updates (Same Series)
 
 ```bash
-# 1. Sync and install new sources (all machines track ~amd64 for 6.18 LTS)
-sudo tools/update-system.sh fetch       # emerge --sync + gentoo-sources + eselect kernel
+# 1. Sync and update system packages
+sudo tools/update-system.sh fetch          # emerge --sync + gentoo-sources + eselect kernel + news
+sudo tools/update-system.sh world          # emerge @world + preserved-rebuild + depclean
+sudo tools/update-system.sh config-update  # merge updated /etc config files via dispatch-conf
 
-# 2. Use the update tool
-tools/update-system.sh check            # pre-flight report
-tools/update-system.sh prepare          # backup + config migrate + patches
-tools/update-system.sh build            # compile
-sudo tools/update-system.sh install     # install + NVIDIA rebuild
+# 2. Build and install kernel
+tools/update-system.sh check               # pre-flight report
+tools/update-system.sh prepare             # backup + config migrate + patches
+tools/update-system.sh build               # compile
+sudo tools/update-system.sh install        # install + NVIDIA rebuild
 # reboot
-tools/update-system.sh verify           # post-reboot checks
+tools/update-system.sh verify              # post-reboot checks
 
 # 3. Clean up old kernels
-sudo tools/update-system.sh clean       # eclean-kernel -n 3
+sudo tools/update-system.sh clean          # eclean-kernel -n 3
 ```
 
 ### Cross-Series Migration
@@ -815,14 +817,16 @@ Cross-series updates (different major.minor) use `kernel_config.sh` to regenerat
 
 ```bash
 # Same workflow — the tool auto-detects cross-series and uses kernel_config.sh
-sudo tools/update-system.sh fetch       # sync + install new sources
-tools/update-system.sh check            # shows "cross-series" strategy
-tools/update-system.sh prepare          # defconfig → kernel_config.sh → olddefconfig
+sudo tools/update-system.sh fetch          # sync + install new sources + news
+sudo tools/update-system.sh world          # update @world (may pull new deps for new kernel)
+sudo tools/update-system.sh config-update  # merge any updated /etc configs
+tools/update-system.sh check               # shows "cross-series" strategy
+tools/update-system.sh prepare             # defconfig → kernel_config.sh → olddefconfig
 tools/update-system.sh build
 sudo tools/update-system.sh install
 # reboot
 tools/update-system.sh verify
-sudo tools/update-system.sh clean       # remove old kernels
+sudo tools/update-system.sh clean          # remove old kernels
 ```
 
 ### Rollback
