@@ -6,12 +6,14 @@
 # machines. Auto-detects which machine via hostname + DMI fallback.
 #
 # Subcommands:
+#   fetch    - Sync portage, install latest gentoo-sources, select new kernel (requires root)
 #   check    - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
 #   prepare  - Backup .config, migrate config (copy or script), apply patches, lint
 #   build    - make -j$(nproc) with timing
 #   install  - modules_install + make install + NVIDIA rebuild + verify state
 #   verify   - Post-reboot checks: dmesg, drivers, GPU, WiFi, zram, services
-#   all      - prepare + build + install (not verify — requires reboot first)
+#   clean    - Remove old kernels, keeping 3 most recent (requires root)
+#   all      - prepare + build + install (not verify or clean — requires reboot first)
 #
 # Flags:
 #   --dry-run          Show what would happen without making changes
@@ -25,10 +27,12 @@
 #     Falls back to .config copy + warning if no script exists
 #
 # Usage:
+#   sudo update-kernel.sh fetch
 #   update-kernel.sh check
 #   update-kernel.sh --dry-run prepare
 #   update-kernel.sh --machine xps-9510 all
 #   update-kernel.sh verify
+#   sudo update-kernel.sh clean
 # ============================================================================
 
 set -euo pipefail
@@ -202,6 +206,82 @@ detect_machine() {
     fi
 
     error "Cannot detect machine. Hostname='${hostname}'. Use --machine <name> to override.\nValid machines: ${!MACHINES[*]}"
+}
+
+# ============================================================================
+# fetch — Sync portage, install latest gentoo-sources, select new kernel
+# ============================================================================
+do_fetch() {
+    [[ $EUID -eq 0 ]] || error "Fetch requires root"
+
+    header "Portage Sync"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: emerge --sync"
+    else
+        emerge --sync
+    fi
+
+    header "Install gentoo-sources"
+    # Check what's available vs installed
+    local available installed
+    available=$(emerge -pv gentoo-sources 2>/dev/null | grep "gentoo-sources" | head -1 || true)
+    info "Available: ${available:-unknown}"
+
+    if $DRY_RUN; then
+        info "[dry-run] Would run: emerge -v gentoo-sources"
+        emerge -pv gentoo-sources 2>/dev/null || true
+    else
+        emerge -v gentoo-sources
+    fi
+
+    header "Select Kernel"
+    # Find the newest kernel source directory
+    local newest=""
+    for d in /usr/src/linux-*; do
+        [[ -d "$d" ]] || continue
+        if [[ -z "$newest" || "$d" > "$newest" ]]; then
+            newest="$d"
+        fi
+    done
+
+    if [[ -z "$newest" ]]; then
+        error "No kernel sources found in /usr/src/"
+    fi
+
+    local newest_name
+    newest_name=$(basename "$newest")
+    local current_target=""
+    if [[ -L /usr/src/linux ]]; then
+        current_target=$(readlink /usr/src/linux)
+        current_target=$(basename "$current_target")
+    fi
+
+    if [[ "$newest_name" == "$current_target" ]]; then
+        info "Already selected: ${newest_name}"
+    else
+        if $DRY_RUN; then
+            info "[dry-run] Would select: ${newest_name} (current: ${current_target:-none})"
+        else
+            # Find the eselect index for this kernel
+            local idx
+            idx=$(eselect kernel list 2>/dev/null | grep "$newest_name" | grep -oP '\[\K[0-9]+' || true)
+            if [[ -n "$idx" ]]; then
+                eselect kernel set "$idx"
+                info "Selected: ${newest_name} (was: ${current_target:-none})"
+            else
+                warn "Could not find eselect index for ${newest_name}"
+                warn "Run manually: eselect kernel list && eselect kernel set <N>"
+            fi
+        fi
+    fi
+
+    # Show current state
+    if [[ -L /usr/src/linux ]]; then
+        info "Symlink: /usr/src/linux → $(readlink /usr/src/linux)"
+    fi
+
+    echo ""
+    info "Run '${0##*/} check' for pre-flight report."
 }
 
 # ============================================================================
@@ -886,6 +966,60 @@ do_all() {
 }
 
 # ============================================================================
+# clean — Remove old kernels via eclean-kernel
+# ============================================================================
+do_clean() {
+    [[ $EUID -eq 0 ]] || error "Clean requires root"
+
+    # Auto-install eclean-kernel if missing
+    if ! command -v eclean-kernel &>/dev/null; then
+        info "eclean-kernel not installed — installing now"
+        if $DRY_RUN; then
+            info "[dry-run] Would run: emerge app-admin/eclean-kernel"
+        else
+            emerge app-admin/eclean-kernel
+        fi
+    fi
+
+    header "Kernel Cleanup"
+    local before_count=0
+    for f in /boot/vmlinuz-*; do
+        [[ -f "$f" ]] || continue
+        before_count=$(( before_count + 1 ))
+    done
+    info "Kernels in /boot before cleanup: ${before_count}"
+
+    if $DRY_RUN; then
+        info "[dry-run] Would run: eclean-kernel -n 3"
+        eclean-kernel -n 3 --pretend
+    else
+        eclean-kernel -n 3
+        info "eclean-kernel complete"
+    fi
+
+    header "Update GRUB"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: grub-mkconfig -o /boot/grub/grub.cfg"
+    else
+        grub-mkconfig -o /boot/grub/grub.cfg
+        info "GRUB config updated"
+    fi
+
+    # Show remaining kernels
+    header "Remaining Kernels"
+    local after_count=0
+    for f in /boot/vmlinuz-*; do
+        [[ -f "$f" ]] || continue
+        info "  $(basename "$f")  ($(stat -c '%y' "$f" | cut -d' ' -f1))"
+        after_count=$(( after_count + 1 ))
+    done
+    info "Kernels remaining: ${after_count}"
+
+    echo ""
+    info "Cleanup complete."
+}
+
+# ============================================================================
 # Usage
 # ============================================================================
 usage() {
@@ -895,11 +1029,13 @@ Usage: ${0##*/} [OPTIONS] COMMAND
 Local kernel update tool for production Gentoo machines.
 
 Commands:
+  fetch      Sync portage, install latest gentoo-sources, select kernel (requires root)
   check      Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
   prepare    Backup .config, migrate config, apply patches, lint
   build      Compile kernel with make -j\$(nproc)
   install    Install modules + kernel + NVIDIA rebuild (requires root)
   verify     Post-reboot verification checks
+  clean      Remove old kernels, keeping 3 most recent (requires root)
   all        Run prepare + build + install (requires root)
 
 Options:
@@ -908,13 +1044,14 @@ Options:
   -h, --help         Show this help
 
 Typical workflow:
-  1. emerge gentoo-sources && eselect kernel set <N>
+  1. sudo ${0##*/} fetch     # sync + install gentoo-sources + eselect kernel
   2. ${0##*/} check
   3. ${0##*/} prepare
   4. ${0##*/} build
-  5. ${0##*/} install        # as root
+  5. sudo ${0##*/} install
   6. reboot
   7. ${0##*/} verify
+  8. sudo ${0##*/} clean     # eclean-kernel -n 3
 EOF
     exit 0
 }
@@ -959,11 +1096,13 @@ if $DRY_RUN; then
 fi
 
 case "$COMMAND" in
+    fetch)   do_fetch ;;
     check)   do_check "$MACHINE" ;;
     prepare) do_prepare "$MACHINE" ;;
     build)   do_build ;;
     install) do_install "$MACHINE" ;;
     verify)  do_verify "$MACHINE" ;;
+    clean)   do_clean ;;
     all)     do_all "$MACHINE" ;;
     *)       error "Unknown command: ${COMMAND}. Run '${0##*/} --help' for usage." ;;
 esac

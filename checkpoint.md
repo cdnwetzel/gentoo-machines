@@ -1,6 +1,40 @@
 # Checkpoint
 
-## Latest Session: Kernel Update Tool + LTS Tracking
+## Latest Session: eclean-kernel Integration + fetch/clean Subcommands
+
+### What Was Done
+1. **Added `fetch` subcommand to `update-kernel.sh`** (~55 lines): `emerge --sync`, `emerge -v gentoo-sources`, auto-detect newest kernel in `/usr/src/`, `eselect kernel set`. Requires root. `--dry-run` runs `emerge -pv` instead. Idempotent (skips if already selected).
+2. **Added `clean` subcommand to `update-kernel.sh`** (~40 lines): `eclean-kernel -n 3` (keep current + 2 rollback), then `grub-mkconfig` to sync GRUB. Requires root. `--dry-run` maps to `eclean-kernel --pretend`. Shows before/after kernel count.
+3. **Added `app-admin/eclean-kernel` to `shared/world`** under System Administration.
+4. **Documentation updates**: CLAUDE.md (fetch/clean examples), INSTALL.md (Kernel Strategy section + cleanup steps), README.md (Kernel Strategy subsection), machine-checklist.md (cleanup step after verify).
+
+### Files Modified
+- `tools/update-kernel.sh` — fetch + clean subcommands, updated header + usage + case
+- `shared/world` — app-admin/eclean-kernel
+- `CLAUDE.md` — update-kernel.sh examples with fetch/clean
+- `INSTALL.md` — Kernel Strategy section, fetch/clean in workflows
+- `README.md` — Kernel Strategy subsection, fetch/clean in tool examples
+- `shared/machine-checklist.md` — cleanup step in Step 9
+
+### Updated Workflow
+```
+1. sudo update-kernel.sh fetch       # sync + install + eselect
+2. update-kernel.sh check            # pre-flight
+3. update-kernel.sh prepare          # config migrate + patches
+4. update-kernel.sh build            # compile
+5. sudo update-kernel.sh install     # modules + kernel + NVIDIA
+6. reboot
+7. update-kernel.sh verify           # post-reboot checks
+8. sudo update-kernel.sh clean       # eclean-kernel -n 3
+```
+
+### Next Session
+- XPS 9510: execute 6.12→6.18 migration with `tools/update-kernel.sh all`
+- Test `fetch` and `clean` on XPS 9510
+
+---
+
+## Previous Session: Kernel Update Tool + LTS Tracking
 
 ### What Was Done
 1. **Created `tools/update-kernel.sh`** (~970 lines): Local kernel update tool for production machines. Auto-detects machine via hostname + DMI fallback. Subcommands: check, prepare, build, install, verify, all. Supports --dry-run and --machine override. Config strategy: same-series (copy .config + olddefconfig) vs cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry: xps-9510, mbp-2015, surface-pro-6, nuc11. Patch registry with version-range scoping. NVIDIA handling: source symlink fix + @module-rebuild. Writes verify state to /var/lib/kernel-update/ for post-reboot checks.

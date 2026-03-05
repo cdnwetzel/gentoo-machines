@@ -144,17 +144,19 @@ instead — see shared/hibernate-setup.sh header for details.
 Once the machine is in production, use `tools/update-kernel.sh` for subsequent kernel updates:
 
 ```bash
-# 1. Install new kernel sources
-emerge --sync && emerge -av gentoo-sources
-eselect kernel set <N>
+# 1. Sync and install new kernel sources
+sudo tools/update-kernel.sh fetch    # emerge --sync + gentoo-sources + eselect kernel
 
 # 2. Guided update
-tools/update-kernel.sh check      # pre-flight
-tools/update-kernel.sh prepare    # config migration + patches
-tools/update-kernel.sh build      # compile
+tools/update-kernel.sh check         # pre-flight
+tools/update-kernel.sh prepare       # config migration + patches
+tools/update-kernel.sh build         # compile
 sudo tools/update-kernel.sh install  # install + module rebuild
 # reboot
-tools/update-kernel.sh verify     # post-reboot checks
+tools/update-kernel.sh verify        # post-reboot checks
+
+# 3. Clean up old kernels
+sudo tools/update-kernel.sh clean    # eclean-kernel -n 3 (keep current + 2 rollback)
 ```
 
 All production machines should have `=sys-kernel/gentoo-sources-6.18* ~amd64` in their `package.accept_keywords` to track the 6.18 LTS series.
