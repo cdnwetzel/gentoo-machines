@@ -101,8 +101,8 @@ find -L "$KSRC" -name 'Kconfig*' -not -path '*/.git/*' -print0 2>/dev/null | \
         next
     }
 
-    # config/menuconfig at start of line — new symbol
-    /^(config|menuconfig)[[:space:]]+[A-Za-z0-9_]+/ {
+    # config/menuconfig — new symbol (may be indented inside choice blocks)
+    /^[[:space:]]*(config|menuconfig)[[:space:]]+[A-Za-z0-9_]+/ {
         flush_sym()
         sym = $2
         type = ""
@@ -127,42 +127,48 @@ find -L "$KSRC" -name 'Kconfig*' -not -path '*/.git/*' -print0 2>/dev/null | \
     # Skip if no active symbol
     sym == "" { next }
 
-    # Help block: starts with tab + "help" or "---help---"
-    # Once in help, all tab-indented text is help until de-indent
-    /^[\t][[:space:]]*(help|---help---)/ {
+    # Help block: starts with indented "help" or "---help---"
+    # Once in help, all deeper-indented text is help until de-indent
+    /^[\t ][[:space:]]*(help|---help---)/ {
         in_help = 1
+        # Record indentation level of help keyword for de-indent detection
+        help_line = $0
+        match(help_line, /^[[:space:]]*/)
+        help_indent = RLENGTH
         next
     }
 
-    # Inside help block: skip all indented content
-    in_help && /^[\t][\t]/ { next }
-    in_help && /^[\t][[:space:]]/ { next }
+    # Inside help block: skip lines indented deeper than the help keyword
     in_help && /^$/ { next }
-    # De-indented line ends help (but could be a property if single-tab)
-    in_help && /^[\t][^\t[:space:]]/ { in_help = 0 }
-    in_help && /^[^\t]/ { in_help = 0 }
+    in_help {
+        match($0, /^[[:space:]]*/)
+        if (RLENGTH > help_indent) next
+        in_help = 0
+    }
 
     # Properties are tab-indented (single tab)
-    /^[\t][[:space:]]*bool/ { type = "bool" }
-    /^[\t][[:space:]]*boolean/ { type = "bool" }
-    /^[\t][[:space:]]*tristate/ { type = "tristate" }
-    /^[\t][[:space:]]*string/ { type = "string" }
-    /^[\t][[:space:]]*int[[:space:]]/ { type = "int" }
-    /^[\t][[:space:]]*hex[[:space:]]/ { type = "hex" }
+    /^[\t ][[:space:]]*bool/ { type = "bool" }
+    /^[\t ][[:space:]]*boolean/ { type = "bool" }
+    /^[\t ][[:space:]]*tristate/ { type = "tristate" }
+    /^[\t ][[:space:]]*def_bool/ { type = "bool" }
+    /^[\t ][[:space:]]*def_tristate/ { type = "tristate" }
+    /^[\t ][[:space:]]*string/ { type = "string" }
+    /^[\t ][[:space:]]*int[[:space:]]/ { type = "int" }
+    /^[\t ][[:space:]]*hex[[:space:]]/ { type = "hex" }
 
     # depends on
-    /^[\t][[:space:]]*depends on[[:space:]]+/ {
+    /^[\t ][[:space:]]*depends on[[:space:]]+/ {
         dep = $0
-        sub(/^[\t][[:space:]]*depends on[[:space:]]+/, "", dep)
+        sub(/^[\t ][[:space:]]*depends on[[:space:]]+/, "", dep)
         sub(/[[:space:]]*$/, "", dep)
         if (depends != "") depends = depends " && "
         depends = depends dep
     }
 
     # select
-    /^[\t][[:space:]]*select[[:space:]]+[A-Za-z0-9_]+/ {
+    /^[\t ][[:space:]]*select[[:space:]]+[A-Za-z0-9_]+/ {
         sel = $0
-        sub(/^[\t][[:space:]]*select[[:space:]]+/, "", sel)
+        sub(/^[\t ][[:space:]]*select[[:space:]]+/, "", sel)
         sub(/[[:space:]].*/, "", sel)
         if (selects != "") selects = selects ","
         selects = selects sel
@@ -283,8 +289,14 @@ while IFS= read -r line; do
             case "$PARENT" in
                 # Architecture / always-on in defconfig
                 X86|X86_64|PCI|ACPI|HAS_IOMEM|HAS_DMA|HAS_IOPORT|MODULES|NET|INET|USB|SND|INPUT|HID|I2C|SPI|GPIOLIB|REGULATOR|SYSFS|PROC_FS|BLOCK|MMU|EXPERT|OF|COMPILE_TEST|PM|THERMAL|HWMON|WATCHDOG|MFD|MEDIA_SUPPORT|DRM|BT|RFKILL|CFG80211|MAC80211|SOUND|TTY|SERIAL_CORE|CRYPTO|STAGING|IIO) continue ;;
-                # x86 arch basics (always set by arch/x86/Kconfig)
-                HAVE_PCI|HAVE_ARCH_TRANSPARENT_HUGEPAGE|HAVE_PREEMPT_DYNAMIC|ARCH_SUPPORTS_ACPI|ARCH_HIBERNATION_POSSIBLE|CPU_SUP_INTEL|CPU_SUP_AMD|CPU_IDLE|CPU_FREQ|DMI|SHMEM|MULTIUSER|SPARSEMEM_VMEMMAP|X86_PAE|AGP|IRQ_REMAP|INDIRECT_IOMEM) continue ;;
+                # x86 arch basics (always set by arch/x86/Kconfig via select)
+                HAVE_PCI|HAVE_ARCH_TRANSPARENT_HUGEPAGE|HAVE_PREEMPT_DYNAMIC|HAVE_ARCH_SECCOMP|HAVE_ARCH_SECCOMP_FILTER|ARCH_SUPPORTS_ACPI|ARCH_SUPPORTS_SCHED_SMT|ARCH_HIBERNATION_POSSIBLE|CPU_SUP_INTEL|CPU_SUP_AMD|CPU_IDLE|CPU_FREQ|DMI|SHMEM|MULTIUSER|SPARSEMEM_VMEMMAP|X86_PAE|AGP|IRQ_REMAP|INDIRECT_IOMEM) continue ;;
+                # ARCH_SUPPORTS_* / HAVE_* / ARCH_* patterns (auto-selected by arch)
+                ARCH_SUPPORTS_*|HAVE_*|ARCH_*) continue ;;
+                # x86 auto-selected symbols (always set on x86_64)
+                X86_LOCAL_APIC|X86_THERMAL_VECTOR|IA32_FEAT_CTL|GENERIC_CLOCKEVENTS|USB_ARCH_HAS_HCD|PAGE_SIZE_LESS_THAN_256KB|SUSPEND_POSSIBLE) continue ;;
+                # Non-x86 architectures (irrelevant in OR deps)
+                ARM64|RISCV|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH) continue ;;
                 # Subsystem parent menus (always on in any desktop config)
                 USB_SUPPORT|HID_SUPPORT|NETDEVICES|NET_CORE|INPUT_MISC|USB_NET_DRIVERS|USB_PCI|NLS|SCSI|LOONGARCH|X86_PLATFORM_DEVICES|DMADEVICES|COMMON_CLK|HIGH_RES_TIMERS|EVENTFD|FB_CORE|BLK_CGROUP|POWERCAP|VIRTUALIZATION|VHOST_MENU|SND_HDA|SND_HDA_CORE|SND_PCI|SND_SOC|SND_HDA|CPU_MITIGATIONS|HYPERVISOR_GUEST|PTP_1588_CLOCK_OPTIONAL|BT_BREDR|IIO_BUFFER|USB_USBNET) continue ;;
             esac
@@ -301,13 +313,23 @@ while IFS= read -r line; do
 
     # Also check depends-on for parent toggles
     if [[ -n "$SYM_DEPS" ]] && [[ "$ACTION" != "disable" ]]; then
+        # Handle OR deps: split on || and check each branch
+        # If ANY branch of an OR dep is satisfied, skip the whole OR group
+        # Split deps into AND-separated clauses first
+        # e.g., "INTEL_MEI_ME && (DRM_I915 || DRM_XE)" → check each clause
         DEP_SYMS=$(echo "$SYM_DEPS" | grep -oE '[A-Z][A-Z0-9_]+' || true)
         for DEP in $DEP_SYMS; do
             case "$DEP" in
                 # Architecture / always-on
                 X86|X86_64|PCI|ACPI|HAS_IOMEM|HAS_DMA|HAS_IOPORT|MODULES|NET|INET|USB|SND|INPUT|HID|I2C|SPI|GPIOLIB|REGULATOR|SYSFS|PROC_FS|BLOCK|MMU|EXPERT|OF|COMPILE_TEST|PM|THERMAL|HWMON|WATCHDOG|MFD|MEDIA_SUPPORT|DRM|BT|RFKILL|CFG80211|MAC80211|SOUND|TTY|SERIAL_CORE|CRYPTO|STAGING|IIO) continue ;;
-                # x86 arch basics
-                HAVE_PCI|HAVE_ARCH_TRANSPARENT_HUGEPAGE|HAVE_PREEMPT_DYNAMIC|ARCH_SUPPORTS_ACPI|ARCH_HIBERNATION_POSSIBLE|CPU_SUP_INTEL|CPU_SUP_AMD|CPU_IDLE|CPU_FREQ|DMI|SHMEM|MULTIUSER|SPARSEMEM_VMEMMAP|X86_PAE|AGP|IRQ_REMAP|INDIRECT_IOMEM) continue ;;
+                # x86 arch basics (auto-selected by arch)
+                HAVE_PCI|HAVE_ARCH_TRANSPARENT_HUGEPAGE|HAVE_PREEMPT_DYNAMIC|HAVE_ARCH_SECCOMP|HAVE_ARCH_SECCOMP_FILTER|ARCH_SUPPORTS_ACPI|ARCH_SUPPORTS_SCHED_SMT|ARCH_HIBERNATION_POSSIBLE|CPU_SUP_INTEL|CPU_SUP_AMD|CPU_IDLE|CPU_FREQ|DMI|SHMEM|MULTIUSER|SPARSEMEM_VMEMMAP|X86_PAE|AGP|IRQ_REMAP|INDIRECT_IOMEM) continue ;;
+                # ARCH_SUPPORTS_* / HAVE_* / *_ARCH_* patterns (auto-selected by arch)
+                ARCH_SUPPORTS_*|HAVE_*|ARCH_*) continue ;;
+                # x86 auto-selected symbols (always set on x86_64)
+                X86_LOCAL_APIC|X86_THERMAL_VECTOR|IA32_FEAT_CTL|GENERIC_CLOCKEVENTS|USB_ARCH_HAS_HCD|PAGE_SIZE_LESS_THAN_256KB|SUSPEND_POSSIBLE) continue ;;
+                # Non-x86 architectures (irrelevant in OR deps)
+                ARM64|RISCV|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH) continue ;;
                 # Subsystem parent menus
                 USB_SUPPORT|HID_SUPPORT|NETDEVICES|NET_CORE|INPUT_MISC|USB_NET_DRIVERS|USB_PCI|NLS|SCSI|LOONGARCH|X86_PLATFORM_DEVICES|DMADEVICES|COMMON_CLK|HIGH_RES_TIMERS|EVENTFD|FB_CORE|BLK_CGROUP|POWERCAP|VIRTUALIZATION|VHOST_MENU|SND_HDA|SND_HDA_CORE|SND_PCI|SND_SOC|CPU_MITIGATIONS|HYPERVISOR_GUEST|PTP_1588_CLOCK_OPTIONAL|BT_BREDR|IIO_BUFFER|USB_USBNET) continue ;;
                 # Common lib/feature selections
@@ -316,6 +338,23 @@ while IFS= read -r line; do
             # Skip negated deps (e.g., !DRM_NOUVEAU)
             if echo "$SYM_DEPS" | grep -qE "![[:space:]]*$DEP"; then
                 continue
+            fi
+            # Skip OR-dep branches where another branch is satisfied
+            # e.g., "DRM_I915 || DRM_XE" — if DRM_I915 is set, skip DRM_XE warning
+            if echo "$SYM_DEPS" | grep -qE "[A-Z0-9_]+[[:space:]]*\|\|[[:space:]]*$DEP|$DEP[[:space:]]*\|\|[[:space:]]*[A-Z0-9_]+"; then
+                # This dep is part of an OR group — extract all OR siblings
+                OR_SATISFIED=false
+                OR_GROUP=$(echo "$SYM_DEPS" | grep -oE "[A-Z][A-Z0-9_]+[[:space:]]*(\|\|[[:space:]]*[A-Z][A-Z0-9_]+)+" || true)
+                OR_SYMS=$(echo "$OR_GROUP" | grep -oE '[A-Z][A-Z0-9_]+' || true)
+                for OR_SYM in $OR_SYMS; do
+                    if [[ -n "${ALL_SCRIPT_SYMS[$OR_SYM]:-}" ]]; then
+                        OR_SATISFIED=true
+                        break
+                    fi
+                done
+                if $OR_SATISFIED; then
+                    continue
+                fi
             fi
             # Check if dep is set ANYWHERE in the script (not just before this line)
             if [[ -z "${ALL_SCRIPT_SYMS[$DEP]:-}" ]]; then
