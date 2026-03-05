@@ -21,7 +21,7 @@
 
 ### XPS 9510 Power & Battery
 - [x] XPS 9510: run `shared/hibernate-setup.sh` — 31GB swap file + GRUB resume + low-battery monitor [hardware]
-- [ ] XPS 9510: add Dell battery charge thresholds to tlp.conf — `START_CHARGE_THRESH_BAT0=40` / `STOP_CHARGE_THRESH_BAT0=80` [repo+hardware]
+- [x] XPS 9510: add Dell battery charge thresholds to tlp.conf — `START_CHARGE_THRESH_BAT0=40` / `STOP_CHARGE_THRESH_BAT0=80` [repo+hardware]
 
 ### MBP 2015 Power & Tuning
 - [x] MBP 2015: install `sys-power/thermald` — CPU freq management via RAPL [hardware]
@@ -52,8 +52,8 @@
 - [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]
 - [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]
 - [ ] All machines: consider `CONFIG_SECURITY_LOCKDOWN_LSM=y` for defense-in-depth [repo]
-- [ ] XPS 9510: add NVMe APST latency tuning (`nvme_core.default_ps_max_latency_us=5000`) [repo]
-- [ ] XPS 9510: add `vm.max_map_count=262144` to sysctl for PyTorch/CUDA large models [repo]
+- [x] XPS 9510: add NVMe APST latency tuning (`nvme_core.default_ps_max_latency_us=5000`) [repo]
+- [x] XPS 9510: add `vm.max_map_count=262144` to sysctl for PyTorch/CUDA large models [repo]
 
 ## Completed
 - [x] MBP 2015: hibernate setup — 16GB swap file, GRUB resume params, low-battery cron monitor (5%)

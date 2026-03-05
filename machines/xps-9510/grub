@@ -1,6 +1,6 @@
 GRUB_DISTRIBUTOR="Gentoo"
 GRUB_TIMEOUT=5
-GRUB_CMDLINE_LINUX="rootwait i915.enable_guc=3 nvidia.NVreg_DynamicPowerManagement=0x02"
+GRUB_CMDLINE_LINUX="rootwait i915.enable_guc=3 nvidia.NVreg_DynamicPowerManagement=0x02 nvme_core.default_ps_max_latency_us=5000"
 GRUB_CMDLINE_LINUX_DEFAULT="resume=UUID=2df3e30b-76dd-499e-b96e-8ea19769b88a resume_offset=342016"
 GRUB_DEVICE="UUID=2df3e30b-76dd-499e-b96e-8ea19769b88a"
 GRUB_DISABLE_LINUX_UUID=true
