@@ -1,4 +1,31 @@
-# Kernel Patches
+# Patches
+
+## Portage User Patches (`portage/`)
+
+These go in `/etc/portage/patches/<category>/<package>-<version>/` on the target machine.
+
+### freerdp-3.14.1-ffmpeg7-compat.patch
+
+Fixes build failure with FFmpeg 7+ which renamed `FF_PROFILE_*` constants to
+`AV_PROFILE_*`. freerdp 3.14.1 still uses the old name `FF_PROFILE_AAC_MAIN`.
+
+**Error:** `'FF_PROFILE_AAC_MAIN' undeclared; did you mean 'AV_PROFILE_AAC_MAIN'?`
+
+**Install:**
+```bash
+sudo mkdir -p /etc/portage/patches/net-misc/freerdp-3.14.1
+sudo cp patches/portage/freerdp-3.14.1-ffmpeg7-compat.patch \
+  /etc/portage/patches/net-misc/freerdp-3.14.1/ffmpeg7-compat.patch
+sudo emerge -1 net-misc/freerdp
+```
+
+**Upstream status:** Fixed in freerdp >= 3.15.0. Remove patch after upgrade.
+
+**Affects:** Any machine with `USE="ffmpeg"` on freerdp + FFmpeg 7+
+
+---
+
+## Kernel Patches
 
 ## ipu-bridge-fix-double-brace.patch
 
