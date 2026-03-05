@@ -679,6 +679,17 @@ do_install() {
         info "Created ${mod_dir}/source symlink"
     fi
 
+    # Ensure /boot and /boot/efi are mounted (EFI may be noauto or misordered in fstab)
+    if [[ -d /boot/efi ]] && ! mountpoint -q /boot/efi 2>/dev/null; then
+        if grep -q '/boot/efi' /etc/fstab 2>/dev/null; then
+            if ! $DRY_RUN; then
+                mount /boot/efi && info "Mounted /boot/efi" || warn "/boot/efi mount failed — check fstab"
+            else
+                info "[dry-run] Would mount /boot/efi"
+            fi
+        fi
+    fi
+
     header "Install Kernel"
     if $DRY_RUN; then
         info "[dry-run] Would run: make install"

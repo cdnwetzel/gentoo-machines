@@ -272,3 +272,17 @@ swapon --show                          # should show zram0 AND /var/swapfile
 grep resume /etc/default/grub          # resume=UUID=... resume_offset=...
 cat /sys/power/disk                    # should show [platform]
 ```
+
+## 27. fstab Mount Order for Nested Filesystems
+**Problem**: `/boot/efi` listed before `/boot` in fstab. OpenRC's `localmount`
+processes entries top-to-bottom. If `/boot` isn't mounted when `/boot/efi` is
+attempted, the EFI partition silently fails or mounts on the wrong path.
+**Symptom**: After fresh reboot, `/boot/efi` not mounted. `mount /boot/efi` works manually.
+**Fix**: Order fstab by mount hierarchy — parent directories first:
+```
+/            ...   0  1
+/boot        ...   0  2
+/boot/efi    ...   0  0
+```
+**Alternative**: Use `noauto` for `/boot/efi` (XPS 9510 pattern) — only mount when
+updating GRUB. EFI partition isn't needed at runtime.
