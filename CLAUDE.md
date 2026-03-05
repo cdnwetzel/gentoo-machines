@@ -202,7 +202,7 @@ Shared files in `shared/` apply to all machines:
 | `patches/README.md` | Patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
-| `patches/portage/freerdp-3.14.1-ffmpeg7-compat.patch` | Fix freerdp 3.14.1 build with FFmpeg 7+ (FF_PROFILE rename) |
+| `shared/portage_env_freerdp-ffmpeg-fix.conf` | Fix freerdp 3.14.1 build with FFmpeg 7+ (CFLAGS -D workaround) |
 | `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (28 lessons from all machines) |
 | `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `backlog.md` | Prioritized open items tracker |
