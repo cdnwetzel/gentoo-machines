@@ -20,7 +20,7 @@
 - [ ] Fix XPS 9510 kernel_config.sh mismatches — `SCHED_AUTOGROUP`, `BLK_DEV_THROTTLING` in script but disabled in .config [repo]
 
 ### XPS 9510 Power & Battery
-- [ ] XPS 9510: run `shared/hibernate-setup.sh` — 32GB swap file + GRUB resume + low-battery monitor [hardware]
+- [x] XPS 9510: run `shared/hibernate-setup.sh` — 31GB swap file + GRUB resume + low-battery monitor [hardware]
 - [ ] XPS 9510: add Dell battery charge thresholds to tlp.conf — `START_CHARGE_THRESH_BAT0=40` / `STOP_CHARGE_THRESH_BAT0=80` [repo+hardware]
 
 ### MBP 2015 Power & Tuning
