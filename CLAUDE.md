@@ -120,17 +120,21 @@ Auto-detects CPU, GPU, WiFi (8 vendors), audio (SOF/HDA), storage, platform vend
 ### update-kernel.sh
 Local kernel update tool for production machines. Auto-detects machine via hostname + DMI:
 ```bash
-sudo tools/update-kernel.sh fetch               # emerge --sync + gentoo-sources + eselect kernel set
-tools/update-kernel.sh check                     # pre-flight: versions, disk, patches, config strategy
-tools/update-kernel.sh prepare                   # backup .config, migrate config, apply patches, lint
-tools/update-kernel.sh build                     # make -j$(nproc) with timing
-sudo tools/update-kernel.sh install              # modules_install + make install + NVIDIA rebuild
-tools/update-kernel.sh verify                    # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
-sudo tools/update-kernel.sh clean                # eclean-kernel -n 3, keep current + 2 rollback
-tools/update-kernel.sh all                       # prepare + build + install
-tools/update-kernel.sh --dry-run prepare         # preview without changes
-tools/update-kernel.sh --machine xps-9510 check  # override auto-detection
+sudo tools/update-kernel.sh                      # full prompted workflow (default), resumes after reboot
+sudo tools/update-kernel.sh --dry-run             # preview all phases
+sudo tools/update-kernel.sh fetch                 # emerge --sync + gentoo-sources + eselect kernel set
+sudo tools/update-kernel.sh world                 # emerge @world + preserved-rebuild + depclean
+tools/update-kernel.sh check                      # pre-flight: versions, disk, patches, config strategy
+tools/update-kernel.sh prepare                    # backup .config, migrate config, apply patches, lint
+tools/update-kernel.sh build                      # make -j$(nproc) with timing
+sudo tools/update-kernel.sh install               # modules_install + make install + NVIDIA rebuild
+tools/update-kernel.sh verify                     # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
+sudo tools/update-kernel.sh clean                 # eclean-kernel -n 3, keep current + 2 rollback
+tools/update-kernel.sh all                        # prepare + build + install
+tools/update-kernel.sh --machine xps-9510 check   # override auto-detection
 ```
+
+The `full` workflow (default) prompts Y/n/skip before each phase and saves progress to `/var/lib/kernel-update/full-progress`. After install it detects the reboot boundary and exits; re-running `full` resumes with verify + clean. Individual subcommands work standalone for manual use.
 
 Config strategy: same-series (copy .config + olddefconfig), cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11.
 
