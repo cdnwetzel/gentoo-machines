@@ -120,11 +120,13 @@ Auto-detects CPU, GPU, WiFi (8 vendors), audio (SOF/HDA), storage, platform vend
 ### update-kernel.sh
 Local kernel update tool for production machines. Auto-detects machine via hostname + DMI:
 ```bash
-tools/update-kernel.sh check                    # pre-flight: versions, disk, patches, config strategy
+sudo tools/update-kernel.sh fetch               # emerge --sync + gentoo-sources + eselect kernel set
+tools/update-kernel.sh check                     # pre-flight: versions, disk, patches, config strategy
 tools/update-kernel.sh prepare                   # backup .config, migrate config, apply patches, lint
 tools/update-kernel.sh build                     # make -j$(nproc) with timing
 sudo tools/update-kernel.sh install              # modules_install + make install + NVIDIA rebuild
 tools/update-kernel.sh verify                    # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
+sudo tools/update-kernel.sh clean                # eclean-kernel -n 3, keep current + 2 rollback
 tools/update-kernel.sh all                       # prepare + build + install
 tools/update-kernel.sh --dry-run prepare         # preview without changes
 tools/update-kernel.sh --machine xps-9510 check  # override auto-detection

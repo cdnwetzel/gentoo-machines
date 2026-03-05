@@ -1,6 +1,7 @@
 # /var/lib/portage/world - Shared Gentoo package set (all machines)
 
 # System Administration
+app-admin/eclean-kernel
 app-admin/metalog
 app-admin/sudo
 app-portage/cpuid2cpuflags

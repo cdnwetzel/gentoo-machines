@@ -121,14 +121,16 @@ tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 ```
 
 ### update-kernel.sh — Local Kernel Update Tool
-Guided kernel update workflow for production machines. Auto-detects machine via hostname + DMI. Handles same-series updates (copy .config + olddefconfig) and cross-series migrations (defconfig + kernel_config.sh + olddefconfig). Includes NVIDIA module rebuild, patch application, and post-reboot verification.
+Guided kernel update workflow for production machines. Auto-detects machine via hostname + DMI. Handles same-series updates (copy .config + olddefconfig) and cross-series migrations (defconfig + kernel_config.sh + olddefconfig). Includes portage sync, NVIDIA module rebuild, patch application, post-reboot verification, and old kernel cleanup.
 
 ```bash
+sudo tools/update-kernel.sh fetch       # emerge --sync + gentoo-sources + eselect kernel
 tools/update-kernel.sh check            # pre-flight: versions, disk, patches, config strategy
 tools/update-kernel.sh prepare           # backup .config, migrate config, apply patches, lint
 tools/update-kernel.sh build             # compile with make -j$(nproc)
 sudo tools/update-kernel.sh install      # modules_install + make install + NVIDIA rebuild
 tools/update-kernel.sh verify            # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
+sudo tools/update-kernel.sh clean        # eclean-kernel -n 3, keep current + 2 rollback
 ```
 
 ### build-kernel-remote.sh — Cross-Compile and Deploy
@@ -194,3 +196,7 @@ Ryzen 9 5950X with SATA SSDs. First AMD build — needs `CONFIG_CPU_SUP_AMD`, `C
 
 ### Planned: Precision T5810 (Xeon Broadwell-EP)
 ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older PCH. Currently runs Fedora 42.
+
+### Kernel Strategy
+
+All production machines use `gentoo-sources` with manual configuration via per-machine `kernel_config.sh` scripts — not distribution kernels (`gentoo-kernel`/`gentoo-kernel-bin`). No initramfs or dracut — root-path drivers (NVMe, AHCI, ext4) are built-in (=y). `installkernel` with the `grub` USE flag auto-updates GRUB on `make install`. Old kernels are cleaned with `eclean-kernel -n 3` (keep current + 2 rollback). See `tools/update-kernel.sh` for the complete guided workflow.

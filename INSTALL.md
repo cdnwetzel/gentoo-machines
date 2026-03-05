@@ -773,7 +773,7 @@ Follow this installation guide using your new machine directory. After first boo
 | Gentoo news | `eselect news read` |
 | Rebuild kernel | `cd /usr/src/linux && make oldconfig && make -j$(nproc) && make modules_install install` |
 | Update GRUB | `grub-mkconfig -o /boot/grub/grub.cfg` |
-| Update kernel (tool) | `tools/update-kernel.sh check` then `prepare` / `build` / `install` / `verify` |
+| Update kernel (tool) | `tools/update-kernel.sh fetch` then `check` / `prepare` / `build` / `install` / `verify` / `clean` |
 
 ---
 
@@ -787,24 +787,26 @@ For production machines already running Gentoo. Use `tools/update-kernel.sh` for
 - **Security advisories**: Check [kernel.org](https://www.kernel.org/) or Gentoo GLSAs.
 - **Cross-series migration** (e.g., 6.12 → 6.18): Major update. Many Kconfig symbols change. Use `kernel_config.sh` to regenerate config.
 
+### Kernel Strategy
+
+This repository uses `gentoo-sources` with manual configuration via `kernel_config.sh`, not distribution kernels (`gentoo-kernel`/`gentoo-kernel-bin`). No initramfs is generated — root-path drivers (NVMe, AHCI, ext4) are built-in (=y). `sys-kernel/installkernel` with the `grub` USE flag handles GRUB updates automatically on `make install`. Old kernels are cleaned up with `eclean-kernel -n 3` (keep current + 2 rollback).
+
 ### Quick Reference — Minor Updates (Same Series)
 
 ```bash
-# 1. Install new sources (all machines track ~amd64 for 6.18 LTS)
-emerge --sync
-emerge -av gentoo-sources
+# 1. Sync and install new sources (all machines track ~amd64 for 6.18 LTS)
+sudo tools/update-kernel.sh fetch       # emerge --sync + gentoo-sources + eselect kernel
 
-# 2. Select new kernel
-eselect kernel list
-eselect kernel set <N>
-
-# 3. Use the update tool
+# 2. Use the update tool
 tools/update-kernel.sh check            # pre-flight report
 tools/update-kernel.sh prepare          # backup + config migrate + patches
 tools/update-kernel.sh build            # compile
 sudo tools/update-kernel.sh install     # install + NVIDIA rebuild
 # reboot
 tools/update-kernel.sh verify           # post-reboot checks
+
+# 3. Clean up old kernels
+sudo tools/update-kernel.sh clean       # eclean-kernel -n 3
 ```
 
 ### Cross-Series Migration
@@ -813,12 +815,14 @@ Cross-series updates (different major.minor) use `kernel_config.sh` to regenerat
 
 ```bash
 # Same workflow — the tool auto-detects cross-series and uses kernel_config.sh
+sudo tools/update-kernel.sh fetch       # sync + install new sources
 tools/update-kernel.sh check            # shows "cross-series" strategy
 tools/update-kernel.sh prepare          # defconfig → kernel_config.sh → olddefconfig
 tools/update-kernel.sh build
 sudo tools/update-kernel.sh install
 # reboot
 tools/update-kernel.sh verify
+sudo tools/update-kernel.sh clean       # remove old kernels
 ```
 
 ### Rollback
