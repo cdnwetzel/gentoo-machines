@@ -290,9 +290,9 @@ EOF
 cat > /etc/fstab << 'FSTAB'
 # /etc/fstab - Surface Pro 6 Gentoo
 # <uuid>                                 <mount>      <fs>   <opts>                                              <dump> <pass>
-UUID=<efi-uuid>                          /boot/efi    vfat   defaults,noatime,umask=0077                         0      0
-UUID=<boot-uuid>                         /boot        ext4   defaults,noatime                                    0      2
 UUID=<root-uuid>                         /            ext4   defaults,noatime                                    0      1
+UUID=<boot-uuid>                         /boot        ext4   defaults,noatime                                    0      2
+UUID=<efi-uuid>                          /boot/efi    vfat   defaults,noatime,umask=0077                         0      0
 
 # Portage tmpfs — 4GB (8GB RAM machine, keep half for system)
 tmpfs                                    /var/tmp/portage tmpfs size=4G,uid=portage,gid=portage,mode=775,nosuid,noatime,nodev 0 0

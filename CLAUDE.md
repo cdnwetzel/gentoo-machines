@@ -202,7 +202,7 @@ Shared files in `shared/` apply to all machines:
 | `patches/README.md` | Kernel patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
-| `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (25 lessons from all machines) |
+| `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (27 lessons from all machines) |
 | `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `backlog.md` | Prioritized open items tracker |
 | `checkpoint.md` | Session-by-session progress log |
@@ -350,7 +350,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/fedora-reference.config` | Fedora 43 kernel 6.18.8 config (cross-reference) |
 | `machines/surface-pro-6/HARDWARE.md` | Complete hardware inventory (5 harvest rounds) |
 | `machines/surface-pro-6/INSTALL_PREFLIGHT.md` | 13-phase install checklist |
-| `machines/surface-pro-6/INSTALL_GOTCHAS.md` | 20 lessons learned from prior builds |
+| `machines/surface-pro-6/INSTALL_GOTCHAS.md` | 21 lessons learned from prior builds |
 | `machines/surface-pro-6/EXEC_SEQUENCE.md` | 7-step quick reference |
 | `machines/surface-pro-6/FEDORA_REFERENCE.md` | Config mined from running Fedora |
 | `machines/surface-pro-6/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions explained |

@@ -287,7 +287,22 @@ dedicated Kaby Lake target because it's architecturally identical to Skylake.
 **Fix**: Use `-march=skylake` in make.conf for Kaby Lake and Kaby Lake-R CPUs.
 Valid GCC targets near this range: `haswell`, `broadwell`, `skylake`, `skylake-avx512`.
 
-## 20. ccache in FEATURES Before ccache Is Installed
+## 20. fstab Mount Order for Nested Filesystems
+**Problem**: `/boot/efi` listed before `/boot` in fstab. OpenRC's `localmount`
+processes entries top-to-bottom. If `/boot` isn't mounted yet when it tries to
+mount `/boot/efi`, the EFI partition either fails silently or mounts on the
+wrong path (bare root's `/boot/efi` dir instead of the real `/boot` partition's).
+**Symptom**: After reboot, `/boot/efi` is not mounted. `mount /boot/efi` works manually.
+**Fix**: Order fstab entries by mount hierarchy: `/` first, then `/boot`, then `/boot/efi`.
+```
+UUID=<root-uuid>   /           ext4   defaults,noatime              0  1
+UUID=<boot-uuid>   /boot       ext4   defaults,noatime              0  2
+UUID=<efi-uuid>    /boot/efi   vfat   defaults,noatime,umask=0077   0  0
+```
+**Alternative**: Use `noauto` for `/boot/efi` (like XPS 9510) — EFI partition
+is only needed when updating GRUB, not at runtime.
+
+## 21. ccache in FEATURES Before ccache Is Installed
 **Problem**: make.conf has `FEATURES="ccache"` but ccache isn't emerged yet.
 The compiler wrapper fails — every `econf` dies with "C compiler cannot create executables".
 **Fix**: Remove `ccache` from FEATURES until after `dev-util/ccache` is installed.
