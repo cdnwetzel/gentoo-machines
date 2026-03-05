@@ -862,7 +862,7 @@ do_install() {
     else
         if [[ -f /boot/grub/grub.cfg ]]; then
             local grub_entries
-            grub_entries=$(grep -c "menuentry " /boot/grub/grub.cfg 2>/dev/null || echo 0)
+            grub_entries=$(grep -c "menuentry " /boot/grub/grub.cfg 2>/dev/null || true)
             info "GRUB has ${grub_entries} menu entries"
             if grep -q "$krelease" /boot/grub/grub.cfg; then
                 info "New kernel ${krelease} found in GRUB"
@@ -938,7 +938,7 @@ do_verify() {
 
     header "Boot Messages"
     local error_count
-    error_count=$(dmesg 2>/dev/null | grep -ci -E "(error|fail)" || echo 0)
+    error_count=$(dmesg 2>/dev/null | grep -ci -E "(error|fail)" || true)
     if (( error_count == 0 )); then
         info "No errors or failures in dmesg"
     else
@@ -951,7 +951,7 @@ do_verify() {
 
     header "PCI Drivers"
     local unbound
-    unbound=$(lspci -k 2>/dev/null | grep -c "Kernel driver in use:" || echo 0)
+    unbound=$(lspci -k 2>/dev/null | grep -c "Kernel driver in use:" || true)
     local total_pci
     total_pci=$(lspci 2>/dev/null | wc -l)
     info "${unbound}/${total_pci} PCI devices have drivers bound"
@@ -968,7 +968,7 @@ do_verify() {
 
     header "Firmware"
     local fw_errors
-    fw_errors=$(dmesg 2>/dev/null | grep -ci "firmware.*error\|firmware.*fail\|firmware.*missing" || echo 0)
+    fw_errors=$(dmesg 2>/dev/null | grep -ci "firmware.*error\|firmware.*fail\|firmware.*missing" || true)
     if (( fw_errors == 0 )); then
         info "No firmware errors in dmesg"
     else
@@ -979,7 +979,7 @@ do_verify() {
     header "Services"
     if command -v rc-status &>/dev/null; then
         local failed
-        failed=$(rc-status 2>/dev/null | grep -c "crashed\|stopped" || echo 0)
+        failed=$(rc-status 2>/dev/null | grep -c "crashed\|stopped" || true)
         if (( failed == 0 )); then
             info "All OpenRC services running"
         else
@@ -1026,7 +1026,7 @@ verify_machine_specific() {
                 warn "/dev/nvidia0 missing — nvidia module not loaded?"
             fi
             local nv_dmesg_err
-            nv_dmesg_err=$(dmesg 2>/dev/null | grep -ci "nvidia.*error\|nvrm.*error" || echo 0)
+            nv_dmesg_err=$(dmesg 2>/dev/null | grep -ci "nvidia.*error\|nvrm.*error" || true)
             if (( nv_dmesg_err > 0 )); then
                 warn "${nv_dmesg_err} NVIDIA errors in dmesg"
             else
@@ -1034,7 +1034,7 @@ verify_machine_specific() {
             fi
             ;;
         intel)
-            if lsmod 2>/dev/null | grep -q i915; then
+            if grep -q "^i915 " /proc/modules 2>/dev/null; then
                 info "i915 loaded"
             else
                 warn "i915 not loaded"
@@ -1049,7 +1049,7 @@ verify_machine_specific() {
     header "WiFi"
     case "$machine" in
         xps-9510|xps-9315|nuc11)
-            if lsmod 2>/dev/null | grep -q iwlwifi; then
+            if grep -q "^iwlwifi " /proc/modules 2>/dev/null; then
                 info "iwlwifi loaded"
                 local wl_iface
                 wl_iface=$(ip -o link show 2>/dev/null | grep -oP 'wl\S+' | head -1 || true)
@@ -1061,14 +1061,14 @@ verify_machine_specific() {
             fi
             ;;
         mbp-2015)
-            if lsmod 2>/dev/null | grep -q brcmfmac; then
+            if grep -q "^brcmfmac " /proc/modules 2>/dev/null; then
                 info "brcmfmac loaded"
             else
                 warn "brcmfmac not loaded"
             fi
             ;;
         surface-pro-6)
-            if lsmod 2>/dev/null | grep -q mwifiex; then
+            if grep -q "^mwifiex " /proc/modules 2>/dev/null; then
                 info "mwifiex loaded"
             else
                 warn "mwifiex not loaded"
@@ -1080,7 +1080,7 @@ verify_machine_specific() {
     case "$machine" in
         mbp-2015)
             header "Apple Platform"
-            if lsmod 2>/dev/null | grep -q applesmc; then
+            if grep -q "^applesmc " /proc/modules 2>/dev/null; then
                 info "applesmc loaded"
                 if command -v sensors &>/dev/null; then
                     local temp
@@ -1093,7 +1093,7 @@ verify_machine_specific() {
             ;;
         surface-pro-6)
             header "Surface Platform"
-            if lsmod 2>/dev/null | grep -q surface_aggregator; then
+            if grep -q "^surface_aggregator " /proc/modules 2>/dev/null; then
                 info "surface_aggregator loaded"
             else
                 warn "surface_aggregator not loaded"
@@ -1106,10 +1106,10 @@ verify_machine_specific() {
             ;;
         xps-9510)
             header "Dell Platform"
-            if lsmod 2>/dev/null | grep -q dell_smbios; then
+            if grep -q "^dell_smbios " /proc/modules 2>/dev/null; then
                 info "dell_smbios loaded"
             fi
-            if lsmod 2>/dev/null | grep -q dell_wmi; then
+            if grep -q "^dell_wmi " /proc/modules 2>/dev/null; then
                 info "dell_wmi loaded"
             fi
             ;;
