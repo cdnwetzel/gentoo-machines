@@ -6,7 +6,12 @@
 # machines. Auto-detects which machine via hostname + DMI fallback.
 #
 # Subcommands:
+#   full     - Prompted end-to-end workflow with resume (default when no args)
+#              fetch → world → check → prepare → build → install → reboot → verify → clean
+#              Prompts Y/n/skip before each phase. State saved to /var/lib/kernel-update/
+#              so the workflow survives interruption and reboot.
 #   fetch    - Sync portage, install latest gentoo-sources, select new kernel (requires root)
+#   world    - Update @world + preserved-rebuild + depclean (requires root)
 #   check    - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
 #   prepare  - Backup .config, migrate config (copy or script), apply patches, lint
 #   build    - make -j$(nproc) with timing
@@ -27,10 +32,10 @@
 #     Falls back to .config copy + warning if no script exists
 #
 # Usage:
-#   sudo update-kernel.sh fetch
-#   update-kernel.sh check
-#   update-kernel.sh --dry-run prepare
-#   update-kernel.sh --machine xps-9510 all
+#   sudo update-kernel.sh                  # full prompted workflow (default)
+#   sudo update-kernel.sh full             # same thing, explicit
+#   sudo update-kernel.sh --dry-run full   # preview all phases
+#   update-kernel.sh --machine xps-9510 check
 #   update-kernel.sh verify
 #   sudo update-kernel.sh clean
 # ============================================================================
@@ -1020,6 +1025,159 @@ do_clean() {
 }
 
 # ============================================================================
+# world — Update system packages (@world + preserved-rebuild + depclean)
+# ============================================================================
+do_world() {
+    [[ $EUID -eq 0 ]] || error "World update requires root"
+
+    header "System Update (@world)"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: emerge -avuDN @world"
+        emerge --pretend -vuDN @world || true
+    else
+        emerge -avuDN @world
+    fi
+
+    header "Preserved Rebuild"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: emerge @preserved-rebuild"
+        emerge --pretend @preserved-rebuild || true
+    else
+        emerge @preserved-rebuild
+    fi
+
+    header "Dependency Cleanup"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: emerge --depclean -a"
+        emerge --pretend --depclean || true
+    else
+        emerge --depclean -a
+    fi
+
+    echo ""
+    info "World update complete."
+}
+
+# ============================================================================
+# full — Complete prompted workflow with resume support
+# ============================================================================
+# State file tracks completed phases so the workflow can be interrupted and
+# resumed (e.g., across a reboot). Each line is a completed phase name.
+FULL_STATE="${STATE_DIR}/full-progress"
+
+phase_done() {
+    $DRY_RUN && return 1  # dry-run shows all phases
+    [[ -f "$FULL_STATE" ]] && grep -qx "$1" "$FULL_STATE" 2>/dev/null
+}
+
+mark_done() {
+    $DRY_RUN && return 0
+    echo "$1" >> "$FULL_STATE"
+}
+
+# Prompt before a phase, run the command, mark done.
+# Usage: run_full_phase <phase> <description> <command> [args...]
+# User can answer: Y (run), n (stop and resume later), s (skip this phase)
+run_full_phase() {
+    local phase="$1" desc="$2"
+    shift 2
+
+    phase_done "$phase" && return 0
+
+    echo ""
+    echo -e "${BOLD}>>> Phase: ${phase}${RESET} — ${desc}"
+    if ! $DRY_RUN; then
+        read -rp "    Proceed? [Y/n/s(kip)] " answer
+        case "${answer,,}" in
+            n|no)
+                echo ""
+                info "Stopped. Resume later: sudo ${0##*/} full"
+                exit 0
+                ;;
+            s|skip)
+                mark_done "$phase"
+                info "Skipped ${phase}"
+                return 0
+                ;;
+        esac
+    fi
+
+    "$@"
+    mark_done "$phase"
+}
+
+do_full() {
+    local machine="$1"
+    [[ $EUID -eq 0 ]] || error "Full workflow requires root"
+
+    mkdir -p "${STATE_DIR}"
+
+    # Resume check
+    if [[ -f "$FULL_STATE" ]] && ! $DRY_RUN; then
+        info "Resuming full workflow — completed phases:"
+        while IFS= read -r line; do
+            info "  done: ${line}"
+        done < "$FULL_STATE"
+        echo ""
+        read -rp "Continue from where you left off? [Y/n/reset] " answer
+        case "${answer,,}" in
+            n|no) exit 0 ;;
+            r|reset)
+                rm -f "$FULL_STATE"
+                info "Progress cleared — starting fresh."
+                echo ""
+                ;;
+        esac
+    fi
+
+    info "Full workflow: fetch → world → check → prepare → build → install → reboot → verify → clean"
+
+    # --- Pre-reboot phases ---
+    run_full_phase fetch   "Sync portage + install gentoo-sources + eselect kernel" \
+        do_fetch
+    run_full_phase world   "Update @world + preserved-rebuild + depclean" \
+        do_world
+    run_full_phase check   "Pre-flight report (versions, disk, patches)" \
+        do_check "$machine"
+    run_full_phase prepare "Backup config + migrate + apply patches + lint" \
+        do_prepare "$machine"
+    run_full_phase build   "Compile kernel with make -j$(nproc)" \
+        do_build
+    run_full_phase install "Install modules + kernel + NVIDIA rebuild + GRUB" \
+        do_install "$machine"
+
+    # --- Reboot boundary ---
+    if ! phase_done verify; then
+        # Check if the new kernel is running (i.e., user rebooted)
+        if [[ -f "$PENDING_FILE" ]]; then
+            # shellcheck disable=SC1090
+            source "$PENDING_FILE"
+            local running
+            running=$(get_running_release)
+            if [[ "${NEW_RELEASE:-}" != "$running" ]] && ! $DRY_RUN; then
+                echo ""
+                info "Install complete. Reboot into the new kernel, then resume:"
+                info "  sudo ${0##*/} full"
+                exit 0
+            fi
+        fi
+    fi
+
+    # --- Post-reboot phases ---
+    run_full_phase verify "Post-reboot verification (dmesg, drivers, GPU, WiFi)" \
+        do_verify "$machine"
+    run_full_phase clean  "Remove old kernels, keeping 3 most recent" \
+        do_clean
+
+    # All done
+    if ! $DRY_RUN; then
+        rm -f "$FULL_STATE"
+    fi
+    echo ""
+    info "Full workflow complete."
+}
+
+# ============================================================================
 # Usage
 # ============================================================================
 usage() {
@@ -1029,7 +1187,11 @@ Usage: ${0##*/} [OPTIONS] COMMAND
 Local kernel update tool for production Gentoo machines.
 
 Commands:
+  full       Prompted end-to-end workflow with resume support (default)
+               fetch → world → check → prepare → build → install → reboot → verify → clean
+               Prompts Y/n/skip before each phase. Saves progress — re-run to resume.
   fetch      Sync portage, install latest gentoo-sources, select kernel (requires root)
+  world      Update @world + preserved-rebuild + depclean (requires root)
   check      Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
   prepare    Backup .config, migrate config, apply patches, lint
   build      Compile kernel with make -j\$(nproc)
@@ -1043,15 +1205,23 @@ Options:
   --machine NAME     Override auto-detection (valid: ${!MACHINES[*]})
   -h, --help         Show this help
 
-Typical workflow:
-  1. sudo ${0##*/} fetch     # sync + install gentoo-sources + eselect kernel
-  2. ${0##*/} check
-  3. ${0##*/} prepare
-  4. ${0##*/} build
-  5. sudo ${0##*/} install
-  6. reboot
-  7. ${0##*/} verify
-  8. sudo ${0##*/} clean     # eclean-kernel -n 3
+Typical usage:
+  sudo ${0##*/}              # prompted full workflow (default)
+  sudo ${0##*/} full         # same thing
+  sudo ${0##*/} --dry-run    # preview all phases
+  # after reboot:
+  sudo ${0##*/}              # resumes with verify + clean
+
+Individual subcommands (run phases manually):
+  sudo ${0##*/} fetch
+  sudo ${0##*/} world
+  ${0##*/} check
+  ${0##*/} prepare
+  ${0##*/} build
+  sudo ${0##*/} install
+  # reboot
+  ${0##*/} verify
+  sudo ${0##*/} clean
 EOF
     exit 0
 }
@@ -1083,7 +1253,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-[[ $# -ge 1 ]] || usage
+[[ $# -ge 1 ]] || set -- full
 
 COMMAND="$1"
 shift
@@ -1096,7 +1266,9 @@ if $DRY_RUN; then
 fi
 
 case "$COMMAND" in
+    full)    do_full "$MACHINE" ;;
     fetch)   do_fetch ;;
+    world)   do_world ;;
     check)   do_check "$MACHINE" ;;
     prepare) do_prepare "$MACHINE" ;;
     build)   do_build ;;
