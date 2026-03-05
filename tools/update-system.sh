@@ -1065,6 +1065,7 @@ do_world() {
             warn "  emerge --resume --skipfirst  # skip it and continue with the rest"
             warn "Before skipping, check if anything depends on the failed package:"
             warn "  equery depends <failed-pkg>  # if nothing, safe to skip"
+            warn "NEVER skip: gcc, glibc, binutils, openssl, python, llvm, portage, baselayout"
             warn "Fix the issue, then re-run: sudo ${0##*/} world"
             return 1
         fi
