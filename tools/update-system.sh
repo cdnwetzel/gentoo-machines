@@ -93,6 +93,21 @@ declare -A PATCH_REGISTRY=(
 )
 
 # ============================================================================
+# Portage Workarounds Registry
+# ============================================================================
+# Temporary CFLAGS/env workarounds for packages that fail to build.
+# These install an env file + package.env entry, and are auto-removed
+# when the fixed version is available.
+#
+# Format: env_file|package_atom|max_version (pipe-delimited)
+#   env_file:     source file in shared/ (repo-relative)
+#   package_atom: category/package for package.env
+#   max_version:  remove workaround when installed version > this
+declare -A PORTAGE_WORKAROUNDS=(
+    [freerdp-ffmpeg-fix]="shared/portage_env_freerdp-ffmpeg-fix.conf|net-misc/freerdp|3.14.1"
+)
+
+# ============================================================================
 # Helpers
 # ============================================================================
 info()  { echo -e "${GREEN}>>>${RESET} $*"; }
@@ -174,6 +189,125 @@ get_target_release() {
         cat "${KERNEL_SRC}/include/config/kernel.release"
     else
         echo "$(get_target_version)-gentoo"
+    fi
+}
+
+# ============================================================================
+# Portage Workaround Sync
+# ============================================================================
+# Compares installed package versions against PORTAGE_WORKAROUNDS registry.
+# Installs workarounds for affected versions, removes them when fixed.
+sync_portage_workarounds() {
+    local changed=false
+
+    for name in "${!PORTAGE_WORKAROUNDS[@]}"; do
+        local entry="${PORTAGE_WORKAROUNDS[$name]}"
+        local env_file pkg_atom max_ver
+        IFS='|' read -r env_file pkg_atom max_ver <<< "$entry"
+
+        local env_name
+        env_name=$(basename "$env_file" | sed 's/^portage_env_//')
+        local dest="/etc/portage/env/${env_name}"
+        local src="${REPO_DIR}/${env_file}"
+
+        # Get installed version (e.g., "3.14.1")
+        local installed_ver=""
+        installed_ver=$(qatom -F '%{PV}' "$(qlist -Iv "$pkg_atom" 2>/dev/null | head -1)" 2>/dev/null || true)
+
+        # Check if workaround is still needed
+        # Needed if: package not installed (pre-install), or installed_ver <= max_ver
+        local needed=true
+        if [[ -n "$installed_ver" ]]; then
+            # Not needed if installed version is newer than max_ver
+            if [[ "$(printf '%s\n' "$installed_ver" "$max_ver" | sort -V | tail -1)" != "$max_ver" ]]; then
+                needed=false
+            fi
+        fi
+
+        if $needed; then
+            # Install workaround if not present
+            if [[ ! -f "$dest" ]]; then
+                if [[ ! -f "$src" ]]; then
+                    warn "Workaround source missing: ${src}"
+                    continue
+                fi
+                if $DRY_RUN; then
+                    info "[dry-run] Would install workaround: ${env_name} for ${pkg_atom} ${installed_ver}"
+                else
+                    cp "$src" "$dest"
+                    info "Installed workaround: ${env_name}"
+                    changed=true
+                fi
+            fi
+            # Add package.env entry if not present
+            if ! grep -q "^${pkg_atom}.*${env_name}" /etc/portage/package.env 2>/dev/null; then
+                if $DRY_RUN; then
+                    info "[dry-run] Would add package.env: ${pkg_atom} ${env_name}"
+                else
+                    echo "${pkg_atom} ${env_name}" >> /etc/portage/package.env
+                    info "Added package.env entry: ${pkg_atom} ${env_name}"
+                    changed=true
+                fi
+            fi
+        else
+            # Remove workaround if no longer needed
+            if [[ -f "$dest" ]]; then
+                if $DRY_RUN; then
+                    info "[dry-run] Would remove obsolete workaround: ${env_name} (${pkg_atom} ${installed_ver:-not installed} > ${max_ver})"
+                else
+                    rm -f "$dest"
+                    info "Removed obsolete workaround: ${env_name} (${pkg_atom} upgraded past ${max_ver})"
+                    changed=true
+                fi
+            fi
+            if grep -q "^${pkg_atom}.*${env_name}" /etc/portage/package.env 2>/dev/null; then
+                if $DRY_RUN; then
+                    info "[dry-run] Would remove package.env entry: ${pkg_atom} ${env_name}"
+                else
+                    sed -i "\|^${pkg_atom}.*${env_name}|d" /etc/portage/package.env
+                    info "Removed package.env entry: ${pkg_atom} ${env_name}"
+                    changed=true
+                fi
+            fi
+        fi
+    done
+
+    if ! $changed; then
+        info "Portage workarounds up to date"
+    fi
+}
+
+# Report workaround status (for check subcommand, no root needed)
+check_portage_workarounds() {
+    header "Portage Workarounds"
+    local any=false
+    for name in "${!PORTAGE_WORKAROUNDS[@]}"; do
+        any=true
+        local entry="${PORTAGE_WORKAROUNDS[$name]}"
+        local env_file pkg_atom max_ver
+        IFS='|' read -r env_file pkg_atom max_ver <<< "$entry"
+
+        local env_name
+        env_name=$(basename "$env_file" | sed 's/^portage_env_//')
+        local installed_ver=""
+        installed_ver=$(qatom -F '%{PV}' "$(qlist -Iv "$pkg_atom" 2>/dev/null | head -1)" 2>/dev/null || true)
+
+        local status
+        if [[ -z "$installed_ver" ]]; then
+            status="needed (${pkg_atom} not yet installed, workaround ready)"
+        elif [[ "$(printf '%s\n' "$installed_ver" "$max_ver" | sort -V | tail -1)" != "$max_ver" ]]; then
+            status="obsolete — ${pkg_atom}-${installed_ver} > ${max_ver}, safe to remove"
+        else
+            status="active — ${pkg_atom}-${installed_ver} <= ${max_ver}"
+        fi
+
+        local installed_icon="✗"
+        [[ -f "/etc/portage/env/${env_name}" ]] && installed_icon="✓"
+
+        info "${name}: ${status} [${installed_icon} installed]"
+    done
+    if ! $any; then
+        info "No workarounds registered"
     fi
 }
 
@@ -291,6 +425,9 @@ do_fetch() {
         info "Symlink: /usr/src/linux → $(readlink /usr/src/linux)"
     fi
 
+    header "Portage Workarounds"
+    sync_portage_workarounds
+
     header "Portage News"
     if $DRY_RUN; then
         info "[dry-run] Would run: eselect news read"
@@ -404,6 +541,9 @@ do_check() {
     else
         info "No patches registered for ${machine}"
     fi
+
+    # Portage workarounds
+    check_portage_workarounds
 
     # Existing kernels
     header "Installed Kernels"
