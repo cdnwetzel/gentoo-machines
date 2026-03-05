@@ -17,7 +17,7 @@
 #   fetch         - Sync portage, install latest gentoo-sources, select new kernel,
 #                   show news (requires root)
 #   world         - Update @world + preserved-rebuild + depclean (requires root)
-#   config-update - Merge updated config files via dispatch-conf (requires root)
+#   config-update - Merge updated config files (auto-accept new versions) (requires root)
 #   check         - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
 #   prepare       - Backup .config, migrate config (copy or script), apply patches, lint
 #   build         - make -j$(nproc) with timing
@@ -1239,7 +1239,7 @@ do_world() {
 }
 
 # ============================================================================
-# config-update — Merge updated config files via dispatch-conf
+# config-update — Merge updated config files (auto-accept new versions)
 # ============================================================================
 do_config_update() {
     [[ $EUID -eq 0 ]] || error "Config update requires root"
@@ -1251,12 +1251,12 @@ do_config_update() {
         info "No config files to update."
         return 0
     fi
-    info "${pending} config file(s) need updating"
+    info "${pending} config file(s) need updating:"
+    find /etc -name '._cfg????_*' 2>/dev/null | sed 's|.*_cfg[0-9]*_|  |' | sort -u
     if $DRY_RUN; then
-        info "[dry-run] Would run: dispatch-conf"
-        find /etc -name '._cfg????_*' 2>/dev/null | head -10
+        info "[dry-run] Would run: etc-update --automode -5 (use new)"
     else
-        dispatch-conf
+        etc-update --automode -5
     fi
 }
 
@@ -1339,7 +1339,7 @@ do_full() {
         do_fetch
     run_full_phase world          "Update @world + preserved-rebuild + depclean" \
         do_world
-    run_full_phase config-update  "Merge updated config files (dispatch-conf)" \
+    run_full_phase config-update  "Merge updated config files (auto-accept new versions)" \
         do_config_update
     run_full_phase check          "Pre-flight report (versions, disk, patches)" \
         do_check "$machine"
@@ -1397,7 +1397,7 @@ Commands:
                    Prompts Y/n/skip before each phase. Saves progress — re-run to resume.
   fetch          Sync portage, install latest gentoo-sources, select kernel, show news (requires root)
   world          Update @world + preserved-rebuild + depclean (requires root)
-  config-update  Merge updated config files via dispatch-conf (requires root)
+  config-update  Merge updated config files (auto-accept new versions) (requires root)
   check          Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
   prepare        Backup .config, migrate config, apply patches, lint
   build          Compile kernel with make -j\$(nproc)
