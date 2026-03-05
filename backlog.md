@@ -4,7 +4,7 @@
 - [x] Execute Surface Pro 6 Gentoo install (scripts ready, ~3.5 hours) [hardware]
 - [x] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU [hardware]
 - [x] MBP 2015: upgrade install scripts to XPS/SP6 standard — 9 orphaned files, filename mismatch, zram algo inconsistency [repo]
-- [ ] XPS 9510: migrate kernel 6.12 → 6.18 LTS — use `tools/update-kernel.sh all` (cross-series, will use kernel_config.sh) [hardware]
+- [ ] XPS 9510: migrate kernel 6.12 → 6.18 LTS — use `tools/update-system.sh all` (cross-series, will use kernel_config.sh) [hardware]
 
 ## Medium Priority — Kernel & Power Optimization (All Machines)
 

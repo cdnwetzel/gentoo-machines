@@ -1,24 +1,30 @@
 #!/bin/bash
 # ============================================================================
-# update-kernel.sh — Local Kernel Update Tool
+# update-system.sh — System Update Tool
 # ============================================================================
-# Single self-contained script for updating the kernel on production Gentoo
-# machines. Auto-detects which machine via hostname + DMI fallback.
+# Single self-contained script for updating production Gentoo machines:
+# portage sync, @world packages, kernel build/install, config file merging,
+# post-reboot verification, and old kernel cleanup.
+# Auto-detects which machine via hostname + DMI fallback.
 #
 # Subcommands:
-#   full     - Prompted end-to-end workflow with resume (default when no args)
-#              fetch → world → check → prepare → build → install → reboot → verify → clean
-#              Prompts Y/n/skip before each phase. State saved to /var/lib/kernel-update/
-#              so the workflow survives interruption and reboot.
-#   fetch    - Sync portage, install latest gentoo-sources, select new kernel (requires root)
-#   world    - Update @world + preserved-rebuild + depclean (requires root)
-#   check    - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
-#   prepare  - Backup .config, migrate config (copy or script), apply patches, lint
-#   build    - make -j$(nproc) with timing
-#   install  - modules_install + make install + NVIDIA rebuild + verify state
-#   verify   - Post-reboot checks: dmesg, drivers, GPU, WiFi, zram, services
-#   clean    - Remove old kernels, keeping 3 most recent (requires root)
-#   all      - prepare + build + install (not verify or clean — requires reboot first)
+#   full          - Prompted end-to-end workflow with resume (default when no args)
+#                   fetch → world → config-update → check → prepare → build →
+#                   install → reboot → verify → clean
+#                   Prompts Y/n/skip before each phase. State saved to
+#                   /var/lib/kernel-update/ so the workflow survives interruption
+#                   and reboot.
+#   fetch         - Sync portage, install latest gentoo-sources, select new kernel,
+#                   show news (requires root)
+#   world         - Update @world + preserved-rebuild + depclean (requires root)
+#   config-update - Merge updated config files via dispatch-conf (requires root)
+#   check         - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
+#   prepare       - Backup .config, migrate config (copy or script), apply patches, lint
+#   build         - make -j$(nproc) with timing
+#   install       - modules_install + make install + NVIDIA rebuild + verify state
+#   verify        - Post-reboot checks: dmesg, drivers, GPU, WiFi, zram, services
+#   clean         - Remove old kernels, keeping 3 most recent (requires root)
+#   all           - prepare + build + install (not verify or clean — requires reboot first)
 #
 # Flags:
 #   --dry-run          Show what would happen without making changes
@@ -32,12 +38,12 @@
 #     Falls back to .config copy + warning if no script exists
 #
 # Usage:
-#   sudo update-kernel.sh                  # full prompted workflow (default)
-#   sudo update-kernel.sh full             # same thing, explicit
-#   sudo update-kernel.sh --dry-run full   # preview all phases
-#   update-kernel.sh --machine xps-9510 check
-#   update-kernel.sh verify
-#   sudo update-kernel.sh clean
+#   sudo update-system.sh                  # full prompted workflow (default)
+#   sudo update-system.sh full             # same thing, explicit
+#   sudo update-system.sh --dry-run full   # preview all phases
+#   update-system.sh --machine xps-9510 check
+#   update-system.sh verify
+#   sudo update-system.sh clean
 # ============================================================================
 
 set -euo pipefail
@@ -283,6 +289,13 @@ do_fetch() {
     # Show current state
     if [[ -L /usr/src/linux ]]; then
         info "Symlink: /usr/src/linux → $(readlink /usr/src/linux)"
+    fi
+
+    header "Portage News"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: eselect news read"
+    else
+        eselect news read
     fi
 
     echo ""
@@ -723,7 +736,7 @@ do_install() {
         mkdir -p "${STATE_DIR}"
         cat > "${PENDING_FILE}" <<EOF
 # Kernel update pending verification
-# Written by update-kernel.sh on $(date -Iseconds)
+# Written by update-system.sh on $(date -Iseconds)
 MACHINE=${machine}
 OLD_RELEASE=${old_release}
 NEW_RELEASE=${krelease}
@@ -1056,6 +1069,29 @@ do_world() {
 
     echo ""
     info "World update complete."
+    info "Run '${0##*/} config-update' if there are pending config file updates."
+}
+
+# ============================================================================
+# config-update — Merge updated config files via dispatch-conf
+# ============================================================================
+do_config_update() {
+    [[ $EUID -eq 0 ]] || error "Config update requires root"
+
+    header "Config File Updates"
+    local pending
+    pending=$(find /etc -name '._cfg????_*' 2>/dev/null | wc -l)
+    if (( pending == 0 )); then
+        info "No config files to update."
+        return 0
+    fi
+    info "${pending} config file(s) need updating"
+    if $DRY_RUN; then
+        info "[dry-run] Would run: dispatch-conf"
+        find /etc -name '._cfg????_*' 2>/dev/null | head -10
+    else
+        dispatch-conf
+    fi
 }
 
 # ============================================================================
@@ -1130,14 +1166,16 @@ do_full() {
         esac
     fi
 
-    info "Full workflow: fetch → world → check → prepare → build → install → reboot → verify → clean"
+    info "Full workflow: fetch → world → config-update → check → prepare → build → install → reboot → verify → clean"
 
     # --- Pre-reboot phases ---
-    run_full_phase fetch   "Sync portage + install gentoo-sources + eselect kernel" \
+    run_full_phase fetch          "Sync portage + install gentoo-sources + eselect kernel + news" \
         do_fetch
-    run_full_phase world   "Update @world + preserved-rebuild + depclean" \
+    run_full_phase world          "Update @world + preserved-rebuild + depclean" \
         do_world
-    run_full_phase check   "Pre-flight report (versions, disk, patches)" \
+    run_full_phase config-update  "Merge updated config files (dispatch-conf)" \
+        do_config_update
+    run_full_phase check          "Pre-flight report (versions, disk, patches)" \
         do_check "$machine"
     run_full_phase prepare "Backup config + migrate + apply patches + lint" \
         do_prepare "$machine"
@@ -1184,21 +1222,23 @@ usage() {
     cat <<EOF
 Usage: ${0##*/} [OPTIONS] COMMAND
 
-Local kernel update tool for production Gentoo machines.
+System update tool for production Gentoo machines.
 
 Commands:
-  full       Prompted end-to-end workflow with resume support (default)
-               fetch → world → check → prepare → build → install → reboot → verify → clean
-               Prompts Y/n/skip before each phase. Saves progress — re-run to resume.
-  fetch      Sync portage, install latest gentoo-sources, select kernel (requires root)
-  world      Update @world + preserved-rebuild + depclean (requires root)
-  check      Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
-  prepare    Backup .config, migrate config, apply patches, lint
-  build      Compile kernel with make -j\$(nproc)
-  install    Install modules + kernel + NVIDIA rebuild (requires root)
-  verify     Post-reboot verification checks
-  clean      Remove old kernels, keeping 3 most recent (requires root)
-  all        Run prepare + build + install (requires root)
+  full           Prompted end-to-end workflow with resume support (default)
+                   fetch → world → config-update → check → prepare → build →
+                   install → reboot → verify → clean
+                   Prompts Y/n/skip before each phase. Saves progress — re-run to resume.
+  fetch          Sync portage, install latest gentoo-sources, select kernel, show news (requires root)
+  world          Update @world + preserved-rebuild + depclean (requires root)
+  config-update  Merge updated config files via dispatch-conf (requires root)
+  check          Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
+  prepare        Backup .config, migrate config, apply patches, lint
+  build          Compile kernel with make -j\$(nproc)
+  install        Install modules + kernel + NVIDIA rebuild (requires root)
+  verify         Post-reboot verification checks
+  clean          Remove old kernels, keeping 3 most recent (requires root)
+  all            Run prepare + build + install (requires root)
 
 Options:
   --dry-run          Show what would happen without changes
@@ -1215,6 +1255,7 @@ Typical usage:
 Individual subcommands (run phases manually):
   sudo ${0##*/} fetch
   sudo ${0##*/} world
+  sudo ${0##*/} config-update
   ${0##*/} check
   ${0##*/} prepare
   ${0##*/} build
@@ -1266,15 +1307,16 @@ if $DRY_RUN; then
 fi
 
 case "$COMMAND" in
-    full)    do_full "$MACHINE" ;;
-    fetch)   do_fetch ;;
-    world)   do_world ;;
-    check)   do_check "$MACHINE" ;;
-    prepare) do_prepare "$MACHINE" ;;
-    build)   do_build ;;
-    install) do_install "$MACHINE" ;;
-    verify)  do_verify "$MACHINE" ;;
-    clean)   do_clean ;;
-    all)     do_all "$MACHINE" ;;
-    *)       error "Unknown command: ${COMMAND}. Run '${0##*/} --help' for usage." ;;
+    full)          do_full "$MACHINE" ;;
+    fetch)         do_fetch ;;
+    world)         do_world ;;
+    config-update) do_config_update ;;
+    check)         do_check "$MACHINE" ;;
+    prepare)       do_prepare "$MACHINE" ;;
+    build)         do_build ;;
+    install)       do_install "$MACHINE" ;;
+    verify)        do_verify "$MACHINE" ;;
+    clean)         do_clean ;;
+    all)           do_all "$MACHINE" ;;
+    *)             error "Unknown command: ${COMMAND}. Run '${0##*/} --help' for usage." ;;
 esac

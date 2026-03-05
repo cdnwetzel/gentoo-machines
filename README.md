@@ -61,7 +61,7 @@ gentoo-machines/
 │   ├── deep_harvest.sh    # Deep hardware discovery with module/firmware detection
 │   ├── kconfig-lint.sh    # Static kernel config validator (5 checks, 19K symbols)
 │   ├── kernel-config-template.sh  # Auto-generate kernel_config.sh from harvest data
-│   ├── update-kernel.sh            # Prompted kernel + system update workflow with resume
+│   ├── update-system.sh            # Prompted system update workflow with resume
 │   ├── build-kernel-remote.sh     # Cross-compile and deploy kernels over SSH
 │   └── generate-config.sh         # AI-powered config generation (uses Claude CLI)
 ├── shared/
@@ -120,31 +120,32 @@ Uses Claude CLI to analyze harvest data against a base config and generate `.con
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 ```
 
-### update-kernel.sh — Kernel and System Update Tool
+### update-system.sh — System Update Tool
 
-End-to-end update workflow for production machines. Auto-detects machine via hostname + DMI fallback. Handles portage sync, system package updates, kernel config migration, build, install, NVIDIA module rebuild, post-reboot verification, and old kernel cleanup.
+End-to-end update workflow for production machines. Auto-detects machine via hostname + DMI fallback. Handles portage sync, system package updates, config file merging (dispatch-conf), kernel config migration, build, install, NVIDIA module rebuild, post-reboot verification, and old kernel cleanup.
 
 **Default usage** — prompted step-by-step with resume:
 
 ```bash
-sudo tools/update-kernel.sh           # walks through all phases, prompts Y/n/skip at each step
+sudo tools/update-system.sh           # walks through all phases, prompts Y/n/skip at each step
 # reboot when prompted
-sudo tools/update-kernel.sh           # resumes with verify + clean
+sudo tools/update-system.sh           # resumes with verify + clean
 ```
 
-The `full` workflow runs 9 phases in order: `fetch` → `world` → `check` → `prepare` → `build` → `install` → reboot → `verify` → `clean`. Progress is saved to `/var/lib/kernel-update/full-progress`, so the workflow survives interruption and reboot. On resume, completed phases are skipped. Type `reset` at the resume prompt to start over.
+The `full` workflow runs 10 phases in order: `fetch` → `world` → `config-update` → `check` → `prepare` → `build` → `install` → reboot → `verify` → `clean`. Progress is saved to `/var/lib/kernel-update/full-progress`, so the workflow survives interruption and reboot. On resume, completed phases are skipped. Type `reset` at the resume prompt to start over.
 
 **Individual subcommands** — run any phase standalone:
 
 ```bash
-sudo tools/update-kernel.sh fetch     # sync portage + install gentoo-sources + eselect kernel
-sudo tools/update-kernel.sh world     # emerge @world + preserved-rebuild + depclean
-tools/update-kernel.sh check          # pre-flight: versions, disk, patches, config strategy
-tools/update-kernel.sh prepare        # backup .config, migrate config, apply patches, lint
-tools/update-kernel.sh build          # compile with make -j$(nproc)
-sudo tools/update-kernel.sh install   # modules_install + make install + NVIDIA rebuild
-tools/update-kernel.sh verify         # post-reboot: dmesg, drivers, GPU, WiFi, zram, services
-sudo tools/update-kernel.sh clean     # eclean-kernel -n 3 (keep current + 2 rollback)
+sudo tools/update-system.sh fetch          # sync portage + install gentoo-sources + eselect kernel + news
+sudo tools/update-system.sh world          # emerge @world + preserved-rebuild + depclean
+sudo tools/update-system.sh config-update  # merge updated config files via dispatch-conf
+tools/update-system.sh check               # pre-flight: versions, disk, patches, config strategy
+tools/update-system.sh prepare        # backup .config, migrate config, apply patches, lint
+tools/update-system.sh build          # compile with make -j$(nproc)
+sudo tools/update-system.sh install   # modules_install + make install + NVIDIA rebuild
+tools/update-system.sh verify         # post-reboot: dmesg, drivers, GPU, WiFi, zram, services
+sudo tools/update-system.sh clean     # eclean-kernel -n 3 (keep current + 2 rollback)
 ```
 
 **Options:**
@@ -169,9 +170,9 @@ tools/build-kernel-remote.sh <target> {pull|build|deploy|all}
 ### Update an existing machine
 
 ```bash
-sudo tools/update-kernel.sh           # prompted workflow: sync, update, build, install
+sudo tools/update-system.sh           # prompted workflow: sync, update, build, install
 # reboot
-sudo tools/update-kernel.sh           # resume: verify + clean
+sudo tools/update-system.sh           # resume: verify + clean
 ```
 
 ### Deploy a kernel config manually
@@ -231,4 +232,4 @@ ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older PCH. Currently runs
 
 ### Kernel Strategy
 
-All production machines use `gentoo-sources` with manual configuration via per-machine `kernel_config.sh` scripts — not distribution kernels (`gentoo-kernel`/`gentoo-kernel-bin`). No initramfs or dracut — root-path drivers (NVMe, AHCI, ext4) are built-in (=y). `installkernel` with the `grub` USE flag auto-updates GRUB on `make install`. Old kernels are cleaned with `eclean-kernel -n 3` (keep current + 2 rollback). See `tools/update-kernel.sh` for the complete guided workflow.
+All production machines use `gentoo-sources` with manual configuration via per-machine `kernel_config.sh` scripts — not distribution kernels (`gentoo-kernel`/`gentoo-kernel-bin`). No initramfs or dracut — root-path drivers (NVMe, AHCI, ext4) are built-in (=y). `installkernel` with the `grub` USE flag auto-updates GRUB on `make install`. Old kernels are cleaned with `eclean-kernel -n 3` (keep current + 2 rollback). See `tools/update-system.sh` for the complete guided workflow.

@@ -141,22 +141,25 @@ instead — see shared/hibernate-setup.sh header for details.
 
 ## Step 9: Kernel Updates (Production Machines)
 
-Once the machine is in production, use `tools/update-kernel.sh` for subsequent kernel updates:
+Once the machine is in production, use `tools/update-system.sh` for subsequent updates:
 
 ```bash
-# 1. Sync and install new kernel sources
-sudo tools/update-kernel.sh fetch    # emerge --sync + gentoo-sources + eselect kernel
+# Option 1: Full prompted workflow (recommended)
+sudo tools/update-system.sh          # walks through all phases, prompts Y/n/skip
+# reboot when prompted
+sudo tools/update-system.sh          # resumes with verify + clean
 
-# 2. Guided update
-tools/update-kernel.sh check         # pre-flight
-tools/update-kernel.sh prepare       # config migration + patches
-tools/update-kernel.sh build         # compile
-sudo tools/update-kernel.sh install  # install + module rebuild
+# Option 2: Individual subcommands
+sudo tools/update-system.sh fetch          # emerge --sync + gentoo-sources + eselect kernel + news
+sudo tools/update-system.sh world          # emerge @world + preserved-rebuild + depclean
+sudo tools/update-system.sh config-update  # merge updated config files via dispatch-conf
+tools/update-system.sh check               # pre-flight
+tools/update-system.sh prepare             # config migration + patches
+tools/update-system.sh build               # compile
+sudo tools/update-system.sh install        # install + module rebuild
 # reboot
-tools/update-kernel.sh verify        # post-reboot checks
-
-# 3. Clean up old kernels
-sudo tools/update-kernel.sh clean    # eclean-kernel -n 3 (keep current + 2 rollback)
+tools/update-system.sh verify              # post-reboot checks
+sudo tools/update-system.sh clean          # eclean-kernel -n 3 (keep current + 2 rollback)
 ```
 
 All production machines should have `=sys-kernel/gentoo-sources-6.18* ~amd64` in their `package.accept_keywords` to track the 6.18 LTS series.
