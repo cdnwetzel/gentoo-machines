@@ -17,12 +17,12 @@ set -euo pipefail
 # --- Target Definitions ---
 # Format: TARGETS[name]="user@host"
 declare -A TARGETS=(
-    [xps-9315]="user@xps-9315.local"
-    [nuc11]="user@nuc11.local"
+    [xps-9510]="chris@xps-9510"
+    [mbp-2015]="chris@gentoo-mbp"
+    [surface-pro-6]="chris@surface-pro-6"
+    [nuc11]="chris@nuc11"
 )
 
-# Kernel version (update as needed)
-KVER="6.12.58-gentoo"
 BUILD_DIR="/tmp/kernel-build"
 JOBS=$(nproc)
 
@@ -66,6 +66,12 @@ check_deps() {
 
 do_pull() {
     info "Pulling kernel source and .config from ${TARGET_NAME} (${TARGET_HOST})..."
+
+    # Detect kernel version from target's /usr/src/linux symlink
+    info "Detecting kernel version on target..."
+    KVER=$(ssh "${TARGET_HOST}" 'basename "$(readlink -f /usr/src/linux)" | sed "s/^linux-//"')
+    info "Target kernel: ${KVER}"
+    SRC_DIR="${BUILD_DIR}/${TARGET_NAME}-linux-${KVER}"
 
     mkdir -p "${SRC_DIR}"
 
@@ -167,10 +173,7 @@ do_deploy() {
     cp -a /tmp/modules-${krelease} /lib/modules/${krelease}
     depmod ${krelease}
 
-    # Rebuild initramfs
-    dracut --force /boot/initramfs-${krelease}.img ${krelease}
-
-    # Update GRUB (if using GRUB)
+    # Update GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
 
     # Clean up
@@ -192,12 +195,27 @@ if [[ -z "${TARGETS[$TARGET_NAME]+x}" ]]; then
 fi
 
 TARGET_HOST="${TARGETS[$TARGET_NAME]}"
-SRC_DIR="${BUILD_DIR}/${TARGET_NAME}-linux-${KVER}"
+# SRC_DIR is set dynamically in do_pull() after detecting KVER from target.
+# For build/deploy, KVER must already be known from a previous pull.
+KVER=""
+SRC_DIR=""
+
+# Find existing source dir from a previous pull (for build/deploy)
+find_src_dir() {
+    local latest
+    latest=$(ls -td "${BUILD_DIR}/${TARGET_NAME}-linux-"* 2>/dev/null | head -1)
+    if [[ -n "$latest" ]]; then
+        SRC_DIR="$latest"
+        KVER=$(basename "$latest" | sed "s/^${TARGET_NAME}-linux-//")
+    else
+        error "No source dir found. Run: $0 ${TARGET_NAME} pull"
+    fi
+}
 
 case "${ACTION}" in
     pull)   do_pull ;;
-    build)  do_build ;;
-    deploy) do_deploy ;;
+    build)  find_src_dir; do_build ;;
+    deploy) find_src_dir; do_deploy ;;
     all)
         do_pull
         do_build

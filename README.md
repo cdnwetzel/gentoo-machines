@@ -16,7 +16,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
-NVIDIA machines use **proprietary nvidia-drivers**. The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads.
+NVIDIA machines use **proprietary nvidia-drivers**. The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
 
 ## Repository Layout
 
@@ -61,6 +61,7 @@ gentoo-machines/
 │   ├── deep_harvest.sh    # Deep hardware discovery with module/firmware detection
 │   ├── kconfig-lint.sh    # Static kernel config validator (5 checks, 19K symbols)
 │   ├── kernel-config-template.sh  # Auto-generate kernel_config.sh from harvest data
+│   ├── update-kernel.sh            # Local kernel update tool (check/prepare/build/install/verify)
 │   ├── build-kernel-remote.sh     # Cross-compile and deploy kernels over SSH
 │   └── generate-config.sh         # AI-powered config generation (uses Claude CLI)
 ├── shared/
@@ -119,8 +120,19 @@ Uses Claude CLI to analyze harvest data against a base config and generate `.con
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 ```
 
+### update-kernel.sh — Local Kernel Update Tool
+Guided kernel update workflow for production machines. Auto-detects machine via hostname + DMI. Handles same-series updates (copy .config + olddefconfig) and cross-series migrations (defconfig + kernel_config.sh + olddefconfig). Includes NVIDIA module rebuild, patch application, and post-reboot verification.
+
+```bash
+tools/update-kernel.sh check            # pre-flight: versions, disk, patches, config strategy
+tools/update-kernel.sh prepare           # backup .config, migrate config, apply patches, lint
+tools/update-kernel.sh build             # compile with make -j$(nproc)
+sudo tools/update-kernel.sh install      # modules_install + make install + NVIDIA rebuild
+tools/update-kernel.sh verify            # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
+```
+
 ### build-kernel-remote.sh — Cross-Compile and Deploy
-Build kernels on a powerful host and deploy over SSH.
+Build kernels on a powerful host and deploy over SSH. Auto-detects kernel version from target.
 
 ```bash
 tools/build-kernel-remote.sh <target> {pull|build|deploy|all}

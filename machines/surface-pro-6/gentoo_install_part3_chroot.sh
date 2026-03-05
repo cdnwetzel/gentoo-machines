@@ -449,7 +449,32 @@ else
     echo "  [WARN] wifi-recover.sh not found"
 fi
 
-echo "[11.3] Verifying firmware files..."
+echo "[11.3] Installing local.d boot scripts..."
+mkdir -p /etc/local.d
+if [[ -f "$CONFIGS/disable-wakeup.start" ]]; then
+    cp "$CONFIGS/disable-wakeup.start" /etc/local.d/disable-wakeup.start
+    chmod +x /etc/local.d/disable-wakeup.start
+    echo "  [OK] /etc/local.d/disable-wakeup.start (prevent s2idle spurious wake)"
+else
+    echo "  [WARN] disable-wakeup.start not found"
+fi
+if [[ -f "$CONFIGS/fstrim-weekly.start" ]]; then
+    cp "$CONFIGS/fstrim-weekly.start" /etc/local.d/fstrim-weekly.start
+    chmod +x /etc/local.d/fstrim-weekly.start
+    echo "  [OK] /etc/local.d/fstrim-weekly.start (weekly SSD TRIM)"
+else
+    echo "  [WARN] fstrim-weekly.start not found"
+fi
+
+echo "[11.4] Installing sysctl tuning..."
+if [[ -f "$CONFIGS/sysctl-performance.conf" ]]; then
+    cp "$CONFIGS/sysctl-performance.conf" /etc/sysctl.d/99-surface-pro-6-performance.conf
+    echo "  [OK] /etc/sysctl.d/99-surface-pro-6-performance.conf"
+else
+    echo "  [WARN] sysctl-performance.conf not found"
+fi
+
+echo "[11.5] Verifying firmware files..."
 ls /lib/firmware/mrvl/pcie8897_uapsta.bin* 2>/dev/null && echo "  [OK] WiFi firmware" || echo "  [FAIL] WiFi firmware!"
 ls /lib/firmware/mrvl/usb8897_uapsta.bin* 2>/dev/null && echo "  [OK] BT firmware" || echo "  [FAIL] BT firmware!"
 ls /lib/firmware/i915/kbl_dmc_ver1_04.bin* 2>/dev/null && echo "  [OK] i915 DMC firmware" || echo "  [FAIL] i915 firmware!"
