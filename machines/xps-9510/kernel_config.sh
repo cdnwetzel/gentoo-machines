@@ -3,11 +3,12 @@
 # Gentoo Kernel Config - Dell XPS 15 9510
 # ============================================================================
 # ALL settings verified against:
-#   - Live Gentoo system (kernel 6.12.58-gentoo, production since Feb 2026)
+#   - Live Gentoo system (kernel 6.18-gentoo, production)
 #   - deep_harvest.sh hardware inventory
 #   - XPS 9510 HARDWARE.md (PCI IDs, drivers, firmware)
 #   - Cross-reference with Surface Pro 6, MBP 2015, NUC11 production configs
 #   - NVIDIA driver 590.48.01 build requirements
+#   - Kconfig symbol updates for 6.18 (MCORE2 removed, renames applied)
 #
 # BASE CONFIG: Start from any existing .config (e.g., defconfig or MBP base)
 #
@@ -60,7 +61,7 @@ echo "[Phase 2] Processor configuration..."
 
 $SC --enable SMP
 $SC --set-val NR_CPUS 16
-$SC --enable MCORE2
+# MCORE2 removed in 6.18 for x86_64; CPU march handled by CFLAGS in make.conf
 
 $SC --enable SCHED_MC
 $SC --enable SCHED_SMT
@@ -76,7 +77,7 @@ $SC --enable X86_X2APIC
 $SC --enable INTEL_RAPL
 $SC --enable X86_PKG_TEMP_THERMAL
 $SC --enable INTEL_POWERCLAMP
-$SC --enable CORETEMP
+$SC --enable SENSORS_CORETEMP
 
 # DPTF thermal framework (Intel Dynamic Tuning [8086:9a03])
 # ACPI_DPTF is the parent toggle — must be enabled first
@@ -212,6 +213,7 @@ $SC --disable DRM_I915_GVT
 $SC --enable FB
 $SC --enable FB_EFI
 $SC --enable FRAMEBUFFER_CONSOLE
+$SC --enable DRM_CLIENT_SELECTION
 $SC --enable DRM_FBDEV_EMULATION
 
 # Backlight — intel_backlight (OLED panel)
@@ -258,7 +260,7 @@ $SC --enable SND_HDA_RECONFIG
 $SC --enable SND_HDA_INPUT_BEEP
 $SC --set-val SND_HDA_INPUT_BEEP_MODE 0
 $SC --enable SND_HDA_PATCH_LOADER
-$SC --enable SND_HDA_POWER_SAVE
+# SND_HDA_POWER_SAVE bool removed in 6.18; only the default value int remains
 $SC --set-val SND_HDA_POWER_SAVE_DEFAULT 1
 
 # ALSA core
@@ -266,7 +268,7 @@ $SC --enable SOUND
 $SC --module SND
 $SC --module SND_PCM
 $SC --module SND_HWDEP
-$SC --module SND_SEQ
+$SC --module SND_SEQUENCER
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
@@ -311,7 +313,7 @@ echo "  [OK] Bluetooth"
 echo "[Phase 12] Thunderbolt 4..."
 
 # TB4 NHI [8086:9a21], USB Controller [8086:9a17]
-$SC --module THUNDERBOLT
+$SC --module USB4
 $SC --module INTEL_WMI_THUNDERBOLT
 
 echo "  [OK] Thunderbolt"
@@ -540,8 +542,8 @@ echo "[Phase 24] Hardware crypto..."
 $SC --module CRYPTO_AES_NI_INTEL
 $SC --module CRYPTO_GHASH_CLMUL_NI_INTEL
 $SC --module CRYPTO_POLYVAL_CLMUL_NI
-$SC --module CRYPTO_SHA256_SSSE3
-$SC --module CRYPTO_SHA512_SSSE3
+$SC --module CRYPTO_SHA256
+$SC --module CRYPTO_SHA512
 
 echo "  [OK] Crypto"
 
@@ -586,12 +588,10 @@ $SC --disable PARPORT
 
 # iSCSI (not needed)
 $SC --disable BE2ISCSI
-$SC --disable BNX2I
-$SC --disable CXGB4I
-$SC --disable CXGB3I
-$SC --disable QLA4XXX
+$SC --disable SCSI_BNX2_ISCSI
 $SC --disable SCSI_CXGB3_ISCSI
 $SC --disable SCSI_CXGB4_ISCSI
+$SC --disable SCSI_QLA_ISCSI
 
 # Broadcom WiFi (not present — Intel WiFi on XPS 9510)
 $SC --disable BRCMUTIL
