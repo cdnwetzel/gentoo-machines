@@ -1059,7 +1059,13 @@ do_world() {
         info "[dry-run] Would run: emerge -avuDN @world"
         emerge --pretend -vuDN @world || true
     else
-        emerge -avuDN @world
+        if ! emerge -avuDN @world; then
+            warn "@world update failed. To resume where it left off:"
+            warn "  emerge --resume              # retry from the failed package"
+            warn "  emerge --resume --skipfirst  # skip it and continue with the rest"
+            warn "Fix the issue, then re-run: sudo ${0##*/} world"
+            return 1
+        fi
     fi
 
     header "Preserved Rebuild"
@@ -1067,7 +1073,10 @@ do_world() {
         info "[dry-run] Would run: emerge @preserved-rebuild"
         emerge --pretend @preserved-rebuild || true
     else
-        emerge @preserved-rebuild
+        if ! emerge @preserved-rebuild; then
+            warn "preserved-rebuild failed. Fix the issue, then re-run: sudo ${0##*/} world"
+            return 1
+        fi
     fi
 
     header "Dependency Cleanup"
@@ -1075,7 +1084,10 @@ do_world() {
         info "[dry-run] Would run: emerge --depclean -a"
         emerge --pretend --depclean || true
     else
-        emerge --depclean -a
+        if ! emerge --depclean -a; then
+            warn "depclean failed. Fix the issue, then re-run: sudo ${0##*/} world"
+            return 1
+        fi
     fi
 
     echo ""
