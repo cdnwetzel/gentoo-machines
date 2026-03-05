@@ -6,8 +6,8 @@
 # New layout uses the full disk more efficiently with portage tmpfs in RAM
 
 # <device>                                <mount>          <fs>   <opts>                                                 <dump> <pass>
-UUID=<your-efi-uuid>                       /boot/efi        vfat   noauto,umask=0077                                       0      2
 UUID=<your-root-uuid>                      /                ext4   noatime,discard                                         0      1
+UUID=<your-efi-uuid>                       /boot/efi        vfat   noauto,umask=0077                                       0      2
 
 # Ramdisks
 tmpfs                                      /tmp             tmpfs  size=4G,nosuid,nodev                                    0      0
