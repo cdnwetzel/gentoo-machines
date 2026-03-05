@@ -286,3 +286,16 @@ attempted, the EFI partition silently fails or mounts on the wrong path.
 ```
 **Alternative**: Use `noauto` for `/boot/efi` (XPS 9510 pattern) — only mount when
 updating GRUB. EFI partition isn't needed at runtime.
+
+## 28. PORTAGE_TMPDIR Must Be `/var/tmp`, Not `/var/tmp/portage`
+**Problem**: Setting `PORTAGE_TMPDIR="/var/tmp/portage"` in make.conf. Portage
+automatically appends `/portage/` to PORTAGE_TMPDIR, so builds go to
+`/var/tmp/portage/portage/` — bypassing the tmpfs mount at `/var/tmp/portage`.
+Builds run on disk instead of RAM, and build logs vanish from the expected path.
+**Fix**: Use the default value:
+```
+PORTAGE_TMPDIR="/var/tmp"
+```
+Portage creates `/var/tmp/portage/` itself, which is where fstab mounts the tmpfs.
+The disk fallback (`notmpfs.conf`) correctly uses `/var/tmp/portage-disk` — portage
+builds large packages in `/var/tmp/portage-disk/portage/`, entirely separate from tmpfs.
