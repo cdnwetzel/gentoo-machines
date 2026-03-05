@@ -285,6 +285,13 @@ if [[ -f "$CONFIGS/fstrim-weekly.start" ]]; then
     echo "  [OK] fstrim-weekly.start -> /etc/local.d/"
 fi
 
+# --- sysctl tuning ---
+if [[ -f "$CONFIGS/sysctl-performance.conf" ]]; then
+    mkdir -p "$GENTOO/etc/sysctl.d"
+    cp "$CONFIGS/sysctl-performance.conf" "$GENTOO/etc/sysctl.d/99-surface-pro-6-performance.conf"
+    echo "  [OK] sysctl-performance.conf -> /etc/sysctl.d/"
+fi
+
 # --- Chroot install script ---
 if [[ -f "$CONFIGS/gentoo_install_part3_chroot.sh" ]]; then
     cp "$CONFIGS/gentoo_install_part3_chroot.sh" "$GENTOO/root/"

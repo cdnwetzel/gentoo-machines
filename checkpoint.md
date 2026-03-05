@@ -1,6 +1,35 @@
 # Checkpoint
 
-## Latest Session: MBP 2015 Kernel Rebuild + Inventory Updates
+## Latest Session: Kernel Update Tool + LTS Tracking
+
+### What Was Done
+1. **Created `tools/update-kernel.sh`** (~970 lines): Local kernel update tool for production machines. Auto-detects machine via hostname + DMI fallback. Subcommands: check, prepare, build, install, verify, all. Supports --dry-run and --machine override. Config strategy: same-series (copy .config + olddefconfig) vs cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry: xps-9510, mbp-2015, surface-pro-6, nuc11. Patch registry with version-range scoping. NVIDIA handling: source symlink fix + @module-rebuild. Writes verify state to /var/lib/kernel-update/ for post-reboot checks.
+2. **Fixed `tools/build-kernel-remote.sh`**: Removed dracut reference (no initramfs), made KVER dynamic (detected from target's /usr/src/linux symlink instead of hardcoded), added all production machines to TARGETS (xps-9510, mbp-2015, surface-pro-6, nuc11), updated user@host format.
+3. **~amd64 keyword tracking for 6.18 LTS**: Added `=sys-kernel/gentoo-sources-6.18* ~amd64` to package.accept_keywords for all production + ready machines (xps-9510, mbp-2015, surface-pro-6, nuc11). Created new files for SP6 and NUC11.
+4. **Documentation**: INSTALL.md kernel update section, CLAUDE.md tool reference + LTS note, machine-checklist kernel update step, backlog XPS 6.12→6.18 item.
+
+### Files Created
+- `tools/update-kernel.sh` — local kernel update tool
+- `machines/surface-pro-6/package.accept_keywords` — ~amd64 keywords
+- `machines/nuc11/package.accept_keywords` — ~amd64 keywords
+
+### Files Modified
+- `tools/build-kernel-remote.sh` — dynamic KVER, all targets, no dracut
+- `machines/xps-9510/package.accept_keywords` — gentoo-sources 6.18 LTS
+- `machines/mbp-2015/package.accept_keywords` — gentoo-sources 6.18 LTS
+- `INSTALL.md` — kernel update section
+- `CLAUDE.md` — update-kernel.sh docs, LTS note, SP6 file table
+- `shared/machine-checklist.md` — kernel update step
+- `backlog.md` — XPS 6.12→6.18 migration item
+
+### Next Session
+- XPS 9510: execute 6.12→6.18 migration with `tools/update-kernel.sh all`
+- XPS 9510: kernel config fixes (NVME_HWMON, INTEL_RAPL, kernel_config.sh mismatches)
+- XPS 9510: hibernate-setup.sh, Dell battery charge thresholds
+
+---
+
+## Previous Session: MBP 2015 Kernel Rebuild + Inventory Updates
 
 ### What Was Done
 1. **MBP 2015 kernel rebuild**: Applied repo .config with SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT — all now live and verified

@@ -773,3 +773,71 @@ Follow this installation guide using your new machine directory. After first boo
 | Gentoo news | `eselect news read` |
 | Rebuild kernel | `cd /usr/src/linux && make oldconfig && make -j$(nproc) && make modules_install install` |
 | Update GRUB | `grub-mkconfig -o /boot/grub/grub.cfg` |
+| Update kernel (tool) | `tools/update-kernel.sh check` then `prepare` / `build` / `install` / `verify` |
+
+---
+
+## Kernel Updates
+
+For production machines already running Gentoo. Use `tools/update-kernel.sh` for a guided workflow, or follow the manual steps below.
+
+### When to Update
+
+- **LTS point releases** (e.g., 6.18.12 → 6.18.16): Security fixes, driver fixes. Safe — Kconfig rarely changes within a series.
+- **Security advisories**: Check [kernel.org](https://www.kernel.org/) or Gentoo GLSAs.
+- **Cross-series migration** (e.g., 6.12 → 6.18): Major update. Many Kconfig symbols change. Use `kernel_config.sh` to regenerate config.
+
+### Quick Reference — Minor Updates (Same Series)
+
+```bash
+# 1. Install new sources (all machines track ~amd64 for 6.18 LTS)
+emerge --sync
+emerge -av gentoo-sources
+
+# 2. Select new kernel
+eselect kernel list
+eselect kernel set <N>
+
+# 3. Use the update tool
+tools/update-kernel.sh check            # pre-flight report
+tools/update-kernel.sh prepare          # backup + config migrate + patches
+tools/update-kernel.sh build            # compile
+sudo tools/update-kernel.sh install     # install + NVIDIA rebuild
+# reboot
+tools/update-kernel.sh verify           # post-reboot checks
+```
+
+### Cross-Series Migration
+
+Cross-series updates (different major.minor) use `kernel_config.sh` to regenerate the config from scratch, since Kconfig options change significantly between series.
+
+```bash
+# Same workflow — the tool auto-detects cross-series and uses kernel_config.sh
+tools/update-kernel.sh check            # shows "cross-series" strategy
+tools/update-kernel.sh prepare          # defconfig → kernel_config.sh → olddefconfig
+tools/update-kernel.sh build
+sudo tools/update-kernel.sh install
+# reboot
+tools/update-kernel.sh verify
+```
+
+### Rollback
+
+If the new kernel has issues:
+
+1. Reboot and select the old kernel from the GRUB menu (hold Shift during boot)
+2. Old kernel and modules are still on disk — nothing was deleted
+3. Fix the issue, rebuild, and try again
+
+### Manual Steps (Without the Tool)
+
+```bash
+cd /usr/src/linux
+zcat /proc/config.gz > .config         # copy running config
+make olddefconfig                       # update for new version
+make -j$(nproc)                         # build
+make modules_install                    # install modules
+make install                            # install kernel + update GRUB
+# NVIDIA machines: emerge @module-rebuild
+reboot
+```

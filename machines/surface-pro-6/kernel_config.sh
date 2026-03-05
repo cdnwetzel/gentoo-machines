@@ -15,7 +15,7 @@
 # USAGE:
 #   cd /usr/src/linux
 #   cp /path/to/mbp-2015/.config .config    # start from MBP base
-#   bash /path/to/kernel_config_surface_pro6.sh
+#   bash /path/to/kernel_config.sh
 #   make olddefconfig     # resolve all dependencies
 #   make menuconfig       # review
 #   make -j9 && make modules_install && make install
@@ -111,15 +111,21 @@ $SC --enable SCHED_SMT
 $SC --enable SCHED_AUTOGROUP
 $SC --enable X86_INTEL_PSTATE
 $SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
+$SC --enable CPU_FREQ_STAT
 $SC --enable INTEL_IDLE
 # MICROCODE is def_bool y when CPU_SUP_INTEL is set — no explicit enable needed
 $SC --enable X86_X2APIC
 
 # Kaby Lake-R thermal/power (confirmed via /sys/class/thermal)
 $SC --enable INTEL_RAPL
+$SC --module INTEL_RAPL_MSR
+$SC --module PERF_EVENTS_INTEL_RAPL
 $SC --enable X86_PKG_TEMP_THERMAL
 $SC --enable INTEL_POWERCLAMP
 $SC --module SENSORS_CORETEMP
+
+# Thermal zone sysfs export (hwmon interface for lm-sensors/powertop)
+$SC --enable THERMAL_HWMON
 
 # DPTF thermal framework (confirmed: INT3400, INT3403 thermal zones active)
 $SC --enable ACPI_DPTF
@@ -189,6 +195,7 @@ echo "[Phase 6] NVMe storage (boot drive, must be built-in)..."
 # CRITICAL: NVMe MUST be =y (built-in) — boot drive, no initramfs
 $SC --enable BLK_DEV_NVME
 $SC --enable NVME_CORE
+$SC --enable NVME_HWMON
 
 # I/O scheduler
 $SC --enable BLK_DEV_THROTTLING
@@ -379,6 +386,7 @@ $SC --module SURFACE_DTX
 
 # Surface battery/charger (needs POWER_SUPPLY parent)
 $SC --enable POWER_SUPPLY
+$SC --enable POWER_SUPPLY_HWMON
 $SC --module BATTERY_SURFACE
 $SC --module CHARGER_SURFACE
 

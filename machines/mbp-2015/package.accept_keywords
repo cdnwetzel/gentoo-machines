@@ -1,2 +1,3 @@
 app-laptop/mbpfan ~amd64
 net-vpn/networkmanager-sstp ~amd64
+=sys-kernel/gentoo-sources-6.18* ~amd64

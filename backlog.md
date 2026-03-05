@@ -4,18 +4,19 @@
 - [x] Execute Surface Pro 6 Gentoo install (scripts ready, ~3.5 hours) [hardware]
 - [x] Post-install SP6 verification: WiFi, display, audio, zram, brightness, GPU [hardware]
 - [x] MBP 2015: upgrade install scripts to XPS/SP6 standard — 9 orphaned files, filename mismatch, zram algo inconsistency [repo]
+- [ ] XPS 9510: migrate kernel 6.12 → 6.18 LTS — use `tools/update-kernel.sh all` (cross-series, will use kernel_config.sh) [hardware]
 
 ## Medium Priority — Kernel & Power Optimization (All Machines)
 
 ### Cross-Machine Kernel Config (next rebuild)
-- [x] Enable `CONFIG_SCHED_AUTOGROUP=y` on MBP 2015 — needs rebuild; XPS 9510 + SP6 still pending [repo]
-- [x] Enable `CONFIG_KSM=y` on MBP 2015 — needs rebuild; SP6 still pending [repo]
-- [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 + SP6 — NVMe thermal monitoring [repo]
-- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on all machines — battery monitoring via hwmon (MBP done) [repo]
-- [ ] Enable `CONFIG_THERMAL_HWMON=y` on all machines — thermal zone sysfs export (MBP done) [repo]
-- [x] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` to SCHEDUTIL on MBP 2015 — needs rebuild; XPS 9510 still pending [repo]
+- [x] Enable `CONFIG_SCHED_AUTOGROUP=y` on MBP 2015 + SP6 — XPS 9510 still pending [repo]
+- [x] Enable `CONFIG_KSM=y` on MBP 2015 + SP6 [repo]
+- [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 — NVMe thermal monitoring (SP6 done) [repo]
+- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on XPS 9510 — battery monitoring via hwmon (MBP + SP6 done) [repo]
+- [ ] Enable `CONFIG_THERMAL_HWMON=y` on XPS 9510 — thermal zone sysfs export (MBP + SP6 done) [repo]
+- [x] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` to SCHEDUTIL on MBP 2015 — XPS 9510 still pending [repo]
 - [ ] Enable `CONFIG_INTEL_RAPL=y` on XPS 9510 — currently only RAPL_CORE enabled [repo]
-- [ ] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
+- [x] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
 - [ ] Fix XPS 9510 kernel_config.sh mismatches — `SCHED_AUTOGROUP`, `BLK_DEV_THROTTLING` in script but disabled in .config [repo]
 
 ### XPS 9510 Power & Battery
@@ -32,9 +33,9 @@
 
 ### SP6 Power & Tuning
 - [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
-- [ ] SP6: create sysctl tuning file — even more critical with 8GB RAM + zram [repo]
-- [ ] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — reduce s2idle power drain [hardware]
-- [ ] SP6: install `sys-power/powertop` for battery profiling [hardware]
+- [x] SP6: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP tuning [repo]
+- [x] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — added to part3 phase 11 [repo]
+- [x] SP6: add `sys-power/powertop` to world file + `CPU_FREQ_STAT` to kernel config [repo]
 
 ## Medium Priority — Other
 - [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]

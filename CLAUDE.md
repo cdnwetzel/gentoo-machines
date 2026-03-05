@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh
+tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh, update-kernel.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -40,6 +40,8 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface Pro 6 runs stock gentoo-sources; Surface Pro 9 will need **linux-surface** kernel patches.
+
+All production machines track **6.18 LTS** (EOL Dec 2027) via `=sys-kernel/gentoo-sources-6.18* ~amd64` in their `package.accept_keywords`. Use `tools/update-kernel.sh` for guided kernel updates.
 
 ## Machine-Specific Details
 
@@ -115,11 +117,26 @@ tools/kernel-config-template.sh <machine-name> <harvest-log>
 ```
 Auto-detects CPU, GPU, WiFi (8 vendors), audio (SOF/HDA), storage, platform vendor (Dell/Apple/Surface/Lenovo/HP/ASUS), Ethernet, Thunderbolt, ISH sensors, cameras. Generates a complete 26-phase kernel_config.sh and auto-runs kconfig-lint on the output.
 
+### update-kernel.sh
+Local kernel update tool for production machines. Auto-detects machine via hostname + DMI:
+```bash
+tools/update-kernel.sh check                    # pre-flight: versions, disk, patches, config strategy
+tools/update-kernel.sh prepare                   # backup .config, migrate config, apply patches, lint
+tools/update-kernel.sh build                     # make -j$(nproc) with timing
+sudo tools/update-kernel.sh install              # modules_install + make install + NVIDIA rebuild
+tools/update-kernel.sh verify                    # post-reboot checks: dmesg, drivers, GPU, WiFi, zram
+tools/update-kernel.sh all                       # prepare + build + install
+tools/update-kernel.sh --dry-run prepare         # preview without changes
+tools/update-kernel.sh --machine xps-9510 check  # override auto-detection
+```
+
+Config strategy: same-series (copy .config + olddefconfig), cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11.
+
 ### build-kernel-remote.sh
-Cross-compile and deploy kernels over SSH:
+Cross-compile and deploy kernels over SSH (auto-detects KVER from target):
 ```bash
 tools/build-kernel-remote.sh <target> {pull|build|deploy|all}
-# Targets: xps-9315, nuc11
+# Targets: xps-9510, mbp-2015, surface-pro-6, nuc11
 ```
 
 ### generate-config.sh
@@ -316,9 +333,10 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/make.conf` | Portage: `-march=skylake`, VIDEO_CARDS="intel", 4GB tmpfs |
 | `machines/surface-pro-6/kernel_config.sh` | Programmatic kernel config (scripts/config based) |
 | `machines/surface-pro-6/package.use` | USE: installkernel+grub, networkmanager-sstp gui |
+| `machines/surface-pro-6/package.accept_keywords` | ~amd64 keywords: networkmanager-sstp, gentoo-sources 6.18 LTS |
 | `machines/surface-pro-6/package.env` | Large package tmpdir override |
 | `machines/surface-pro-6/portage_env_notmpfs.conf` | Fallback PORTAGE_TMPDIR to disk |
-| `machines/surface-pro-6/world` | Target package set (70+ packages) |
+| `machines/surface-pro-6/world` | Target package set (64 packages) |
 | `machines/surface-pro-6/iptsd.conf` | Surface touch/pen input daemon config |
 | `machines/surface-pro-6/iptsd-device.conf` | Surface Pro 6 specific IPTSD device config |
 | `machines/surface-pro-6/50-iptsd.rules` | udev rules for IPTSD |
@@ -329,6 +347,15 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/EXEC_SEQUENCE.md` | 7-step quick reference |
 | `machines/surface-pro-6/FEDORA_REFERENCE.md` | Config mined from running Fedora |
 | `machines/surface-pro-6/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions explained |
+| `machines/surface-pro-6/grub` | GRUB defaults: i915 power saving, HiDPI console font, 1024x768 menu |
+| `machines/surface-pro-6/sysctl-performance.conf` | VM/network tuning for 8GB RAM + NVMe |
+| `machines/surface-pro-6/zram-init.conf` | 4GB zstd compressed swap config |
+| `machines/surface-pro-6/mwifiex.conf` | Marvell 88W8897 WiFi power-save disable (modprobe.d) |
+| `machines/surface-pro-6/wifi-powersave.conf` | NetworkManager WiFi power save disable |
+| `machines/surface-pro-6/wifi-reload.sh` | elogind sleep hook: reload mwifiex on resume |
+| `machines/surface-pro-6/wifi-recover.sh` | Manual WiFi recovery script (/usr/local/bin/wifi-recover) |
+| `machines/surface-pro-6/disable-wakeup.start` | Prevent spurious s2idle wake (LID0/XHC1) |
+| `machines/surface-pro-6/fstrim-weekly.start` | Weekly SSD TRIM via /etc/local.d/ |
 | `machines/surface-pro-6/gentoo_install_part1.sh` | Partition + format NVMe |
 | `machines/surface-pro-6/gentoo_install_part2.sh` | Stage3 + config copy + chroot prep |
 | `machines/surface-pro-6/lightdm.conf` | LightDM config with HiDPI (xserver-command=X -dpi 144) |

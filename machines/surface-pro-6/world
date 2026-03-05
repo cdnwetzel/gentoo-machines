@@ -23,6 +23,7 @@ sys-kernel/linux-firmware
 sys-block/zram-init
 sys-power/acpid
 sys-power/acpilight
+sys-power/powertop
 sys-power/thermald
 sys-power/tlp
 

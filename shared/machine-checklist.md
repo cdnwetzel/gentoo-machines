@@ -139,7 +139,27 @@ This creates a swap file (size = RAM) for hibernate alongside zram, and installs
 a cron job that auto-hibernates at 5% battery. Desktops with APC UPS use apcupsd
 instead — see shared/hibernate-setup.sh header for details.
 
-## Step 9: Document & Commit
+## Step 9: Kernel Updates (Production Machines)
+
+Once the machine is in production, use `tools/update-kernel.sh` for subsequent kernel updates:
+
+```bash
+# 1. Install new kernel sources
+emerge --sync && emerge -av gentoo-sources
+eselect kernel set <N>
+
+# 2. Guided update
+tools/update-kernel.sh check      # pre-flight
+tools/update-kernel.sh prepare    # config migration + patches
+tools/update-kernel.sh build      # compile
+sudo tools/update-kernel.sh install  # install + module rebuild
+# reboot
+tools/update-kernel.sh verify     # post-reboot checks
+```
+
+All production machines should have `=sys-kernel/gentoo-sources-6.18* ~amd64` in their `package.accept_keywords` to track the 6.18 LTS series.
+
+## Step 10: Document & Commit
 
 1. Update HARDWARE.md with any new findings from live verification
 2. Update CLAUDE.md with new machine entry
