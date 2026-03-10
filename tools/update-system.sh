@@ -104,7 +104,7 @@ declare -A PATCH_REGISTRY=(
 #   package_atom: category/package for package.env
 #   max_version:  remove workaround when installed version > this
 declare -A PORTAGE_WORKAROUNDS=(
-    [freerdp-ffmpeg-fix]="shared/portage_env_freerdp-ffmpeg-fix.conf|net-misc/freerdp|3.14.1"
+    # Add entries as: [name]="repo_file|package_atom|max_version"
 )
 
 # ============================================================================

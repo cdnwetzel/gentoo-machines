@@ -2,27 +2,9 @@
 
 ## Portage Environment Workarounds
 
-Temporary build fixes via `/etc/portage/env/` + `package.env`. See `shared/` for the env files.
+Temporary build fixes via `/etc/portage/env/` + `package.env`. Managed by `tools/update-system.sh` PORTAGE_WORKAROUNDS registry.
 
-### freerdp-ffmpeg-fix.conf (freerdp <= 3.14.x + FFmpeg 7+)
-
-FFmpeg 7 renamed `FF_PROFILE_*` constants to `AV_PROFILE_*`, breaking freerdp
-3.14.1 compile. Fixed by injecting a `-D` define via CFLAGS — more reliable
-than source patching since portage user patches had context-matching issues.
-
-**Error:** `'FF_PROFILE_AAC_MAIN' undeclared; did you mean 'AV_PROFILE_AAC_MAIN'?`
-
-**Install:**
-```bash
-sudo cp shared/portage_env_freerdp-ffmpeg-fix.conf /etc/portage/env/freerdp-ffmpeg-fix.conf
-echo "net-misc/freerdp freerdp-ffmpeg-fix.conf" | sudo tee -a /etc/portage/package.env
-sudo emerge -1 net-misc/freerdp
-```
-
-**Remove** once freerdp >= 3.15.0 is in Gentoo: delete the env file and the
-`package.env` line.
-
-**Affects:** Any machine with `USE="ffmpeg"` on freerdp + FFmpeg 7+
+No active workarounds.
 
 ---
 
