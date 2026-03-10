@@ -381,13 +381,9 @@ do_fetch() {
 
     header "Select Kernel"
     # Find the newest kernel source directory
-    local newest=""
-    for d in /usr/src/linux-*; do
-        [[ -d "$d" ]] || continue
-        if [[ -z "$newest" || "$d" > "$newest" ]]; then
-            newest="$d"
-        fi
-    done
+    local newest
+    newest=$(printf '%s\n' /usr/src/linux-* | sort -V | tail -1)
+    [[ -d "$newest" ]] || newest=""
 
     if [[ -z "$newest" ]]; then
         error "No kernel sources found in /usr/src/"
@@ -756,6 +752,10 @@ do_prepare() {
 do_build() {
     [[ -f "${KERNEL_SRC}/.config" ]] || error "No .config in ${KERNEL_SRC} — run 'prepare' first"
 
+    if [[ $EUID -eq 0 ]]; then
+        warn "Running build as root — consider running 'build' as a normal user"
+    fi
+
     header "Build"
     local jobs
     jobs=$(nproc)
@@ -938,12 +938,13 @@ do_verify() {
 
     header "Boot Messages"
     local error_count
-    error_count=$(dmesg 2>/dev/null | grep -ci -E "(error|fail)" || true)
+    local dmesg_filter='(error\.recovery|failsafe|fail.over|aer.*corrected|manage.error)'
+    error_count=$(dmesg 2>/dev/null | grep -i -E "(error|fail)" | grep -icv -E "$dmesg_filter" || true)
     if (( error_count == 0 )); then
         info "No errors or failures in dmesg"
     else
-        warn "${error_count} lines with error/fail in dmesg"
-        dmesg 2>/dev/null | grep -i -E "(error|fail)" | head -10
+        warn "${error_count} lines with error/fail in dmesg (excluding benign patterns)"
+        dmesg 2>/dev/null | grep -i -E "(error|fail)" | grep -iv -E "$dmesg_filter" | head -10
         if (( error_count > 10 )); then
             warn "... and $(( error_count - 10 )) more (run 'dmesg | grep -i error' to see all)"
         fi
