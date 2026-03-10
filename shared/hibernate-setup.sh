@@ -220,12 +220,23 @@ if $HAS_BATTERY; then
         chmod 755 "$MONITOR_DST"
         echo "  Installed $MONITOR_DST"
 
-        # Add cron job if not already present
-        if crontab -l 2>/dev/null | grep -q "low-battery-hibernate"; then
-            echo "  Cron job already exists, skipping"
+        # Prefer cron if available, fall back to local.d background loop
+        if command -v crontab &>/dev/null; then
+            if crontab -l 2>/dev/null | grep -q "low-battery-hibernate"; then
+                echo "  Cron job already exists, skipping"
+            else
+                (crontab -l 2>/dev/null || true; echo "*/2 * * * * $MONITOR_DST") | crontab -
+                echo "  Added cron job: */2 * * * * $MONITOR_DST"
+            fi
         else
-            (crontab -l 2>/dev/null || true; echo "*/2 * * * * $MONITOR_DST") | crontab -
-            echo "  Added cron job: */2 * * * * $MONITOR_DST"
+            # No cron (e.g. SP6) — install local.d background loop
+            cat > /etc/local.d/low-battery-hibernate.start <<'STARTEOF'
+#!/bin/bash
+# Low-battery hibernate monitor — background loop (no cron)
+/usr/local/bin/low-battery-hibernate.sh --loop &
+STARTEOF
+            chmod 755 /etc/local.d/low-battery-hibernate.start
+            echo "  No cron available — installed /etc/local.d/low-battery-hibernate.start (background loop)"
         fi
     else
         warn "$MONITOR_SRC not found — install low-battery-hibernate.sh manually"
