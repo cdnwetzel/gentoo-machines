@@ -32,7 +32,7 @@
 - [x] MBP 2015: kernel rebuild needed — repo .config has SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT but running kernel doesn't [hardware]
 
 ### SP6 Power & Tuning
-- [ ] SP6: re-test WiFi power save on kernel 6.18 — currently disabled (`driver_mode=0x3`, NM `powersave=2`) due to old Marvell hang bugs [hardware]
+- [x] SP6: re-test WiFi power save on kernel 6.18 — closed: 3-layer mitigation working (driver_mode, NM powersave, resume reload), 24h+ uptime with roaming + suspend/resume cycles shows zero hangs, not worth removing working mitigations [hardware]
 - [x] SP6: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP tuning [repo]
 - [x] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — added to part3 phase 11 [repo]
 - [x] SP6: add `sys-power/powertop` to world file + `CPU_FREQ_STAT` to kernel config [repo]
