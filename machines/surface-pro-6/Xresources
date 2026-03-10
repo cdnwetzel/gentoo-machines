@@ -8,5 +8,6 @@ Xft.hinting: true
 Xft.hintstyle: hintslight
 Xft.rgba: rgb
 
-! Cursor size (24 * 1.5 = 36)
+! Cursor size (24 * 1.5 = 36) and theme (Adwaita has large sizes)
 Xcursor.size: 36
+Xcursor.theme: Adwaita

@@ -28,6 +28,15 @@ if [[ -f "$SCRIPT_DIR/xrandr-dpi.desktop" ]]; then
     echo "  [OK] xrandr --dpi 144 autostart installed"
 fi
 
+# Install .xprofile — env vars sourced by LightDM Xsession before WM starts
+# XCURSOR_SIZE is needed because many X11 apps read the env var, not Xresources
+cat > "$HOME/.xprofile" <<'XPROFILE'
+# HiDPI cursor size (36 = 24 * 1.5 for 150% scaling)
+export XCURSOR_SIZE=36
+export XCURSOR_THEME=Adwaita
+XPROFILE
+echo "  [OK] .xprofile installed (XCURSOR_SIZE=36, XCURSOR_THEME=Adwaita)"
+
 # --- XFCE settings (persisted in xfconf XML) ---
 
 # Font rendering DPI — controls text and GTK widget sizing
@@ -37,6 +46,10 @@ xfconf-query -c xsettings -p /Xft/DPI -n -t int -s 144 2>/dev/null || \
 # Cursor size (default 24 is tiny at HiDPI — 36 = 24 * 1.5)
 xfconf-query -c xsettings -p /Gtk/CursorThemeSize -n -t int -s 36 2>/dev/null || \
     xfconf-query -c xsettings -p /Gtk/CursorThemeSize -s 36
+
+# Cursor theme (Adwaita has proper sizes up to 96px)
+xfconf-query -c xsettings -p /Gtk/CursorThemeName -n -t string -s Adwaita 2>/dev/null || \
+    xfconf-query -c xsettings -p /Gtk/CursorThemeName -s Adwaita
 
 # --- Apply for current session ---
 
