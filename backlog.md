@@ -40,13 +40,16 @@
 ## Medium Priority — Other
 - [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]
 - [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
+- [ ] Restore GitHub PAT to VTOYEFI USB — portable git credential store for push from any machine (was used for MBP/SP6, purged with old folders) [repo]
 - [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, ~~MBP 2015~~, NUC11, Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external [hardware]
 
 ## Low Priority
 - [ ] Harvest ASRock B550 / Ryzen 9 5950X (Fedora 42) [hardware]
-- [ ] Harvest Dell Precision T5810 (Fedora 42) [hardware]
+- [x] Generate T5810 install scripts (part1/2/3) with SABRENT Ventoy exclusion safety [repo]
+- [x] T5810 Gentoo build: all 13 phases complete, deep sanity passed 0 fail/0 warn, ready for first boot (2026-03-11) [hardware]
+- [x] Harvest Dell Precision T5810 (Fedora 43 live USB) — harvest + configs generated + sanity-checked 2026-03-11 [hardware]
 - [ ] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]

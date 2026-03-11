@@ -15,7 +15,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
-  precision-t5810/  Dell Precision T5810 / Xeon E5 (planned)
+  precision-t5810/  Dell Precision T5810 / Xeon E5 (BUILT — awaiting first boot)
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
@@ -34,7 +34,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Planned | Fedora 42 |
+| 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Built (awaiting first boot) | Gentoo (chroot) |
 | 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
@@ -318,6 +318,40 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/mbp-2015/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/mbp-2015/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
+### Dell Precision T5810 (Harvested + Configs Generated)
+
+- **Kernel**: Not yet built (configs generated 2026-03-11)
+- **Architecture**: x86_64, 22C/44T (Broadwell-EP, AVX2, no AVX-512)
+- **Compiler flags**: `-march=broadwell -O2 -pipe`
+- **Key drivers**: nvidia (2x GP107 GTX 1050 Ti, proprietary), e1000e (I217-LM), nvme, ahci, snd_hda_intel (Realtek ALC3220 + 2x NVIDIA HDMI)
+- **Firmware**: Loaded from /lib/firmware/ (nvidia/gp107/*)
+- **No Intel iGPU**: Xeon E5 — discrete NVIDIA only
+- **No WiFi**: Desktop workstation, wired Ethernet only
+- **ECC**: 256GB DDR4 ECC (8x32GB Hynix), sb_edac EDAC driver
+- **Performance**: C-states disabled in BIOS, GOV_PERFORMANCE, always-on workstation
+- **Chipset**: C610/X99 (no LPSS/Pinctrl, I2C via i801 SMBus only)
+- **Hardware ref**: `machines/precision-t5810/HARDWARE.md`
+
+### Precision T5810 Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/precision-t5810/.config` | Kernel config (base from XPS 9510, needs kernel_config.sh + olddefconfig) |
+| `machines/precision-t5810/make.conf` | Portage: `-march=broadwell`, VIDEO_CARDS="nvidia", 128GB tmpfs |
+| `machines/precision-t5810/kernel_config.sh` | Generated programmatic kernel config (26 phases) |
+| `machines/precision-t5810/HARDWARE.md` | Full hardware inventory |
+| `machines/precision-t5810/sysctl-performance.conf` | VM/network tuning for 256GB RAM + NVMe |
+| `machines/precision-t5810/zram-init.conf` | 16GB zstd compressed swap (safety net, 6% of RAM) |
+| `machines/precision-t5810/world` | Package set (no WiFi/BT/laptop packages) |
+| `machines/precision-t5810/package.accept_keywords` | ~amd64 keywords: gentoo-sources 6.18 LTS, NVIDIA |
+| `machines/precision-t5810/package.use` | USE: installkernel+grub, NVIDIA, NM -wifi -bluetooth |
+| `machines/precision-t5810/gentoo_install_part1.sh` | Partition Samsung 990 PRO 2TB NVMe (SABRENT exclusion) |
+| `machines/precision-t5810/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/precision-t5810/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA, no WiFi) |
+| `machines/precision-t5810/ONE_OFF_TOOLS.md` | Manual commands, tooling improvements, generalization learnings |
+| `machines/precision-t5810/harvest/hardware_inventory.log` | harvest.sh output |
+| `machines/precision-t5810/harvest/deep_harvest.log` | deep_harvest.sh output |
+
 ### Surface Pro 6 (Production)
 
 - **Kernel**: Linux 6.18.12-gentoo
@@ -376,6 +410,6 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 ## Future Machine Notes
 
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
-- **Precision T5810**: Broadwell-EP Xeon — ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older chipset
+- **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11. Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).
 - **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
 - **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).

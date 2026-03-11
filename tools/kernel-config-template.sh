@@ -61,7 +61,7 @@ CPU_MODEL_NAME=$(grep -m1 'Model name:' "$HARVEST" | sed 's/.*Model name:[[:spac
 CPU_FAMILY=$(grep -m1 'CPU family:' "$HARVEST" | awk '{print $NF}' || echo "")
 CPU_MODEL_NUM=$(grep -m1 'Model:' "$HARVEST" | awk '{print $NF}' || echo "")
 
-# Detect CPU core count from model name
+# Detect CPU core count from model name or /proc/cpuinfo thread count
 NR_CPUS=4  # safe default
 if echo "$CPU_MODEL_NAME" | grep -qiE 'i[3579]-[0-9]{4,5}'; then
     # Try to derive from known suffixes
@@ -75,6 +75,12 @@ if echo "$CPU_MODEL_NAME" | grep -qiE 'i[3579]-[0-9]{4,5}'; then
         *i7-5557*|*i5-5257*)    NR_CPUS=4 ;;
         *)                      NR_CPUS=8 ;;
     esac
+elif echo "$CPU_MODEL_NAME" | grep -qiE 'Xeon'; then
+    # Xeon: derive from /proc/cpuinfo thread count (most reliable)
+    if [ -f /proc/cpuinfo ]; then
+        XEON_THREADS=$(grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo "0")
+        [[ "$XEON_THREADS" -gt 0 ]] && NR_CPUS="$XEON_THREADS"
+    fi
 fi
 # Also try from lscpu if available in harvest
 LSCPU_CPUS=$(grep -m1 'CPU(s):' "$HARVEST" | awk '{print $NF}' || echo "")
@@ -195,13 +201,37 @@ grep -qi 'ipu6\|IPU6\|intel_ipu6' "$HARVEST" && HAS_IPU6=1
 HAS_SAM=0
 grep -qi 'surface_aggregator\|SURFACE_AGGREGATOR' "$HARVEST" && HAS_SAM=1
 
+# --- Chassis type (desktop vs laptop) ---
+# chassis_type: 3=Desktop, 4=LowProfile, 5=Pizza Box, 6=MiniTower, 7=Tower, 8=Portable, 9=Laptop, 10=Notebook, 11=HandHeld
+CHASSIS_TYPE=$(grep -m1 'chassis_type:' "$HARVEST" | awk '{print $NF}' || echo "")
+IS_LAPTOP=1  # default: assume laptop (safer)
+case "$CHASSIS_TYPE" in
+    3|4|5|6|7|17) IS_LAPTOP=0 ;;  # desktop/tower/server
+esac
+
+# --- EDAC / ECC detection ---
+HAS_EDAC=0
+grep -qi 'sb_edac\|skx_edac\|amd64_edac\|edac' "$HARVEST" && HAS_EDAC=1
+
+# --- NUMA (multi-socket or Xeon server) ---
+HAS_NUMA=0
+if echo "$CPU_MODEL_NAME" | grep -qiE 'Xeon.*E[57]|Xeon W|EPYC'; then
+    HAS_NUMA=1
+fi
+
+# --- Optical drive ---
+HAS_OPTICAL=0
+grep -qi 'DVD\|Blu-ray\|CD-ROM\|sr0\|HL-DT-ST' "$HARVEST" && HAS_OPTICAL=1
+
 # --- Summary ---
 echo "  CPU: $CPU_MODEL_NAME ($CPU_VENDOR, NR_CPUS=$NR_CPUS)"
 echo "  GPU: Intel=$HAS_INTEL_GPU($INTEL_GPU_GEN) NVIDIA=$HAS_NVIDIA_GPU AMD=$HAS_AMD_GPU"
-echo "  WiFi: $WIFI_DRIVER"
+echo "  WiFi: ${WIFI_DRIVER:-none}"
 echo "  Audio: $AUDIO_TYPE ($AUDIO_CODEC)"
-echo "  Storage: NVMe=$HAS_NVME SATA=$HAS_SATA"
+echo "  Storage: NVMe=$HAS_NVME SATA=$HAS_SATA Optical=$HAS_OPTICAL"
 echo "  Platform: $PLATFORM"
+echo "  Chassis: $([ $IS_LAPTOP -eq 1 ] && echo 'Laptop' || echo 'Desktop/Tower') (type=$CHASSIS_TYPE)"
+echo "  EDAC=$HAS_EDAC NUMA=$HAS_NUMA"
 echo "  Boot: $([ $BOOT_EFI -eq 1 ] && echo 'EFI' || echo 'BIOS')"
 echo "  -march: ${GCC_MARCH:-unknown}"
 echo ""
@@ -349,6 +379,37 @@ $SC --enable INTEL_HFI_THERMAL 2>/dev/null || echo "  [INFO] INTEL_HFI_THERMAL n
 EOF
 fi
 
+# EDAC / ECC memory
+if [ $HAS_EDAC -eq 1 ]; then
+    cat >> "$OUTPUT" << 'EOF'
+
+# EDAC — ECC memory error detection
+$SC --enable EDAC
+$SC --module EDAC_DECODE_MCE
+EOF
+    # Detect specific EDAC driver
+    if grep -qi 'sb_edac' "$HARVEST"; then
+        echo '$SC --module EDAC_SBRIDGE  # Sandy Bridge through Broadwell-EP' >> "$OUTPUT"
+    elif grep -qi 'skx_edac' "$HARVEST"; then
+        echo '$SC --module EDAC_SKX  # Skylake-SP Xeon' >> "$OUTPUT"
+    elif grep -qi 'amd64_edac' "$HARVEST"; then
+        echo '$SC --module EDAC_AMD64' >> "$OUTPUT"
+    else
+        echo '# TODO: identify correct EDAC driver for this platform' >> "$OUTPUT"
+    fi
+fi
+
+# NUMA support
+if [ $HAS_NUMA -eq 1 ]; then
+    cat >> "$OUTPUT" << 'EOF'
+
+# NUMA topology (multi-socket / server Xeon)
+$SC --enable NUMA
+$SC --enable X86_64_ACPI_NUMA
+$SC --enable ACPI_NUMA
+EOF
+fi
+
 cat >> "$OUTPUT" << 'EOF'
 
 # KVM
@@ -451,6 +512,20 @@ $SC --enable BFQ_GROUP_IOSCHED
 $SC --module USB_STORAGE
 $SC --module USB_UAS
 
+EOF
+
+# Optical drive (DVD/Blu-ray)
+if [ $HAS_OPTICAL -eq 1 ]; then
+    cat >> "$OUTPUT" << 'EOF'
+# Optical drive (DVD-ROM)
+$SC --enable BLK_DEV_SR
+$SC --enable ISO9660_FS
+$SC --enable UDF_FS
+EOF
+fi
+
+cat >> "$OUTPUT" << 'EOF'
+
 echo "  [OK] Storage"
 
 # ==========================================================================
@@ -544,10 +619,16 @@ $SC --enable FB_EFI
 $SC --enable FRAMEBUFFER_CONSOLE
 $SC --enable DRM_FBDEV_EMULATION
 
-# Backlight
-$SC --enable BACKLIGHT_CLASS_DEVICE
-
 echo "  [OK] GPU"
+
+EOF
+
+# Backlight — laptop only
+if [ $IS_LAPTOP -eq 1 ]; then
+    echo '$SC --enable BACKLIGHT_CLASS_DEVICE' >> "$OUTPUT"
+fi
+
+cat >> "$OUTPUT" << 'EOF'
 
 EOF
 
@@ -631,6 +712,9 @@ EOF
 # ==========================================================================
 # PHASE 9: WIFI
 # ==========================================================================
+# WiFi: only include if WiFi hardware detected
+if [ -n "$WIFI_DRIVER" ]; then
+
 cat >> "$OUTPUT" << 'EOF'
 # ==========================================================================
 # PHASE 9: WIFI
@@ -713,6 +797,27 @@ esac
 cat >> "$OUTPUT" << 'EOF'
 
 echo "  [OK] WiFi"
+EOF
+
+else
+    # No WiFi hardware — disable wireless subsystem
+    cat >> "$OUTPUT" << 'EOF'
+# ==========================================================================
+# PHASE 9: WIFI — no WiFi hardware detected
+# ==========================================================================
+echo "[Phase 9] No WiFi hardware — disabling wireless..."
+
+$SC --disable CFG80211
+$SC --disable MAC80211
+$SC --disable IWLWIFI
+$SC --disable BRCMFMAC
+$SC --disable MWIFIEX
+
+echo "  [OK] WiFi disabled"
+EOF
+fi  # end WiFi conditional
+
+cat >> "$OUTPUT" << 'EOF'
 
 # ==========================================================================
 # PHASE 10: BLUETOOTH
@@ -952,6 +1057,8 @@ echo "[Phase 16] USB and HID..."
 $SC --enable USB
 $SC --enable USB_XHCI_HCD
 $SC --enable USB_XHCI_PCI
+$SC --enable USB_EHCI_HCD
+$SC --enable USB_EHCI_PCI
 
 $SC --enable HID
 $SC --enable USB_HID
@@ -994,30 +1101,45 @@ echo "  [OK] Ethernet"
 # ==========================================================================
 echo "[Phase 18] I2C and Serial IO..."
 
+$SC --module I2C_I801
+
+EOF
+
+# Detect LPSS/Pinctrl requirement
+# Older chipsets (C610/X99, C600/X79) don't use LPSS/Pinctrl subsystem
+HAS_LPSS=0
+grep -qiE 'intel-lpss\|Sunrise\|Cannon\|Tiger\|Ice.*Point\|Alder\|Raptor' "$HARVEST" && HAS_LPSS=1
+if grep -qiE 'C610|X99|C600|X79' "$HARVEST"; then
+    HAS_LPSS=0
+fi
+
+if [ $HAS_LPSS -eq 1 ]; then
+    cat >> "$OUTPUT" << 'EOF'
+# LPSS I2C (modern Intel platforms)
 $SC --enable MFD_INTEL_LPSS
 $SC --enable MFD_INTEL_LPSS_ACPI
 $SC --enable MFD_INTEL_LPSS_PCI
-
 $SC --enable I2C_DESIGNWARE_CORE
 $SC --enable I2C_DESIGNWARE_PLATFORM
 $SC --enable I2C_DESIGNWARE_PCI
-
-$SC --module I2C_I801
 
 # Pinctrl
 $SC --enable PINCTRL
 $SC --enable PINCTRL_INTEL
 EOF
-
-# Add platform-specific pinctrl
-case "$INTEL_GPU_GEN" in
-    tgl)  echo '$SC --enable PINCTRL_TIGERLAKE' >> "$OUTPUT" ;;
-    adlp) echo '$SC --enable PINCTRL_ALDERLAKE 2>/dev/null || true' >> "$OUTPUT" ;;
-    kbl)  echo '$SC --enable PINCTRL_SUNRISEPOINT' >> "$OUTPUT" ;;
-    skl)  echo '$SC --enable PINCTRL_SUNRISEPOINT' >> "$OUTPUT" ;;
-    icl)  echo '$SC --enable PINCTRL_ICELAKE' >> "$OUTPUT" ;;
-    *)    echo '# TODO: add correct PINCTRL for your platform' >> "$OUTPUT" ;;
-esac
+    case "$INTEL_GPU_GEN" in
+        tgl)  echo '$SC --enable PINCTRL_TIGERLAKE' >> "$OUTPUT" ;;
+        adlp) echo '$SC --enable PINCTRL_ALDERLAKE 2>/dev/null || true' >> "$OUTPUT" ;;
+        kbl)  echo '$SC --enable PINCTRL_SUNRISEPOINT' >> "$OUTPUT" ;;
+        skl)  echo '$SC --enable PINCTRL_SUNRISEPOINT' >> "$OUTPUT" ;;
+        icl)  echo '$SC --enable PINCTRL_ICELAKE' >> "$OUTPUT" ;;
+        *)    echo '# TODO: add correct PINCTRL for your platform' >> "$OUTPUT" ;;
+    esac
+else
+    cat >> "$OUTPUT" << 'EOF'
+# Older chipset (C610/X99) — I2C via i801 SMBus only, no LPSS/Pinctrl
+EOF
+fi
 
 cat >> "$OUTPUT" << 'EOF'
 
@@ -1031,8 +1153,6 @@ echo "[Phase 19] ACPI platform..."
 $SC --enable PCI
 $SC --enable PCIEPORTBUS
 $SC --enable ACPI
-$SC --enable ACPI_AC
-$SC --enable ACPI_BATTERY
 $SC --enable ACPI_BUTTON
 $SC --enable ACPI_FAN
 $SC --enable ACPI_PROCESSOR
@@ -1040,6 +1160,26 @@ $SC --enable ACPI_THERMAL
 $SC --enable ACPI_VIDEO
 
 $SC --module ACPI_WMI
+
+EOF
+
+# Laptop-only: battery, AC, backlight
+if [ $IS_LAPTOP -eq 1 ]; then
+    cat >> "$OUTPUT" << 'EOF'
+# Laptop power management
+$SC --enable ACPI_AC
+$SC --enable ACPI_BATTERY
+$SC --enable BACKLIGHT_CLASS_DEVICE
+EOF
+else
+    cat >> "$OUTPUT" << 'EOF'
+# Desktop/Tower: no battery or laptop backlight
+$SC --disable ACPI_AC
+$SC --disable ACPI_BATTERY
+EOF
+fi
+
+cat >> "$OUTPUT" << 'EOF'
 
 # MEI (Management Engine)
 $SC --module INTEL_MEI
@@ -1211,6 +1351,9 @@ $SC --disable IWLMVM
 $SC --disable BRCMUTIL
 $SC --disable BRCMFMAC
 EOF
+        ;;
+    "")
+        # No WiFi — already disabled in Phase 9
         ;;
     *)
         echo '# TODO: disable unused WiFi drivers' >> "$OUTPUT"

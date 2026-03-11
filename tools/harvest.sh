@@ -23,6 +23,51 @@ lspci -nnk >> "$LOG_FILE"
 echo -e "\n[2. CPU DETAILS - SCHEDULER & OPTIMIZATION]" >> "$LOG_FILE"
 lscpu | grep -E 'Model name|Vendor ID|CPU family|Model:|Flags' >> "$LOG_FILE"
 
+# 2b. CPU Thread Count and RAM — for parallelism tuning
+echo -e "\n[2b. PARALLELISM PROFILE]" >> "$LOG_FILE"
+TOTAL_THREADS=$(nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo "unknown")
+echo "  CPU threads (nproc): $TOTAL_THREADS" >> "$LOG_FILE"
+
+# Total RAM in MB and GB
+if [ -f /proc/meminfo ]; then
+    RAM_KB=$(grep '^MemTotal:' /proc/meminfo | awk '{print $2}')
+    RAM_MB=$((RAM_KB / 1024))
+    RAM_GB=$((RAM_MB / 1024))
+    echo "  Total RAM: ${RAM_GB}GB (${RAM_MB}MB)" >> "$LOG_FILE"
+
+    # ECC detection via dmidecode or edac
+    if command -v dmidecode &> /dev/null; then
+        ECC_TYPE=$(dmidecode -t 16 2>/dev/null | grep -m1 'Error Correction Type:' | sed 's/.*: //')
+        [[ -n "$ECC_TYPE" ]] && echo "  ECC: $ECC_TYPE" >> "$LOG_FILE"
+        DIMM_COUNT=$(dmidecode -t 17 2>/dev/null | grep -c 'Size:.*[0-9]' || echo "0")
+        DIMM_SIZE=$(dmidecode -t 17 2>/dev/null | grep -m1 'Size:.*[0-9]' | awk '{print $2, $3}')
+        echo "  DIMMs: ${DIMM_COUNT}x ${DIMM_SIZE}" >> "$LOG_FILE"
+    fi
+
+    # Build profile recommendation
+    if [ "$RAM_GB" -ge 128 ]; then
+        echo "  Build profile: HIGH-POWER (128GB+ RAM)" >> "$LOG_FILE"
+        echo "  Suggested tmpfs: $((RAM_GB / 2))G (half of RAM)" >> "$LOG_FILE"
+        echo "  Suggested emerge --jobs: 6-8" >> "$LOG_FILE"
+        echo "  No package.env disk fallback needed" >> "$LOG_FILE"
+    elif [ "$RAM_GB" -ge 27 ]; then
+        echo "  Build profile: STANDARD (27-128GB RAM)" >> "$LOG_FILE"
+        echo "  Suggested tmpfs: $((RAM_GB * 3 / 4))G" >> "$LOG_FILE"
+        echo "  Suggested emerge --jobs: 2-4" >> "$LOG_FILE"
+        echo "  Disk fallback for: chromium, llvm, rust, gcc" >> "$LOG_FILE"
+    elif [ "$RAM_GB" -ge 8 ]; then
+        echo "  Build profile: CONSTRAINED (8-27GB RAM)" >> "$LOG_FILE"
+        echo "  Suggested tmpfs: $((RAM_GB / 2))G" >> "$LOG_FILE"
+        echo "  Suggested emerge --jobs: 1-2" >> "$LOG_FILE"
+        echo "  Disk fallback for large packages required" >> "$LOG_FILE"
+    else
+        echo "  Build profile: MINIMAL (<8GB RAM)" >> "$LOG_FILE"
+        echo "  Suggested tmpfs: 4G (or skip tmpfs)" >> "$LOG_FILE"
+        echo "  Suggested emerge --jobs: 1" >> "$LOG_FILE"
+        echo "  Disk builds recommended for all packages" >> "$LOG_FILE"
+    fi
+fi
+
 # 3. Motherboard & BIOS (Identify Chipset & Laptop Specifics)
 echo -e "\n[3. MOTHERBOARD/DMI - CHIPSET]" >> "$LOG_FILE"
 if command -v dmidecode &> /dev/null; then
@@ -281,16 +326,16 @@ if [ -f /proc/cpuinfo ]; then
     MARCH="unknown"
     if [ "$VENDOR" = "GenuineIntel" ]; then
         case "${FAMILY}:${MODEL}" in
-            # Broadwell
-            6:61|6:71)    MARCH="broadwell" ;;
-            # Skylake
-            6:78|6:94)    MARCH="skylake" ;;
+            # Broadwell (client + Xeon EP/DE)
+            6:61|6:71|6:79|6:86) MARCH="broadwell" ;;
+            # Skylake (client + Xeon SP)
+            6:78|6:94|6:85)      MARCH="skylake" ;;
             # Kaby Lake / Coffee Lake / Whiskey Lake (GCC: -march=skylake)
             6:142|6:158)  MARCH="skylake" ;;
             # Comet Lake
             6:165|6:166)  MARCH="skylake" ;;
-            # Ice Lake
-            6:126|6:125)  MARCH="icelake-client" ;;
+            # Ice Lake (client + Xeon SP)
+            6:125|6:126|6:106)  MARCH="icelake-client" ;;
             # Tiger Lake
             6:140|6:141)  MARCH="tigerlake" ;;
             # Alder Lake
@@ -299,8 +344,8 @@ if [ -f /proc/cpuinfo ]; then
             6:183|6:186)  MARCH="raptorlake" ;;
             # Meteor Lake
             6:170)        MARCH="meteorlake" ;;
-            # Older
-            6:60|6:69|6:70) MARCH="haswell" ;;
+            # Haswell (client + Xeon EP v3)
+            6:60|6:63|6:69|6:70) MARCH="haswell" ;;
             6:58|6:62)    MARCH="ivybridge" ;;
             6:42|6:45)    MARCH="sandybridge" ;;
             *)            MARCH="x86-64-v3" ;;
