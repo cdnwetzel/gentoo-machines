@@ -2,6 +2,28 @@
 
 General-purpose installation guide for deploying Gentoo on any supported machine in this repository. Each machine has a pre-built kernel `.config` and `make.conf` that eliminates the hardest part of a Gentoo install — hardware-specific kernel configuration.
 
+## Table of Contents
+
+1. [Supported Machines](#supported-machines)
+2. [Prerequisites](#prerequisites)
+3. [Variables Used Throughout](#variables-used-throughout)
+4. [Part 1: Preparation](#part-1-preparation)
+5. [Part 2: Network Setup](#part-2-network-setup)
+6. [Part 3: Disk Setup](#part-3-disk-setup)
+7. [Part 4: Install Gentoo Base System](#part-4-install-gentoo-base-system)
+8. [Part 5: Enter the New System (Chroot)](#part-5-enter-the-new-system-chroot)
+9. [Part 6: Configure Portage and Update System](#part-6-configure-portage-and-update-system)
+10. [Part 7: Build the Kernel](#part-7-build-the-kernel)
+11. [Part 8: System Configuration](#part-8-system-configuration)
+12. [Part 9: Install Desktop and Enable Services](#part-9-install-desktop-and-enable-services)
+13. [Part 10: Create User and Finalize](#part-10-create-user-and-finalize)
+14. [Part 11: Reboot](#part-11-reboot)
+15. [Part 12: Post-Install Verification](#part-12-post-install-verification)
+16. [Troubleshooting](#troubleshooting)
+17. [Adding a New Machine](#adding-a-new-machine)
+18. [Quick Reference](#quick-reference)
+19. [Kernel Updates](#kernel-updates)
+
 ## Supported Machines
 
 Before starting, confirm your target machine has a config ready:
@@ -14,7 +36,7 @@ Before starting, confirm your target machine has a config ready:
 | Dell XPS 13 9315 | `machines/xps-9315/` | Configs updated |
 | Intel NUC11TNBi5 | `machines/nuc11/` | Ready to build |
 | ASRock B550 / Ryzen 9 5950X | `machines/asrock-b550/` | Planned |
-| Dell Precision T5810 | `machines/precision-t5810/` | Planned |
+| Dell Precision T5810 | `machines/precision-t5810/` | Built (awaiting first boot) |
 | Dell Precision 7960 | `machines/precision-7960/` | Harvest only |
 | Surface Pro 9 | `machines/surface-pro-9/` | Planned |
 
@@ -350,7 +372,11 @@ This is where the machine-specific `.config` from this repo saves you hours.
 
 ```bash
 # Core kernel packages
-emerge --ask sys-kernel/gentoo-sources sys-kernel/linux-firmware sys-kernel/dracut
+emerge --ask sys-kernel/gentoo-sources sys-kernel/linux-firmware
+
+# Only install dracut if you need an initramfs (most machines in this repo don't —
+# root-path drivers like NVMe, AHCI, ext4 are built-in =y)
+# emerge --ask sys-kernel/dracut
 
 # Intel machines also need:
 emerge --ask sys-firmware/intel-microcode

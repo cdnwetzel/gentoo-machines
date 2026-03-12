@@ -12,7 +12,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Planned | Fedora 42 |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Built** (awaiting first boot) | Gentoo |
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
@@ -53,7 +53,7 @@ gentoo-machines/
 │   │   ├── make.conf      # Portage build settings (-march=tigerlake)
 │   │   └── HARDWARE.md    # Hardware reference
 │   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PLANNED
-│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PLANNED
+│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - BUILT (awaiting first boot)
 │   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
 │   └── surface-pro-9/     # Surface Pro 9 - PLANNED
 ├── tools/
@@ -227,8 +227,8 @@ Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHE
 ### Planned: ASRock B550 (First AMD)
 Ryzen 9 5950X with SATA SSDs. First AMD build — needs `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`.
 
-### Planned: Precision T5810 (Xeon Broadwell-EP)
-ECC memory, 2x NVIDIA GTX 1050 Ti, `-march=broadwell`, older PCH. Currently runs Fedora 42.
+### Built: Precision T5810 (Xeon Broadwell-EP)
+Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Full 3-phase automated install, all 13 phases complete, deep sanity 0 fail. Awaiting first boot.
 
 ### Kernel Strategy
 

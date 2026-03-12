@@ -137,7 +137,7 @@ tools/update-system.sh --machine xps-9510 check   # override auto-detection
 
 The `full` workflow (default) prompts Y/n/skip before each phase and saves progress to `/var/lib/kernel-update/full-progress`. After install it detects the reboot boundary and exits; re-running `full` resumes with verify + clean. Individual subcommands work standalone for manual use.
 
-Config strategy: same-series (copy .config + olddefconfig), cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11.
+Config strategy: same-series (copy .config + olddefconfig), cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11. Precision-t5810 not yet added (awaiting first boot).
 
 ### build-kernel-remote.sh
 Cross-compile and deploy kernels over SSH (auto-detects KVER from target):
@@ -320,7 +320,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell Precision T5810 (Harvested + Configs Generated)
 
-- **Kernel**: Not yet built (configs generated 2026-03-11)
+- **Kernel**: Built 2026-03-11, awaiting first boot
 - **Architecture**: x86_64, 22C/44T (Broadwell-EP, AVX2, no AVX-512)
 - **Compiler flags**: `-march=broadwell -O2 -pipe`
 - **Key drivers**: nvidia (2x GP107 GTX 1050 Ti, proprietary), e1000e (I217-LM), nvme, ahci, snd_hda_intel (Realtek ALC3220 + 2x NVIDIA HDMI)
@@ -349,8 +349,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/precision-t5810/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/precision-t5810/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA, no WiFi) |
 | `machines/precision-t5810/ONE_OFF_TOOLS.md` | Manual commands, tooling improvements, generalization learnings |
-| `machines/precision-t5810/harvest/hardware_inventory.log` | harvest.sh output |
-| `machines/precision-t5810/harvest/deep_harvest.log` | deep_harvest.sh output |
+| ~~`machines/precision-t5810/harvest/`~~ | Harvest logs not committed (generated at `/tmp/t5810-harvest/` during build) |
 
 ### Surface Pro 6 (Production)
 

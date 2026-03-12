@@ -245,10 +245,10 @@ Or download as ZIP from GitHub and extract.
 # From inside /mnt/gentoo/root/gentoo-machines/
 
 # Portage configuration
-cp make.conf /mnt/gentoo/etc/portage/make.conf
-cp package.use /mnt/gentoo/etc/portage/package.use
-cp package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
-cp package.license /mnt/gentoo/etc/portage/package.license
+cp machines/xps-9315/make.conf /mnt/gentoo/etc/portage/make.conf
+cp shared/package.use /mnt/gentoo/etc/portage/package.use
+cp shared/package.accept_keywords /mnt/gentoo/etc/portage/package.accept_keywords
+cp shared/package.license /mnt/gentoo/etc/portage/package.license
 
 # Portage environment overrides (low-memory build settings)
 mkdir -p /mnt/gentoo/etc/portage/env
@@ -354,7 +354,7 @@ ls -l /usr/src/linux
 
 ```bash
 # Copy our pre-configured kernel config
-cp /root/gentoo-machines/.config /usr/src/linux/
+cp /root/gentoo-machines/machines/xps-9315/.config /usr/src/linux/
 
 # Enter kernel directory
 cd /usr/src/linux
@@ -479,7 +479,7 @@ passwd
 
 ```bash
 # Copy world file (list of all packages to install)
-cp /root/gentoo-machines/world /var/lib/portage/world
+cp /root/gentoo-machines/machines/xps-9315/world /var/lib/portage/world
 
 # Install everything (this takes 1-2 hours)
 emerge --ask --update --deep --newuse @world
