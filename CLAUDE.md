@@ -244,7 +244,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell XPS 15 9510 (Production)
 
-- **Kernel**: Linux 6.12.58-gentoo
+- **Kernel**: Linux 6.18.12-gentoo
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
 - **Key drivers**: i915 (module), nvidia 590.48.01 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
