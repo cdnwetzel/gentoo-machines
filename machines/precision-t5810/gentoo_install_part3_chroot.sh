@@ -158,6 +158,12 @@ emerge --verbose sys-boot/grub
 echo "[3.2] Installing GRUB to EFI..."
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
+# Dell UEFI quirk: many Dell BIOSes only boot from the fallback path
+# EFI/Boot/bootx64.efi, ignoring custom bootloader-id entries.
+echo "[3.2.1] Copying GRUB to EFI fallback path (Dell UEFI quirk)..."
+mkdir -p /boot/efi/EFI/Boot
+cp /boot/efi/EFI/Gentoo/grubx64.efi /boot/efi/EFI/Boot/bootx64.efi
+
 echo "[3.3] Configuring GRUB defaults..."
 # T5810: standard GRUB, no special boot params needed
 # (no i915, no laptop stuff, NVIDIA doesn't need kernel params for desktop)

@@ -146,6 +146,12 @@ emerge --verbose sys-boot/grub
 echo "[3.2] Installing GRUB to EFI..."
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
+# UEFI fallback path: some firmware only boots from EFI/Boot/bootx64.efi,
+# ignoring custom bootloader-id entries.
+echo "[3.2.1] Copying GRUB to EFI fallback path..."
+mkdir -p /boot/efi/EFI/Boot
+cp /boot/efi/EFI/Gentoo/grubx64.efi /boot/efi/EFI/Boot/bootx64.efi
+
 echo "[3.3] Installing GRUB defaults..."
 if [[ -f "$CONFIGS/grub" ]]; then
     cp "$CONFIGS/grub" /etc/default/grub

@@ -836,6 +836,14 @@ do_install() {
     else
         make install
         info "Kernel installed"
+
+        # Copy GRUB to EFI fallback path — many UEFI firmwares (especially Dell)
+        # only boot from EFI/Boot/bootx64.efi, ignoring custom bootloader-id entries.
+        if [[ -d /boot/efi/EFI/Gentoo ]]; then
+            mkdir -p /boot/efi/EFI/Boot
+            cp /boot/efi/EFI/Gentoo/grubx64.efi /boot/efi/EFI/Boot/bootx64.efi
+            info "GRUB copied to EFI fallback path (EFI/Boot/bootx64.efi)"
+        fi
     fi
 
     # NVIDIA rebuild

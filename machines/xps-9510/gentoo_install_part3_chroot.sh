@@ -136,6 +136,12 @@ fi
 echo "[3.3] Installing GRUB to EFI..."
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
+# Dell UEFI quirk: many Dell BIOSes only boot from the fallback path
+# EFI/Boot/bootx64.efi, ignoring custom bootloader-id entries.
+echo "[3.3.1] Copying GRUB to EFI fallback path (Dell UEFI quirk)..."
+mkdir -p /boot/efi/EFI/Boot
+cp /boot/efi/EFI/Gentoo/grubx64.efi /boot/efi/EFI/Boot/bootx64.efi
+
 echo "[3.4] Generating GRUB config..."
 grub-mkconfig -o /boot/grub/grub.cfg
 
