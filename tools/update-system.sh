@@ -81,6 +81,7 @@ declare -A MACHINES=(
     [mbp-2015]="hostname=gentoo-mbp|dmi=MacBookPro12,1|gpu=intel|patches="
     [surface-pro-6]="hostname=surface-pro-6|dmi=Surface Pro|gpu=intel|patches="
     [nuc11]="hostname=nuc11|dmi=NUC11TNBi5|gpu=intel|patches=intel_idle-add-tiger-lake"
+    [precision-t5810]="hostname=precision-t5810|dmi=Precision Tower 5810|gpu=nvidia|patches="
 )
 
 # ============================================================================
@@ -1057,6 +1058,9 @@ verify_machine_specific() {
     # WiFi
     header "WiFi"
     case "$machine" in
+        precision-t5810)
+            info "No WiFi (wired desktop)"
+            ;;
         xps-9510|xps-9315|nuc11)
             if grep -q "^iwlwifi " /proc/modules 2>/dev/null; then
                 info "iwlwifi loaded"
@@ -1120,6 +1124,25 @@ verify_machine_specific() {
             fi
             if grep -q "^dell_wmi " /proc/modules 2>/dev/null; then
                 info "dell_wmi loaded"
+            fi
+            ;;
+        precision-t5810)
+            header "Dell Workstation Platform"
+            if grep -q "^e1000e " /proc/modules 2>/dev/null; then
+                info "e1000e loaded (I217-LM Ethernet)"
+            else
+                warn "e1000e not loaded"
+            fi
+            if grep -q "^sb_edac " /proc/modules 2>/dev/null; then
+                info "sb_edac loaded (ECC memory)"
+                if [[ -d /sys/devices/system/edac/mc ]]; then
+                    local ce ue
+                    ce=$(cat /sys/devices/system/edac/mc/mc0/ce_count 2>/dev/null || echo "?")
+                    ue=$(cat /sys/devices/system/edac/mc/mc0/ue_count 2>/dev/null || echo "?")
+                    info "EDAC MC0: ${ce} correctable, ${ue} uncorrectable errors"
+                fi
+            else
+                warn "sb_edac not loaded (ECC monitoring unavailable)"
             fi
             ;;
     esac
