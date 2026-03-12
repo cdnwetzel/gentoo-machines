@@ -165,3 +165,55 @@ Connected: Logitech wireless receiver (USB HID), hub.
 
 **Note**: No i915 firmware needed (no Intel iGPU). No WiFi firmware needed.
 dmesg firmware loading was not captured (live USB rotated buffer). Firmware paths confirmed from `/lib/firmware/` on Fedora.
+
+## GPU AI/ML Reference (Dual GTX 1050 Ti)
+
+**Driver**: nvidia 580.126.18 (legacy branch, last for Pascal). Security patches until Oct 2028.
+**CUDA**: 13.0, Compute Capability 6.1
+**VRAM**: 4 GB per GPU, 8 GB total
+
+### Constraints
+
+| Constraint | Detail |
+|-----------|--------|
+| 4 GB hard wall per GPU | Single tensors/layers can't span cards |
+| PCIe bandwidth | ~16 GB/s vs NVLink's 600 GB/s — inter-GPU transfers are the bottleneck |
+| No tensor parallelism | Splitting individual layers isn't practical at this bandwidth |
+| CUDA compute 6.1 | Supported by PyTorch but won't get future support forever |
+
+### Best Use Cases (Most to Least Effective)
+
+**1. Pipeline Parallelism** — split one model across both GPUs
+Best for inference on models that just barely don't fit in 4 GB (~7-7.5 GB effective).
+```python
+from accelerate import dispatch_model, infer_auto_device_map
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained("model-name")
+device_map = infer_auto_device_map(model, max_memory={0: "3.5GiB", 1: "3.5GiB"})
+model = dispatch_model(model, device_map=device_map)
+```
+HuggingFace `accelerate` handles layer-splitting automatically. Some speed loss to PCIe transfers between layers.
+
+**2. Data Parallelism** — same model, split batches
+Best for training where the model fits in 4 GB. Roughly ~1.6-1.8x throughput (not 2x due to sync overhead).
+```python
+import torch.nn as nn
+model = nn.DataParallel(model, device_ids=[0, 1])
+model = model.cuda()
+```
+
+**3. Independent Workloads** — separate jobs on each GPU
+Most reliable option. Useful for hyperparameter searches, parallel experiments.
+```python
+# Process 1: CUDA_VISIBLE_DEVICES=0
+# Process 2: CUDA_VISIBLE_DEVICES=1
+```
+
+### Recommendation by Goal
+
+| Goal | Approach |
+|------|----------|
+| Running an LLM | `accelerate` with `device_map="auto"` — splits across both GPUs up to ~7.5 GB |
+| Training a custom model | DataParallel if model fits in 4 GB |
+| Multiple experiments | Independent processes, one GPU each |

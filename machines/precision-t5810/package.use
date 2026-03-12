@@ -4,7 +4,8 @@
 sys-kernel/installkernel grub
 
 # NVIDIA proprietary driver (2x GTX 1050 Ti GP107)
-x11-drivers/nvidia-drivers kernel-open modules tools
+# Pascal (GP107) does NOT support kernel-open (Turing+ only) — must use closed-source modules
+x11-drivers/nvidia-drivers -kernel-open modules tools
 media-libs/mesa -video_cards_nouveau
 
 # NetworkManager — no WiFi support needed (wired only)

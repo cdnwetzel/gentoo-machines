@@ -15,7 +15,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
-  precision-t5810/  Dell Precision T5810 / Xeon E5 (BUILT — awaiting first boot)
+  precision-t5810/  Dell Precision T5810 / Xeon E5 - PRODUCTION
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
@@ -34,7 +34,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Built (awaiting first boot) | Gentoo (chroot) |
+| 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Production | Gentoo |
 | 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
@@ -320,10 +320,11 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell Precision T5810 (Harvested + Configs Generated)
 
-- **Kernel**: Built 2026-03-11, awaiting first boot
+- **Kernel**: Linux 6.18.16-gentoo (Production)
 - **Architecture**: x86_64, 22C/44T (Broadwell-EP, AVX2, no AVX-512)
 - **Compiler flags**: `-march=broadwell -O2 -pipe`
-- **Key drivers**: nvidia (2x GP107 GTX 1050 Ti, proprietary), e1000e (I217-LM), nvme, ahci, snd_hda_intel (Realtek ALC3220 + 2x NVIDIA HDMI)
+- **Key drivers**: nvidia 580.126.18 (2x GP107 GTX 1050 Ti, proprietary legacy branch, CUDA 13.0), e1000e (I217-LM), nvme, ahci, snd_hda_intel (Realtek ALC3220 + 2x NVIDIA HDMI)
+- **NVIDIA legacy**: 580.xx is last branch for Pascal. >=581 masked. Security patches until Oct 2028.
 - **Firmware**: Loaded from /lib/firmware/ (nvidia/gp107/*)
 - **No Intel iGPU**: Xeon E5 — discrete NVIDIA only
 - **No WiFi**: Desktop workstation, wired Ethernet only

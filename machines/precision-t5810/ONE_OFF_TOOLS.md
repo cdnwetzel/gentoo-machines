@@ -271,7 +271,7 @@ Issues encountered running part3 phases inside the chroot:
 1. Change passwords: `passwd root`, `passwd chris` (both currently "gentoo")
 2. `dispatch-conf` — merge `/etc/sudoers` and any other config updates
 3. `eselect news read` — 27 unread items
-4. `nvidia-smi` — verify both GTX 1050 Ti GPUs detected
+4. ~~`nvidia-smi` — verify both GTX 1050 Ti GPUs detected~~ **BLOCKED**: kernel-open doesn't support Pascal — see fix below
 5. `ip addr` — verify Intel I217-LM Ethernet (e1000e)
 6. `xrandr` — verify display output
 7. `pactl info | grep "Server Name"` — verify PipeWire
@@ -280,6 +280,31 @@ Issues encountered running part3 phases inside the chroot:
 10. `cpuid2cpuflags` — verify CPU_FLAGS_X86 in make.conf
 11. `bash ~/gentoo-machines/shared/restore-desktop.sh` — XFCE keybindings, panels, displays
 12. Consider running `tools/update-system.sh verify` for comprehensive post-boot validation
+
+### NVIDIA kernel-open vs Proprietary (First Boot Fix)
+- **Problem**: nvidia-drivers 590.48.01 built with `kernel-open` USE flag. Both GTX 1050 Ti GPUs (PCI ID 10de:1c82, Pascal GP107) failed to probe on boot: "does not include the required GPU". No Xorg started, no nvidia-smi.
+- **Root cause**: `kernel-open` builds NVIDIA's open-source kernel modules, which only support **Turing (RTX 2000+)** and newer. Pascal and older need the proprietary closed-source modules.
+- **Fix**: Changed `kernel-open` → `-kernel-open` in `/etc/portage/package.use/precision-t5810`, then `emerge -1 x11-drivers/nvidia-drivers && rc-service display-manager restart`.
+- **Prevention**: generate-config.sh and kernel-config-template.sh should detect GPU generation from PCI ID and set the correct USE flag automatically.
+
+### NVIDIA 590+ Drops Pascal Entirely (First Boot Fix, Part 1b)
+- **Problem**: Even after fixing kernel-open to use proprietary modules, nvidia-smi still failed. Emerge warned: "You are installing a version known not to work with a GPU of the current system."
+- **Root cause**: NVIDIA driver 590.x dropped Pascal (GTX 10xx), Maxwell (GTX 900), and Volta support entirely. Neither kernel-open NOR proprietary modules work. The **580.xx series** is the last branch supporting Pascal.
+- **Fix**: Mask `>=x11-drivers/nvidia-drivers-581` in `/etc/portage/package.mask/nvidia-drivers`, then downgrade to 580.126.18.
+- **Timeline**: 580.xx gets security patches through October 2028.
+- **Lesson**: Three separate issues stacked on one emerge — kernel-open (wrong module type), file ordering (shared overriding machine), ccache perms (build infra), AND driver version (Pascal dropped). Each masked the next.
+
+### Portage package.use File Ordering Gotcha (First Boot Fix, Part 2)
+- **Problem**: Even after setting `-kernel-open` in `precision-t5810` package.use, emerge still showed `kernel-open` active. Shared file had `kernel-open` (positive), machine file had `-kernel-open` (negative).
+- **Root cause**: Portage processes `/etc/portage/package.use/*` files in **alphabetical order**. `shared` sorts after `precision-t5810`, so the positive `kernel-open` in shared overrode the negative `-kernel-open` in the machine file.
+- **Fix**: Removed `nvidia-drivers` line from shared package.use entirely. Each NVIDIA machine now has its own nvidia-drivers USE in its machine-specific file. XPS 9510 has `kernel-open` (Ampere), T5810 has `-kernel-open` (Pascal).
+- **Rule**: Never put USE flags that vary between machines in the shared file.
+
+### ccache /var/cache/ccache/tmp Permissions (First Boot Fix, Part 3)
+- **Problem**: After fixing kernel-open, nvidia-drivers build still failed with `ccache: error: failed to create temporary file for /var/cache/ccache/tmp/cpp_stdout.tmp.*.i: Permission denied`.
+- **Root cause**: `/var/cache/ccache/` was mode `2775` (group-writable for portage group) but the `tmp/` subdirectory created by ccache was mode `2755` (NOT group-writable). Portage sandbox runs compiles as the `portage` user (group `portage`) — needs write access to ccache tmp.
+- **Fix**: `sudo chmod 2775 /var/cache/ccache/tmp`
+- **Prevention**: Part3 install scripts should verify ccache subdirectory permissions after initial setup, or add a chmod -R to ensure all subdirs are 2775.
 
 ### Future Generalization Candidates
 - [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` that creates all 3 part scripts from harvest data + feature detection (like kernel-config-template.sh does for kernel configs)

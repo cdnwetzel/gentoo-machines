@@ -29,8 +29,9 @@ net-vpn/networkmanager-sstp gui
 # NetworkManager WiFi support
 >=net-wireless/wpa_supplicant-2.11-r4 dbus
 
-# NVIDIA proprietary driver (dGPU machines only)
-x11-drivers/nvidia-drivers kernel-open modules tools
+# NVIDIA: USE flags are machine-specific (kernel-open varies by GPU generation)
+# See INSTALL_GOTCHAS.md #29 (file ordering) and #31 (kernel-open Turing+ only)
+# Each NVIDIA machine sets its own nvidia-drivers line in its machine-specific file.
 media-libs/mesa -video_cards_nouveau
 
 # Auto-unmasked dependencies

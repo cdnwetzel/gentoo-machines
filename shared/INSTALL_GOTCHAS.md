@@ -1,5 +1,5 @@
 # Gentoo Install Gotchas — Universal Lessons Learned
-# Consolidated from MBP 2015, XPS 9510, XPS 9315, Surface Pro 6
+# Consolidated from MBP 2015, XPS 9510, XPS 9315, Surface Pro 6, Precision T5810
 # Persist this on the Ventoy USB so we never repeat these mistakes
 
 ## 1. WiFi During Install (wpa_supplicant)
@@ -299,3 +299,86 @@ PORTAGE_TMPDIR="/var/tmp"
 Portage creates `/var/tmp/portage/` itself, which is where fstab mounts the tmpfs.
 The disk fallback (`notmpfs.conf`) correctly uses `/var/tmp/portage-disk` — portage
 builds large packages in `/var/tmp/portage-disk/portage/`, entirely separate from tmpfs.
+
+## 29. Portage package.use File Ordering — Last Alphabetical File Wins
+**Problem (Precision T5810)**: Machine-specific file `precision-t5810` had
+`x11-drivers/nvidia-drivers -kernel-open modules tools`, but `shared` had
+`x11-drivers/nvidia-drivers kernel-open modules tools`. Because `shared` sorts
+after `precision-t5810` alphabetically, the `kernel-open` from shared overrode
+the `-kernel-open` from the machine file. The emerge output showed `kernel-open`
+still active despite the machine-specific override.
+**Root cause**: When the same package appears in multiple files under
+`/etc/portage/package.use/`, Portage processes them in alphabetical order.
+For conflicting USE flags, the **last file wins**.
+**Fix**: Don't put machine-varying USE flags in shared. Keep nvidia-drivers
+USE flags in machine-specific files only. Each machine knows its GPU generation.
+**Prevention**: Never put USE flags that differ between machines in the shared
+file. Shared should only contain flags that are truly universal across all machines.
+
+## 30. ccache `/var/cache/ccache/tmp` Permissions (portage sandbox)
+**Problem (Precision T5810)**: nvidia-drivers build failed with:
+```
+ccache: error: failed to create temporary file for /var/cache/ccache/tmp/cpp_stdout.tmp.*.i: Permission denied
+```
+**Root cause**: `/var/cache/ccache/` was mode `2775` (group-writable for portage)
+but the `tmp/` subdirectory was mode `2755` (not group-writable). Portage's sandbox
+runs compiles as the `portage` user, which has group `portage` — but `2755` only
+gives the group `r-x`, not write. ccache needs to write temp files there.
+**Fix**:
+```bash
+sudo chmod 2775 /var/cache/ccache/tmp
+```
+**Prevention**: After `mkdir -p /var/cache/ccache && chown root:portage && chmod 2775`,
+also verify subdirectories inherit the group-writable permission. The `setgid` bit (2)
+ensures new files get the `portage` group, but doesn't guarantee write permission on
+subdirectories created by ccache itself.
+
+## 31. NVIDIA 590+ Drops Pascal (GTX 10xx) — Use 580.xx Legacy Branch
+**Problem (Precision T5810)**: After fixing kernel-open AND ccache, nvidia-drivers
+590.48.01 installed successfully but `nvidia-smi` still failed. Emerge printed:
+```
+***WARNING*** You are installing a version known not to work with a GPU of the current system.
+```
+**Root cause**: NVIDIA 590.x dropped support for Maxwell, Pascal, and Volta GPUs
+entirely. The GTX 1050 Ti (Pascal, GP107) is not recognized by 590+ drivers at all —
+neither kernel-open nor proprietary modules. The **580.xx series** is the last driver
+branch supporting Pascal.
+**Timeline**: 580.xx gets quarterly security patches until October 2028, then EOL.
+**Fix**:
+```bash
+# Mask 581+ to stay on legacy branch
+echo '>=x11-drivers/nvidia-drivers-581' > /etc/portage/package.mask/nvidia-drivers
+# Downgrade
+emerge -1v x11-drivers/nvidia-drivers
+```
+**Affected GPUs**: All GeForce GTX 900 series (Maxwell), GTX 10xx series (Pascal),
+Titan X/Xp (Pascal), Quadro P-series, Tesla P-series.
+**Safe GPUs** (590+ works): GeForce RTX 2000+ (Turing), RTX 3000+ (Ampere),
+RTX 4000+ (Ada), RTX 5000+ (Blackwell).
+
+## 32. NVIDIA `kernel-open` Only Supports Turing+ (RTX 2000+)
+**Problem (Precision T5810)**: nvidia-drivers built with `kernel-open` USE flag. On first
+boot, both GTX 1050 Ti GPUs fail to probe:
+```
+NVRM: The NVIDIA GPU 0000:03:00.0 (PCI ID: 10de:1c82)
+NVRM: nvidia.ko because it does not include the required GPU
+nvidia probe with driver nvidia failed with error -1
+```
+No Xorg log created. LightDM reports "started" but X never launches — boots to CLI only.
+`nvidia-smi` also fails (no GPU initialized).
+**Root cause**: The `kernel-open` USE flag builds NVIDIA's open-source kernel modules,
+which only support Turing (RTX 2000) and newer architectures. Pascal (GTX 10xx),
+Maxwell, Kepler, and older GPUs require the proprietary closed-source modules.
+**Fix**:
+```bash
+# In /etc/portage/package.use/<machine>:
+x11-drivers/nvidia-drivers -kernel-open modules tools
+
+# Rebuild
+emerge -1 x11-drivers/nvidia-drivers
+rc-service display-manager restart
+```
+**Impact**: Any machine with pre-Turing NVIDIA GPUs (GTX 1080, 1070, 1060, 1050,
+Titan X Pascal, Quadro P-series, etc.) MUST use `-kernel-open`.
+**Prevention**: kernel-config-template.sh and generate-config.sh should detect GPU
+architecture from PCI ID and auto-set the correct USE flag.
