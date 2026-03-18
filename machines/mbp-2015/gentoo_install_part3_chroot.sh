@@ -209,7 +209,7 @@ echo "Set password for user 'chris':"
 passwd chris
 
 # Sudo
-echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 echo ""
 echo "[OK] Phase 4 complete."

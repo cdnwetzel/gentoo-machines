@@ -190,7 +190,7 @@ echo ""
 echo "Set password for user 'chris':"
 passwd chris
 
-echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 echo ""
 echo "[OK] Phase 4 complete."
