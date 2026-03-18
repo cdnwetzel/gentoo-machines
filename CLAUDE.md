@@ -405,6 +405,8 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/Xresources` | Persistent X11 DPI config (Xft.dpi=144, Xcursor.size=36) |
 | `machines/surface-pro-6/xrandr-dpi.desktop` | XDG autostart: xrandr --dpi 144 on every login |
 | `machines/surface-pro-6/lightdm-gtk-greeter.conf` | LightDM greeter HiDPI (Sans 16, xft-dpi=144) |
+| `machines/surface-pro-6/logind-idle-hibernate.conf` | elogind drop-in: hibernate after 15min idle (safety net) |
+| `machines/surface-pro-6/xfce4-power-manager.sh` | XFCE PM config: hibernate 10min battery, suspend 30min AC |
 | `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ## Future Machine Notes

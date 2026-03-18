@@ -36,6 +36,7 @@
 - [x] SP6: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP tuning [repo]
 - [x] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — added to part3 phase 11 [repo]
 - [x] SP6: add `sys-power/powertop` to world file + `CPU_FREQ_STAT` to kernel config [repo]
+- [x] SP6: fix overnight battery drain — elogind idle-hibernate drop-in (15min) + XFCE PM hibernate (10min battery) + critical battery hibernate (10%) [repo+hardware]
 
 ## Medium Priority — Other
 - [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]
