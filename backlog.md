@@ -45,6 +45,9 @@
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external [hardware]
 
+## Parked
+- [ ] Evaluate kernel 7.x upgrade — NUMA improvements not relevant (all single-socket), NVIDIA 580.xx/590.xx won't support 7.0 at launch, 6.18 LTS covers us until Dec 2027. Revisit when 7.x LTS is declared and hits gentoo-sources ~amd64 (likely late 2027). [all machines]
+
 ## Low Priority
 - [ ] Harvest ASRock B550 / Ryzen 9 5950X (Fedora 42) [hardware]
 - [x] Generate T5810 install scripts (part1/2/3) with SABRENT Ventoy exclusion safety [repo]
