@@ -40,6 +40,13 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-enabled -n -t b
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -n -t bool -s true
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-tray-icon -n -t int -s 1
 
+# --- Screensaver idle activation (CRITICAL) ---
+# xfce4-screensaver sets elogind's IdleHint via D-Bus. Without this,
+# neither XFCE PM inactivity actions nor elogind IdleAction will ever fire.
+xfconf-query -c xfce4-screensaver -p /saver/enabled -n -t bool -s true
+xfconf-query -c xfce4-screensaver -p /saver/idle-activation/enabled -n -t bool -s true
+xfconf-query -c xfce4-screensaver -p /saver/idle-activation/delay -n -t int -s 5
+
 # --- Lid action (leave as-is for clamshell mode compatibility) ---
 # HandleLidSwitchDocked=ignore in logind.conf handles lid-closed-on-dock
 # Power manager lid actions left at defaults (suspend on lid close when on battery)

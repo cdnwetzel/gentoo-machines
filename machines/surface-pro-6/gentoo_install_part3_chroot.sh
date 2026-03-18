@@ -471,8 +471,37 @@ if [[ -f "$CONFIGS/fstrim-weekly.start" ]]; then
 else
     echo "  [WARN] fstrim-weekly.start not found"
 fi
+if [[ -f "$CONFIGS/resume-device.start" ]]; then
+    cp "$CONFIGS/resume-device.start" /etc/local.d/resume-device.start
+    chmod +x /etc/local.d/resume-device.start
+    echo "  [OK] /etc/local.d/resume-device.start (set /sys/power/resume for hibernate)"
+else
+    echo "  [WARN] resume-device.start not found"
+fi
 
-echo "[11.4] Installing elogind idle-hibernate drop-in..."
+echo "[11.4] Installing idle-hint bridge (X11 → elogind IdleHint)..."
+if [[ -f "$CONFIGS/xidletime.c" ]]; then
+    gcc -o /usr/local/bin/xidletime "$CONFIGS/xidletime.c" -lX11 -lXss
+    echo "  [OK] /usr/local/bin/xidletime compiled"
+else
+    echo "  [WARN] xidletime.c not found — idle-hint bridge won't work"
+fi
+if [[ -f "$CONFIGS/idle-hint-bridge.sh" ]]; then
+    cp "$CONFIGS/idle-hint-bridge.sh" /usr/local/bin/idle-hint-bridge
+    chmod +x /usr/local/bin/idle-hint-bridge
+    echo "  [OK] /usr/local/bin/idle-hint-bridge"
+else
+    echo "  [WARN] idle-hint-bridge.sh not found"
+fi
+if [[ -f "$CONFIGS/idle-hint-bridge.desktop" ]]; then
+    mkdir -p /etc/xdg/autostart
+    cp "$CONFIGS/idle-hint-bridge.desktop" /etc/xdg/autostart/idle-hint-bridge.desktop
+    echo "  [OK] /etc/xdg/autostart/idle-hint-bridge.desktop"
+else
+    echo "  [WARN] idle-hint-bridge.desktop not found"
+fi
+
+echo "[11.5] Installing elogind idle-hibernate drop-in..."
 mkdir -p /etc/elogind/logind.conf.d
 if [[ -f "$CONFIGS/logind-idle-hibernate.conf" ]]; then
     cp "$CONFIGS/logind-idle-hibernate.conf" /etc/elogind/logind.conf.d/20-idle-hibernate.conf
@@ -481,7 +510,7 @@ else
     echo "  [WARN] logind-idle-hibernate.conf not found"
 fi
 
-echo "[11.5] Installing sysctl tuning..."
+echo "[11.6] Installing sysctl tuning..."
 if [[ -f "$CONFIGS/sysctl-performance.conf" ]]; then
     cp "$CONFIGS/sysctl-performance.conf" /etc/sysctl.d/99-surface-pro-6-performance.conf
     echo "  [OK] /etc/sysctl.d/99-surface-pro-6-performance.conf"
@@ -489,7 +518,7 @@ else
     echo "  [WARN] sysctl-performance.conf not found"
 fi
 
-echo "[11.6] Verifying firmware files..."
+echo "[11.7] Verifying firmware files..."
 ls /lib/firmware/mrvl/pcie8897_uapsta.bin* 2>/dev/null && echo "  [OK] WiFi firmware" || echo "  [FAIL] WiFi firmware!"
 ls /lib/firmware/mrvl/usb8897_uapsta.bin* 2>/dev/null && echo "  [OK] BT firmware" || echo "  [FAIL] BT firmware!"
 ls /lib/firmware/i915/kbl_dmc_ver1_04.bin* 2>/dev/null && echo "  [OK] i915 DMC firmware" || echo "  [FAIL] i915 firmware!"

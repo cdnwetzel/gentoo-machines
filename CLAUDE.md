@@ -406,7 +406,11 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/xrandr-dpi.desktop` | XDG autostart: xrandr --dpi 144 on every login |
 | `machines/surface-pro-6/lightdm-gtk-greeter.conf` | LightDM greeter HiDPI (Sans 16, xft-dpi=144) |
 | `machines/surface-pro-6/logind-idle-hibernate.conf` | elogind drop-in: hibernate after 15min idle (safety net) |
-| `machines/surface-pro-6/xfce4-power-manager.sh` | XFCE PM config: hibernate 10min battery, suspend 30min AC |
+| `machines/surface-pro-6/xfce4-power-manager.sh` | XFCE PM + screensaver idle config (hibernate 10min battery) |
+| `machines/surface-pro-6/xidletime.c` | X11 idle time query tool (libXss, compile with gcc -lX11 -lXss) |
+| `machines/surface-pro-6/idle-hint-bridge.sh` | Bridge X11 idle → elogind IdleHint (xfce4-screensaver workaround) |
+| `machines/surface-pro-6/idle-hint-bridge.desktop` | XDG autostart for idle-hint-bridge |
+| `machines/surface-pro-6/resume-device.start` | Set /sys/power/resume at boot (enables hibernate with swap file) |
 | `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
 ## Future Machine Notes
