@@ -18,7 +18,7 @@
 - [x] Section 3 expansion: SMBIOS, DMI processor, full memory layout (DIMMs, speed, slots) [repo]
 - [x] Section 16: CPU Topology — NUMA, cache, cores/threads/sockets via lscpu [repo]
 - [x] Section 17: Power & Performance — governor, pstate, turbo, battery, chassis type [repo]
-- [ ] Boot media exclusion: detect and flag Ventoy/live USB drives by device ID or VTOYEFI label [repo]
+- [x] Boot media exclusion: detect Ventoy/live USB by label/model, warn in harvest output [repo]
 - [x] Fix `-march` detection — added Sapphire Rapids, Rocket Lake, Arrow Lake, Lunar Lake, extra variants [repo]
 
 ### deep_harvest.sh Enhancements
@@ -32,11 +32,11 @@
 
 ### Install Script Improvements
 - [ ] Stage3 auto-discovery: auto-discover latest stage3 from mirror directory listing in part2 scripts [repo]
-- [ ] Standardize root handling: add root check or sudo prefix across all install scripts [repo]
+- [x] Standardize root handling: root check added to all part1 + part2 scripts (4 machines) [repo]
 - [ ] Post-format blkid verification in part1 scripts (lsblk shows stale cache) [repo]
 - [x] Audit all machines' make.conf for `$(nproc)` usage — NUC11 fixed, all others clean [repo]
 - [ ] Integrate deep sanity check into part3 as replacement for simpler Phase 13 [repo]
-- [ ] Add `dispatch-conf` or `etc-update` step to part3 after Phase 6 [repo]
+- [x] Add dispatch-conf after Phase 6 @world emerge in all part3 scripts [repo]
 
 ### New Tool Candidates
 - [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` — create all 3 part scripts from harvest data + feature detection [repo]
