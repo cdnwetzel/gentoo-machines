@@ -35,7 +35,7 @@
 - [x] Standardize root handling: root check added to all part1 + part2 scripts (4 machines) [repo]
 - [x] Post-format blkid verification — validate UUIDs, exit on failure with partprobe hint [repo]
 - [x] Audit all machines' make.conf for `$(nproc)` usage — NUC11 fixed, all others clean [repo]
-- [ ] Integrate deep sanity check into part3 as replacement for simpler Phase 13 [repo]
+- [x] Deep sanity check: tools/verify-install.sh — standalone post-reboot verification, auto-detects machine [repo]
 - [x] Add dispatch-conf after Phase 6 @world emerge in all part3 scripts [repo]
 
 ### New Tool Candidates
