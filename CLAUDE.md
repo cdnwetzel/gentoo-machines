@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh, update-system.sh, verify-install.sh
+tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -153,6 +153,18 @@ tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 # Example: tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
 ```
 Analyzes harvest data against a base config and generates `.config`, `make.conf`, and `HARDWARE.md`.
+
+### machine-profile.sh
+Shared hardware detection library — parses harvest.sh output into feature flags. Sourced by other tools, not run directly:
+```bash
+HARVEST="/path/to/hardware_inventory.log"
+source tools/machine-profile.sh
+# Now use: $CPU_VENDOR, $HAS_NVIDIA_GPU, $WIFI_DRIVER, $IS_LAPTOP, etc.
+
+# Or run standalone for a summary:
+HARVEST="/path/to/hardware_inventory.log" MP_SUMMARY=1 bash tools/machine-profile.sh
+```
+Sets 30+ variables: CPU (vendor, model, threads, march, flags), GPU (Intel gen, NVIDIA count, AMD), WiFi/BT drivers, audio type/codec, storage (NVMe/SATA/boot drive), Ethernet drivers, platform vendor, boot type, suspend, chassis/form factor, and hardware features (Thunderbolt, ISH, SAM, EDAC, NUMA).
 
 ### verify-install.sh
 Post-reboot deep verification — auto-detects machine from DMI:

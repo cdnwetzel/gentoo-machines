@@ -15,7 +15,7 @@
 ## Medium Priority — New Tool Candidates
 
 - [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` — create all 3 part scripts from harvest data + feature detection [repo]
-- [ ] **Machine feature profile**: auto-detect HAS_WIFI, HAS_BLUETOOTH, IS_LAPTOP, HAS_NVIDIA from harvest data → service list, packages, config [repo]
+- [x] **Machine feature profile**: tools/machine-profile.sh — shared library, 30+ variables, sourced by kernel-config-template.sh [repo]
 
 ## Parked
 
