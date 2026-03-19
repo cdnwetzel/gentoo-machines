@@ -46,6 +46,44 @@
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
 - [ ] Test clamshell mode on XPS 9510 with AOC 34" external [hardware]
 
+## Medium Priority — Tooling Improvements
+
+### harvest.sh Enhancements
+- [ ] Section 3 expansion: full `dmidecode -t bios/system/baseboard/processor/memory` (ECC type, DIMM layout, socket, max turbo, board model, SMBIOS version) [repo]
+- [ ] Section 16: BIOS Power Config — C-state status, CPU governor, pstate mode (critical for workstation vs laptop) [repo]
+- [ ] Section 17: CPU Topology — NUMA nodes, cache hierarchy, socket count (`lscpu --extended`) [repo]
+- [ ] Boot media exclusion: detect and flag Ventoy/live USB drives by device ID or VTOYEFI label [repo]
+
+### deep_harvest.sh Enhancements
+- [ ] NVIDIA GPU details: `nvidia-smi -q` if proprietary driver loaded, or parse PCI subsystem vendor [repo]
+- [ ] Firmware loading from sysfs: try `/sys/class/firmware/` when dmesg rotates [repo]
+
+### kernel-config-template.sh Enhancements
+- [ ] Power profile auto-detect: workstation (no battery, chassis tower) → default GOV_PERFORMANCE [repo]
+- [ ] Multi-GPU detection: count NVIDIA GPUs, note in kernel_config.sh header [repo]
+- [ ] SATA vs NVMe boot: auto-determine boot drive from harvest data [repo]
+
+### Install Script Improvements
+- [ ] Stage3 auto-discovery: auto-discover latest stage3 from mirror directory listing in part2 scripts [repo]
+- [ ] Standardize root handling: add root check or sudo prefix across all install scripts [repo]
+- [ ] Post-format blkid verification in part1 scripts (lsblk shows stale cache) [repo]
+- [ ] Mirror fallback or speed test in part2 scripts [repo]
+- [ ] Add `sudo` to verification `ls` commands in part2 [repo]
+- [ ] Audit all machines' make.conf for `$(nproc)` usage — Portage doesn't evaluate shell commands [repo]
+- [ ] Always include `-wext` with `-wifi` for NetworkManager in wired-only machine configs [repo]
+- [ ] Add `gui-libs/libwlembed gtk` to shared/package.use if other XFCE machines need it [repo]
+- [ ] Integrate deep sanity check into part3 as replacement for simpler Phase 13 [repo]
+- [ ] Add `dispatch-conf` or `etc-update` step to part3 after Phase 6 [repo]
+
+### New Tool Candidates
+- [ ] **bios-harvest.sh**: dedicated BIOS/UEFI settings dump (`dmidecode` all types, `efivar --list`, power/thermal, virtualization, boot order) [repo]
+- [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` — create all 3 part scripts from harvest data + feature detection [repo]
+- [ ] **Machine feature profile**: auto-detect HAS_WIFI, HAS_BLUETOOTH, IS_LAPTOP, HAS_NVIDIA from harvest data → service list, packages, Phase 11 config [repo]
+- [ ] **Per-machine world file generator**: start from shared world, subtract inapplicable packages [repo]
+- [ ] **Phase 13 auto-generation**: verify list generated from Phase 8 service list, not manually maintained [repo]
+- [ ] **Part3 non-interactive mode**: `chpasswd` instead of `passwd`, `--yes`/`--non-interactive` flag [repo]
+- [ ] **Part3 depclean phase**: Phase 6.5 for `emerge --depclean` + `@preserved-rebuild` [repo]
+
 ## Parked
 - [ ] Evaluate kernel 7.x upgrade — NUMA improvements not relevant (all single-socket), NVIDIA 580.xx/590.xx won't support 7.0 at launch, 6.18 LTS covers us until Dec 2027. Revisit when 7.x LTS is declared and hits gentoo-sources ~amd64 (likely late 2027). [all machines]
 

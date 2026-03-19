@@ -63,7 +63,7 @@ gentoo-machines/
 │   ├── kernel-config-template.sh  # Auto-generate kernel_config.sh from harvest data
 │   ├── update-system.sh            # Prompted system update workflow with resume
 │   ├── build-kernel-remote.sh     # Cross-compile and deploy kernels over SSH
-│   └── generate-config.sh         # AI-powered config generation (uses Claude CLI)
+│   └── generate-config.sh         # Assisted config generation (uses Claude CLI)
 ├── shared/
 │   ├── world              # Common installed package list
 │   ├── package.use        # Per-package USE flags
@@ -77,7 +77,7 @@ gentoo-machines/
 ├── patches/               # Kernel patches with upstream investigation notes
 │   ├── ipu-bridge-fix-double-brace.patch
 │   └── intel_idle-add-tiger-lake.patch
-├── CLAUDE.md              # AI assistant context (project structure, machine details)
+├── CLAUDE.md              # Project context and technical reference
 ├── INSTALL.md             # General-purpose installation guide (any machine)
 └── README.md
 ```
@@ -113,8 +113,8 @@ Auto-generates a complete `kernel_config.sh` from harvest data. Detects CPU, GPU
 tools/kernel-config-template.sh <machine-name> <harvest-log>
 ```
 
-### generate-config.sh — AI-Powered Config Generation
-Uses Claude CLI to analyze harvest data against a base config and generate `.config`, `make.conf`, and `HARDWARE.md`.
+### generate-config.sh — Assisted Config Generation
+Analyzes harvest data against a base config and generates `.config`, `make.conf`, and `HARDWARE.md`. Uses Claude CLI for hardware diff analysis.
 
 ```bash
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>

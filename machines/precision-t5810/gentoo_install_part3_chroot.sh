@@ -25,6 +25,7 @@
 MACHINE_NAME="precision-t5810"
 MACHINE_LABEL="Dell Precision T5810"
 HOSTNAME_VALUE="precision-t5810"
+TIMEZONE="America/New_York"
 CONFIGS="/root/${MACHINE_NAME}-configs"
 
 # CPU / Build
@@ -206,8 +207,8 @@ echo "=========================================="
 echo "=== PHASE 4: System Configuration ==="
 echo "=========================================="
 
-echo "[4.1] Setting timezone to America/New_York..."
-ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+echo "[4.1] Setting timezone to ${TIMEZONE}..."
+ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 
 echo "[4.2] Configuring locale..."
 sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen

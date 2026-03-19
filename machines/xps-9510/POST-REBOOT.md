@@ -1,6 +1,5 @@
 # Dell XPS 15 9510 - Post-Reboot Checklist
 
-**Date**: 2026-02-22
 **Kernel**: 6.12.58-gentoo (modules: i915, iwlwifi, cfg80211, mac80211, nvidia)
 
 ## Immediate Verification

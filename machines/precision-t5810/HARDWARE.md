@@ -1,7 +1,6 @@
 # Dell Precision Tower T5810 - Hardware Reference
 
 **Current OS**: Fedora 43 (live USB via Ventoy)
-**Harvest Date**: 2026-03-11
 
 ## System Overview
 

@@ -24,6 +24,7 @@
 set -euo pipefail
 
 CONFIGS="/root/xps-9510-configs"
+TIMEZONE="America/New_York"
 
 echo "============================================================"
 echo "=== Dell XPS 15 9510 One-Shot Chroot Install ==="
@@ -159,8 +160,8 @@ echo "=========================================="
 echo "=== PHASE 4: System Configuration ==="
 echo "=========================================="
 
-echo "[4.1] Setting timezone to America/New_York..."
-ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+echo "[4.1] Setting timezone to ${TIMEZONE}..."
+ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 
 echo "[4.2] Configuring locale..."
 sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen

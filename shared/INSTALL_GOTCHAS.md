@@ -1,6 +1,5 @@
-# Gentoo Install Gotchas — Universal Lessons Learned
+# Gentoo Install — Known Issues & Considerations
 # Consolidated from MBP 2015, XPS 9510, XPS 9315, Surface Pro 6, Precision T5810
-# Persist this on the Ventoy USB so we never repeat these mistakes
 
 ## 1. WiFi During Install (wpa_supplicant)
 **Problem (MBP 2015)**: Forgot to emerge wpa_supplicant before rebooting.

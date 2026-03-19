@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Project context and technical reference for this repository. Used by contributors and tooling (including Claude Code) to understand the structure, conventions, and machine-specific details.
 
 ## Project Overview
 
@@ -202,7 +202,7 @@ Shared files in `shared/` apply to all machines:
 | `patches/README.md` | Patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
-| `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (28 lessons from all machines) |
+| `shared/INSTALL_GOTCHAS.md` | Universal install known issues (28 lessons from all machines) |
 | `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `backlog.md` | Prioritized open items tracker |
 

@@ -1,4 +1,4 @@
-# Precision T5810 - Manual Commands & Tooling Candidates
+# Precision T5810 — Manual Commands & Tooling Reference
 
 Machine: Dell Precision Tower T5810 (Xeon E5-2699 v4)
 
@@ -63,97 +63,35 @@ Workstations often have C-states disabled in BIOS for performance.
 9. **LPSS/Pinctrl conditional**: C610/X99 doesn't use LPSS → skip LPSS/DesignWare/Pinctrl
 10. **NUMA regex fix**: "Xeon(R) CPU E5" pattern matching
 
-## Tooling Candidates for Future Work
-
-### harvest.sh Enhancements
-- [ ] **Section 3 expansion**: Full `dmidecode -t bios/system/baseboard/processor/memory`
-  - ECC type, DIMM layout, socket type, max turbo speed
-  - Board model/revision for Dell support
-  - SMBIOS version
-- [ ] **Section 16: BIOS Power Config**: C-state status, CPU governor, pstate mode
-  - Critical for workstation vs laptop distinction
-- [ ] **Section 17: CPU Topology**: NUMA nodes, cache hierarchy, socket count
-  - `lscpu --extended` output
-  - `/sys/devices/system/node/` enumeration
-- [ ] **Boot media exclusion**: Detect and flag Ventoy/live USB drives
-  - By device ID, by VTOYEFI label, by lack of Linux partition
-  - Add `# BOOT MEDIA — EXCLUDE FROM INSTALL` annotation in storage section
-
-### deep_harvest.sh Enhancements
-- [ ] **NVIDIA GPU details**: `nvidia-smi -q` if proprietary driver loaded, or parse PCI subsystem vendor
-- [ ] **Firmware loading from sysfs**: When dmesg rotates, try `/sys/class/firmware/` and
-  `find /sys -name 'loading' 2>/dev/null` to identify firmware in use
-
-### kernel-config-template.sh Enhancements
-- [ ] **Power profile**: Detect workstation (no battery, chassis tower) → default GOV_PERFORMANCE
-  Currently requires manual edit. Template should auto-detect.
-- [ ] **Multi-GPU**: Detect count of NVIDIA GPUs, note in kernel_config.sh header
-- [ ] **SATA vs NVMe boot**: Auto-determine which is the boot drive from harvest data
-
-### New Tool Candidates
-- [ ] **bios-harvest.sh**: Dedicated BIOS/UEFI settings dump (dmidecode all types)
-  - More detail than harvest.sh section 3 can hold
-  - Could include `efivar --list` on EFI systems
-  - Power/thermal settings, virtualization features, boot order
-- [x] **install-part1 safety**: Ventoy/boot media auto-exclusion in all `gentoo_install_part1.sh`
-  - Match by device unique ID or VTOYEFI label
-  - Hard-fail if target device has VTOYEFI partition
-  - **Implemented in T5810 part1**: 3-layer protection (udevadm ID check, lsblk model scan, NVMe-only gate)
-
-## Part 1/2 Execution Learnings
-
-Issues encountered running part1 and part2 on the T5810:
+## Part 1/2 Known Issues
 
 ### Stage3 Auto-Discovery (part2)
-- **Problem**: Stage3 filename is hardcoded (`stage3-amd64-desktop-openrc-20260222T170100Z.tar.xz`). We had to manually `curl` the mirror listing to find the latest (20260308).
-- **Fix candidate**: Auto-discover latest stage3 from mirror directory listing:
-  ```bash
-  LATEST=$(curl -sL "${MIRROR}/${STAGE3_DIR}/" | grep -oP 'stage3-amd64-desktop-openrc-\d{8}T\d{6}Z\.tar\.xz' | sort -u | tail -1)
-  ```
-- [ ] **TODO**: Add auto-discovery to all part2 scripts (or create shared function)
+Stage3 filename is hardcoded. Auto-discover latest from mirror directory listing:
+```bash
+LATEST=$(curl -sL "${MIRROR}/${STAGE3_DIR}/" | grep -oP 'stage3-amd64-desktop-openrc-\d{8}T\d{6}Z\.tar\.xz' | sort -u | tail -1)
+```
 
 ### Scripts Assume Root (part1/part2)
-- **Problem**: Scripts use bare commands (`parted`, `mkfs`, `mount`) assuming they run as root. Fedora live USB runs as `liveuser` with passwordless sudo, so every command needs `sudo` prefix.
-- **Problem**: `read -p` interactive prompts don't work through automation tools — had to run steps manually.
-- **Fix candidate**: Add `sudo` prefix to all privileged commands, or add a root check at the top:
-  ```bash
-  [[ $EUID -ne 0 ]] && { echo "Run with sudo or as root."; exit 1; }
-  ```
-- **Fix candidate**: Add `--yes` or `--non-interactive` flag to skip `read -p` prompts when running via automation.
-- [ ] **TODO**: Standardize root handling across all install scripts
+Scripts use bare commands (`parted`, `mkfs`, `mount`) assuming root. Fedora live USB runs as `liveuser` with passwordless sudo. Fix: add root check at script top or prefix privileged commands with `sudo`.
 
 ### lsblk Stale Cache (part1)
-- **Problem**: After `mkfs.ext4`, `lsblk` still shows old `btrfs`/`fedora` from kernel cache. `blkid` shows the correct `ext4`. Confusing but harmless.
-- **Fix candidate**: Run `sudo blockdev --rereadpt /dev/nvme0n1` or `udevadm settle` after format, then use `blkid` for verification instead of `lsblk -o FSTYPE`.
-- [ ] **TODO**: Add post-format `blkid` verification to part1 scripts
+After `mkfs.ext4`, `lsblk` may show old filesystem type from kernel cache. `blkid` shows the correct type. Fix: run `udevadm settle` after format, use `blkid` for verification.
 
 ### Mirror Speed (part2)
-- **Problem**: OSUOSL mirror throttled to ~2-3 MB/s for 703MB stage3 download.
-- **Fix candidate**: Try multiple mirrors in order, or auto-select fastest via `mirrorselect`:
-  ```bash
-  MIRRORS=("https://gentoo.osuosl.org" "https://mirrors.rit.edu/gentoo" "https://mirror.leaseweb.com/gentoo")
-  ```
-- [ ] **TODO**: Add mirror fallback or speed test to part2 scripts
+OSUOSL mirror can throttle to ~2-3 MB/s. Fix: try multiple mirrors in order or auto-select via `mirrorselect`.
 
-### Sudo ls on /root (part2)
-- **Problem**: Final `ls -la "$STAGING/"` fails because `/root` is mode 700. Need `sudo ls`.
-- [ ] **TODO**: Add `sudo` to verification `ls` commands in part2
+### MAKEOPTS `$(nproc)` in Portage
+`MAKEOPTS="-j$(nproc)"` in make.conf causes `$: bad substitution` — Portage does NOT evaluate shell commands in make.conf. Hardcode the thread count instead. `$(nproc)` in kernel_config.sh is fine (runs in bash).
 
-### MAKEOPTS `$(nproc)` Broken in Portage (part3 / make.conf)
-- **Problem**: `MAKEOPTS="-j$(nproc) -l44"` in make.conf causes portage error: `$: bad substitution`. Portage does NOT evaluate shell commands in make.conf — only `bash` does.
-- **Fix**: Hardcode thread count: `MAKEOPTS="-j44 -l44"`. Fixed in make.conf and on VTOYEFI.
-- **Impact**: All make.conf files in the repo should be checked. The kernel_config.sh `$(nproc)` is fine because that runs in bash.
-- [ ] **TODO**: Audit all machines' make.conf for `$(nproc)` usage. Add validation to generate-config.sh.
-
-## Install Script Generalization Learnings
+## Install Script Architecture
 
 ### Pattern: Machine Config at Top, Universal Logic Below
-All three install scripts (part1/part2/part3) now use a **config header** pattern:
+All three install scripts (part1/part2/part3) use a **config header** pattern:
 - Machine-specific values (device paths, hostname, partition sizes, tmpfs, services) at the top
 - Universal logic below that references only the variables
 - Conditional blocks gated by feature flags: `HAS_WIFI`, `HAS_BLUETOOTH`, `HAS_NVIDIA`, `IS_LAPTOP`, `HAS_INTEL_GPU`
 
-### What's Machine-Specific vs Universal (from 9-script analysis)
+### Machine-Specific vs Universal (from 9-script analysis)
 **~70% universal** across all machines:
 - Tool verification, GPT creation, stage3 download/verify/extract
 - Pseudo-fs mounts, DNS copy, UUID extraction, fstab generation
@@ -167,96 +105,48 @@ All three install scripts (part1/part2/part3) now use a **config header** patter
 - Phase 11: GPU (NVIDIA modprobe: desktop vs Optimus), WiFi workarounds, firmware verification
 - Phase 13: service check list matches Phase 8 enables
 
-### Issues Found & Fixed During Review
+### Issues Found & Fixed
 1. **Phase 13 missing service checks**: metalog, local, netmount (default), alsasound (boot) were enabled in Phase 8 but not verified in Phase 13. Fixed.
 2. **No machine-specific world file**: Shared world includes WiFi/BT/laptop packages. Created T5810-specific world (no wpa_supplicant, bluez, thermald, tlp, acpilight, xfce4-power-manager).
 3. **No package.accept_keywords for 6.18 LTS**: Without `=sys-kernel/gentoo-sources-6.18* ~amd64`, Portage installs whatever stable kernel is available. Created T5810-specific file.
 4. **No package.use for installkernel grub**: Without `sys-kernel/installkernel grub`, future kernel updates via `make install` don't auto-run grub-mkconfig. Created T5810-specific file.
 5. **NetworkManager -wifi -bluetooth USE**: Desktop workstation doesn't need WiFi/BT support compiled into NM.
 
-## Part 3 Execution Learnings (2026-03-11)
-
-Issues encountered running part3 phases inside the chroot:
+## Part 3 Known Issues
 
 ### NetworkManager -wext REQUIRED_USE (Phase 5)
-- **Problem**: `net-misc/networkmanager` has `wext` USE flag enabled by default. `wext` depends on `wifi` (`wext? ( wifi )`). Our package.use had `-wifi -bluetooth` but not `-wext`, causing REQUIRED_USE failure.
-- **Fix**: Add `-wext` to NetworkManager package.use line: `net-misc/networkmanager -wifi -wext -bluetooth`
-- **Impact**: All wired-only machines need `-wext` when disabling wifi. Updated package.use in repo, chroot, and VTOYEFI.
-- [ ] **TODO**: Update part2 script template to always include `-wext` with `-wifi` for NetworkManager
+`net-misc/networkmanager` has `wext` USE flag enabled by default. `wext` depends on `wifi` (`wext? ( wifi )`). Disabling wifi without also disabling wext causes REQUIRED_USE failure. Fix: always use `-wifi -wext -bluetooth` together.
 
-### ccache Warning (Phase 3 - GRUB)
-- **Observation**: `Warning: ccache requested but no masquerade dir can be found in /usr/lib*/ccache/bin` during GRUB build. Harmless — ccache symlinks not yet populated in fresh chroot. ccache works once more packages are built.
+### ccache Warning (Phase 3 — GRUB)
+`Warning: ccache requested but no masquerade dir can be found in /usr/lib*/ccache/bin` during GRUB build. Harmless — ccache symlinks not yet populated in fresh chroot.
 
 ### GRUB root= Uses Device Path Not UUID
-- **Observation**: `grub-mkconfig` uses `root=/dev/nvme0n1p3` instead of `root=UUID=...` in the boot entry. This is because the chroot's `/etc/fstab` has the UUID but GRUB's os-prober detects the device path. Works fine — fstab uses UUID for mount so root mounts correctly.
-- **Fix candidate**: Could add `GRUB_DEVICE_UUID=true` or manually set `GRUB_CMDLINE_LINUX="root=UUID=..."` but not necessary.
+`grub-mkconfig` uses `root=/dev/nvme0n1p3` instead of `root=UUID=...`. Works correctly — fstab uses UUID for mount.
 
 ### Passwords via chpasswd (Phase 4)
-- **Observation**: `passwd` requires interactive TTY input which doesn't work through automation. Used `echo "user:pass" | chpasswd` instead. Shows "Weak password" warning but works. Both root and chris set to "gentoo" — must change on first boot.
-- **Fix candidate**: Part3 should use `chpasswd` instead of `passwd` for non-interactive execution, or detect non-interactive mode and switch automatically.
+`passwd` requires interactive TTY. Use `echo "user:pass" | chpasswd` for non-interactive execution. Change default passwords on first boot.
 
 ### libwlembed gtk USE (Phase 6)
-- **Problem**: xfce4-screensaver requires `gui-libs/libwlembed[gtk]` for Wayland support. Not in shared or machine-specific package.use.
-- **Fix**: Added `gui-libs/libwlembed gtk` to package.use. Updated repo, chroot, and VTOYEFI.
-- [ ] **TODO**: Add this to shared/package.use if other XFCE machines hit the same dep
+xfce4-screensaver requires `gui-libs/libwlembed[gtk]`. Add to package.use.
 
-### LLVM Compile Time & CPU Saturation
-- **Observation**: LLVM 21.1.8 is the single biggest bottleneck in @world — ~10-15 minutes at -j44. All 44 cores at 100% during compile, ~20 GB RAM. The 86+ merge queue built up behind it, then drained rapidly when LLVM finished.
-- **Node.js** was the second bottleneck — ~10 minutes, peaked at 48 GB RAM compiling V8.
-- **Total @world**: 250 packages in ~90 minutes on 22C/44T Xeon with --jobs=6. Load hit 42+ during LLVM/Node.js.
-- **Merge queue pattern**: compile burst → merge drain → compile burst. Portage merges are serial (one at a time) but compiles run 6-wide.
-
-### depclean After @world (Phase 6 follow-up)
-- **Observation**: 41 packages depcleaned after @world — mostly LLVM/clang build deps, Qt5/Qt6 libs, and KDE frameworks that were pulled in transitively but not needed by any world package.
-- **Fix candidate**: Part3 should include `emerge --depclean` after Phase 6 and `emerge @preserved-rebuild` verification.
-
-### Deep Sanity Check (Phase 13 enhancement)
-- **Observation**: Phase 13 basic checks passed, but a deeper 13-section check caught a false positive on preserved libs (grep for "Nothing to merge" vs "Total: 0 packages"). Real result: 0 failures, 0 warnings.
-- **Sections checked**: kernel+boot, filesystem+UUIDs, 18 critical packages, 11 services, user+auth, display+desktop, NVIDIA (5 checks), networking (3 checks), portage+build (6 checks), local.d scripts, sysctl, timezone+locale, preserved libs.
-- [ ] **TODO**: Integrate deep sanity check into part3 as a replacement for the simpler Phase 13
-
-### Build Performance Notes (T5810 Xeon E5-2699v4)
-- **Kernel 6.18.16**: ~5 minutes at -j44 (defconfig + 26-phase kernel_config.sh + olddefconfig)
+### Build Performance (T5810 Xeon E5-2699v4)
+- **Kernel 6.18.16**: ~5 minutes at -j44
 - **@world (250 packages)**: ~90 minutes with --jobs=6 --load-average=44
-- **Peak load**: 42+ (all 44 threads at 100%) during LLVM and Node.js
-- **Peak RAM**: ~48 GB during Node.js V8 compile; typical 6-20 GB for most packages
-- **128 GB tmpfs**: never stressed — biggest single package (LLVM) uses ~20 GB tmpfs
-- **256 GB RAM**: 213+ GB free even at peak. Machine has massive headroom for --jobs=8 or --jobs=10.
-- **Bottleneck**: serial merge phase (portage can only merge one package at a time). Compile parallelism is excellent.
+- **Peak load**: 42+ during LLVM and Node.js
+- **Peak RAM**: ~48 GB during Node.js V8 compile; typical 6-20 GB
+- **Bottleneck**: serial merge phase (portage merges one at a time)
 
-### GPU Upgrade Considerations
-- **Current**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal) — PCIe 3.0 x16
-- **T5810 PSU**: 825W, 225W per PCIe slot
-- **Candidates evaluated**:
-  - RTX 3060 12GB ($449 each, 2-slot, 170W) — good VRAM, older arch
-  - RTX 3060 Ti 8GB ($400 each, 2-slot, 200W) — better compute, less VRAM
-  - RTX 4060 Ti 16GB ($539-599, 2-slot, 160W) — best $/VRAM, Ada arch
-  - RTX 5060 Ti 16GB ($476-579, 2.5-slot, ~150W) — newest arch but 2.5-slot clearance issue
-- **2.5-slot cards**: may not fit dual in T5810 — need to measure physical slot spacing
-- **Single 4060 Ti 16GB** at $539-599 may be the best single-card upgrade path
+### depclean After @world
+41 packages depcleaned — mostly LLVM/clang build deps, Qt5/Qt6 libs, KDE frameworks pulled in transitively.
 
-### dispatch-conf Needed on First Boot
-- **Problem**: After @world, emerge warned: `IMPORTANT: config file '/etc/sudoers' needs updating`. We did NOT run `dispatch-conf` in the chroot.
-- **Risk**: Our Phase 4 appended `%wheel ALL=(ALL) ALL` via `echo >>`. The emerge-installed sudoers update might conflict or duplicate. On first boot, run `dispatch-conf` to merge config updates cleanly.
-- **Also**: 27 news items unread (`eselect news read`).
-- [ ] **TODO**: Add `dispatch-conf --auto` or `etc-update` step to part3 after Phase 6
+### dispatch-conf on First Boot
+After @world, emerge warns about config files needing updates. Run `dispatch-conf` on first boot to merge cleanly.
 
-### Services Already in Default Runlevel from Stage3
-- **Observation**: Phase 8 reported `local` and `netmount` as "already installed in runlevel default" — stage3 or early emerge added them. Not a problem (rc-update is idempotent) but shows that part3 Phase 8 has redundant `rc-update add` calls for these.
-- **Implication**: The phase is safe to re-run (idempotent) but could be cleaner.
-
-### Final Package Counts
-- **Installed**: 796 packages (after depclean removed 41)
-- **World**: 57 packages (from 87-line world file, some are meta-packages)
-- **System**: 50 packages
-- **Kernel**: 6.18.16-gentoo (modules at `/lib/modules/6.18.16-gentoo/`)
-- **NVIDIA modules**: found at standard video/ path (confirmed by deep sanity check)
-
-### Post-Boot Checklist (First Boot)
-1. Change passwords: `passwd root`, `passwd chris` (both currently "gentoo")
-2. `dispatch-conf` — merge `/etc/sudoers` and any other config updates
-3. `eselect news read` — 27 unread items
-4. ~~`nvidia-smi` — verify both GTX 1050 Ti GPUs detected~~ **BLOCKED**: kernel-open doesn't support Pascal — see fix below
+## First Boot Checklist
+1. Change passwords: `passwd root`, `passwd chris` (both default "gentoo")
+2. `dispatch-conf` — merge `/etc/sudoers` and other config updates
+3. `eselect news read`
+4. `nvidia-smi` — verify both GTX 1050 Ti GPUs
 5. `ip addr` — verify Intel I217-LM Ethernet (e1000e)
 6. `xrandr` — verify display output
 7. `pactl info | grep "Server Name"` — verify PipeWire
@@ -264,37 +154,24 @@ Issues encountered running part3 phases inside the chroot:
 9. `edac-util -s` — verify ECC memory reporting (sb_edac)
 10. `cpuid2cpuflags` — verify CPU_FLAGS_X86 in make.conf
 11. `bash ~/gentoo-machines/shared/restore-desktop.sh` — XFCE keybindings, panels, displays
-12. Consider running `tools/update-system.sh verify` for comprehensive post-boot validation
+12. `tools/update-system.sh verify` — comprehensive post-boot validation
 
-### NVIDIA kernel-open vs Proprietary (First Boot Fix)
-- **Problem**: nvidia-drivers 590.48.01 built with `kernel-open` USE flag. Both GTX 1050 Ti GPUs (PCI ID 10de:1c82, Pascal GP107) failed to probe on boot: "does not include the required GPU". No Xorg started, no nvidia-smi.
-- **Root cause**: `kernel-open` builds NVIDIA's open-source kernel modules, which only support **Turing (RTX 2000+)** and newer. Pascal and older need the proprietary closed-source modules.
-- **Fix**: Changed `kernel-open` → `-kernel-open` in `/etc/portage/package.use/precision-t5810`, then `emerge -1 x11-drivers/nvidia-drivers && rc-service display-manager restart`.
-- **Prevention**: generate-config.sh and kernel-config-template.sh should detect GPU generation from PCI ID and set the correct USE flag automatically.
+## NVIDIA Driver Issues (First Boot)
 
-### NVIDIA 590+ Drops Pascal Entirely (First Boot Fix, Part 1b)
-- **Problem**: Even after fixing kernel-open to use proprietary modules, nvidia-smi still failed. Emerge warned: "You are installing a version known not to work with a GPU of the current system."
-- **Root cause**: NVIDIA driver 590.x dropped Pascal (GTX 10xx), Maxwell (GTX 900), and Volta support entirely. Neither kernel-open NOR proprietary modules work. The **580.xx series** is the last branch supporting Pascal.
-- **Fix**: Mask `>=x11-drivers/nvidia-drivers-581` in `/etc/portage/package.mask/nvidia-drivers`, then downgrade to 580.126.18.
-- **Timeline**: 580.xx gets security patches through October 2028.
-- **Lesson**: Three separate issues stacked on one emerge — kernel-open (wrong module type), file ordering (shared overriding machine), ccache perms (build infra), AND driver version (Pascal dropped). Each masked the next.
+### kernel-open vs Proprietary
+nvidia-drivers built with `kernel-open` USE flag failed: Pascal GPUs "not included". `kernel-open` only supports Turing (RTX 2000+) and newer. Fix: `-kernel-open` in machine-specific package.use.
 
-### Portage package.use File Ordering Gotcha (First Boot Fix, Part 2)
-- **Problem**: Even after setting `-kernel-open` in `precision-t5810` package.use, emerge still showed `kernel-open` active. Shared file had `kernel-open` (positive), machine file had `-kernel-open` (negative).
-- **Root cause**: Portage processes `/etc/portage/package.use/*` files in **alphabetical order**. `shared` sorts after `precision-t5810`, so the positive `kernel-open` in shared overrode the negative `-kernel-open` in the machine file.
-- **Fix**: Removed `nvidia-drivers` line from shared package.use entirely. Each NVIDIA machine now has its own nvidia-drivers USE in its machine-specific file. XPS 9510 has `kernel-open` (Ampere), T5810 has `-kernel-open` (Pascal).
-- **Rule**: Never put USE flags that vary between machines in the shared file.
+### NVIDIA 590+ Drops Pascal
+Driver 590.x dropped Pascal (GTX 10xx), Maxwell (GTX 900), and Volta entirely. The **580.xx series** is the last branch supporting Pascal (security patches through October 2028). Fix: mask `>=x11-drivers/nvidia-drivers-581`.
 
-### ccache /var/cache/ccache/tmp Permissions (First Boot Fix, Part 3)
-- **Problem**: After fixing kernel-open, nvidia-drivers build still failed with `ccache: error: failed to create temporary file for /var/cache/ccache/tmp/cpp_stdout.tmp.*.i: Permission denied`.
-- **Root cause**: `/var/cache/ccache/` was mode `2775` (group-writable for portage group) but the `tmp/` subdirectory created by ccache was mode `2755` (NOT group-writable). Portage sandbox runs compiles as the `portage` user (group `portage`) — needs write access to ccache tmp.
-- **Fix**: `sudo chmod 2775 /var/cache/ccache/tmp`
-- **Prevention**: Part3 install scripts should verify ccache subdirectory permissions after initial setup, or add a chmod -R to ensure all subdirs are 2775.
+### Portage package.use File Ordering
+Portage processes `/etc/portage/package.use/*` files in **alphabetical order**. `shared` sorts after `precision-t5810`, so shared overrides machine-specific flags. **Rule**: never put USE flags that vary between machines in the shared file.
 
-### Future Generalization Candidates
-- [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` that creates all 3 part scripts from harvest data + feature detection (like kernel-config-template.sh does for kernel configs)
-- [ ] **Machine feature profile**: Auto-detect HAS_WIFI, HAS_BLUETOOTH, IS_LAPTOP, HAS_NVIDIA from harvest data and emit the correct service list, packages, and Phase 11 config
-- [ ] **Per-machine world file generator**: Start from shared world, subtract packages not applicable to the machine (no WiFi → remove wpa_supplicant, etc.)
-- [ ] **Phase 13 auto-generation**: Verify list should be generated from Phase 8 service list, not manually maintained (drift risk)
-- [ ] **Part3 non-interactive mode**: Use `chpasswd` instead of `passwd`, skip `read -p` prompts, add `--yes`/`--non-interactive` flag
-- [ ] **Part3 depclean phase**: Add Phase 6.5 for `emerge --depclean` + `@preserved-rebuild` after @world
+### ccache Permissions
+`/var/cache/ccache/tmp/` was mode `2755` (not group-writable). Portage sandbox runs as `portage` user. Fix: `chmod 2775 /var/cache/ccache/tmp`.
+
+## GPU Upgrade Considerations
+- **Current**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal) — PCIe 3.0 x16
+- **T5810 PSU**: 825W, 225W per PCIe slot
+- **Candidates**: RTX 3060 12GB ($449, 170W), RTX 3060 Ti 8GB ($400, 200W), RTX 4060 Ti 16GB ($539-599, 160W), RTX 5060 Ti 16GB ($476-579, ~150W)
+- **Note**: 2.5-slot cards may not fit dual in T5810 — measure physical slot spacing
