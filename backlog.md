@@ -11,9 +11,9 @@
 ### Cross-Machine Kernel Config (next rebuild)
 - [x] Enable `CONFIG_SCHED_AUTOGROUP=y` on MBP 2015 + SP6 — XPS 9510 still pending [repo]
 - [x] Enable `CONFIG_KSM=y` on MBP 2015 + SP6 [repo]
-- [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 — NVMe thermal monitoring (SP6 done) [repo]
-- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on XPS 9510 — battery monitoring via hwmon (MBP + SP6 done) [repo]
-- [ ] Enable `CONFIG_THERMAL_HWMON=y` on XPS 9510 — thermal zone sysfs export (MBP + SP6 done) [repo]
+- [ ] Enable `CONFIG_NVME_HWMON=y` on XPS 9510 — NVMe thermal monitoring (SP6 done) [repo] (deferred: machine not available)
+- [ ] Enable `CONFIG_POWER_SUPPLY_HWMON=y` on XPS 9510 — battery monitoring via hwmon (MBP + SP6 done) [repo] (deferred: machine not available)
+- [ ] Enable `CONFIG_THERMAL_HWMON=y` on XPS 9510 — thermal zone sysfs export (MBP + SP6 done) [repo] (deferred: machine not available)
 - [x] Change `CONFIG_CPU_FREQ_DEFAULT_GOV` to SCHEDUTIL on MBP 2015 — XPS 9510 still pending [repo]
 - [ ] Enable `CONFIG_INTEL_RAPL=y` on XPS 9510 — currently only RAPL_CORE enabled [repo]
 - [x] Enable `CONFIG_PERF_EVENTS_INTEL_RAPL=m` on SP6 — power profiling per-domain [repo]
@@ -32,15 +32,15 @@
 - [x] MBP 2015: kernel rebuild needed — repo .config has SCHED_AUTOGROUP, SCHEDUTIL governor, CPU_FREQ_STAT but running kernel doesn't [hardware]
 
 ### SP6 Power & Tuning
-- [x] SP6: re-test WiFi power save on kernel 6.18 — closed: 3-layer mitigation working (driver_mode, NM powersave, resume reload), 24h+ uptime with roaming + suspend/resume cycles shows zero hangs, not worth removing working mitigations [hardware]
+- [x] SP6: re-test WiFi power save on kernel 6.18 — closed: removed bogus driver_mode=0x3 (NXP vendor param, ignored by mainline), power save disabled via NM wifi-powersave.conf only [hardware]
 - [x] SP6: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP tuning [repo]
 - [x] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — added to part3 phase 11 [repo]
 - [x] SP6: add `sys-power/powertop` to world file + `CPU_FREQ_STAT` to kernel config [repo]
-- [x] SP6: fix overnight battery drain — hibernate crashes (KBL i915 + NVMe swap file, 6 attempts, all modes), switched to optimized s2idle: restored PSR + DC states (~1-1.5%/hr), idle action changed to suspend. Hibernate kept as critical-battery last resort (crash stops drain). Revisit hibernate on future kernel. [hardware]
+- [x] SP6: fix overnight battery drain — hibernate crashes (KBL i915 + NVMe swap file, 6 attempts, all modes), switched to optimized s2idle: restored PSR + DC states (~1-1.5%/hr), idle action changed to suspend. WiFi resume fixed (2026-03-19): pre-suspend module unload + post-resume reload + NM cycling in elogind hook. Hibernate kept as critical-battery last resort (crash stops drain). [hardware]
 
 ## Medium Priority — Other
 - [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]
-- [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware]
+- [ ] Install Gentoo on NUC11 — follow INSTALL.md [hardware] (deferred: machine not available)
 - [x] Restore GitHub PAT to VTOYEFI USB — portable git credential store for push from any machine (2026-03-11) [repo]
 - [ ] Unify git identity across remaining dev machines — ~~XPS 9510~~, ~~Surface Pro 6~~, ~~MBP 2015~~, NUC11, Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
@@ -92,7 +92,7 @@
 - [x] Generate T5810 install scripts (part1/2/3) with SABRENT Ventoy exclusion safety [repo]
 - [x] T5810 Gentoo build: all 13 phases complete, deep sanity passed 0 fail/0 warn, ready for first boot (2026-03-11) [hardware]
 - [x] Harvest Dell Precision T5810 (Fedora 43 live USB) — harvest + configs generated + sanity-checked 2026-03-11 [hardware]
-- [ ] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) [hardware]
+- [ ] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) — SSH access via VPN [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]
 - [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]
