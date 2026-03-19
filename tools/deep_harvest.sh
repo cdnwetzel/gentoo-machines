@@ -58,4 +58,21 @@ lspci -nnk >> "$LOG_FILE"
 echo -e "\n[5. LOADED MODULES]" >> "$LOG_FILE"
 lsmod >> "$LOG_FILE"
 
+# 6. NVIDIA GPU INFO
+echo -e "\n[6. NVIDIA GPU INFO]" >> "$LOG_FILE"
+if lsmod | grep -q '^nvidia ' && command -v nvidia-smi &> /dev/null; then
+    nvidia-smi >> "$LOG_FILE" 2>&1
+    echo "" >> "$LOG_FILE"
+    # Driver version and build info
+    if [ -f /proc/driver/nvidia/version ]; then
+        cat /proc/driver/nvidia/version >> "$LOG_FILE"
+    fi
+else
+    if lspci | grep -qi nvidia; then
+        echo "NVIDIA GPU detected but nvidia-smi not available (nouveau or no driver loaded)" >> "$LOG_FILE"
+    else
+        echo "No NVIDIA GPU detected" >> "$LOG_FILE"
+    fi
+fi
+
 echo "--- DONE: Check $LOG_FILE ---"

@@ -326,44 +326,52 @@ if [ -f /proc/cpuinfo ]; then
     MARCH="unknown"
     if [ "$VENDOR" = "GenuineIntel" ]; then
         case "${FAMILY}:${MODEL}" in
+            6:42|6:45)    MARCH="sandybridge" ;;
+            6:58|6:62)    MARCH="ivybridge" ;;
+            # Haswell (client + Xeon EP v3)
+            6:60|6:63|6:69|6:70) MARCH="haswell" ;;
             # Broadwell (client + Xeon EP/DE)
             6:61|6:71|6:79|6:86) MARCH="broadwell" ;;
             # Skylake (client + Xeon SP)
             6:78|6:94|6:85)      MARCH="skylake" ;;
-            # Kaby Lake / Coffee Lake / Whiskey Lake (GCC: -march=skylake)
+            # Kaby Lake / Coffee Lake / Whiskey Lake / Amber Lake (GCC: -march=skylake)
             6:142|6:158)  MARCH="skylake" ;;
             # Comet Lake
             6:165|6:166)  MARCH="skylake" ;;
             # Ice Lake (client + Xeon SP)
             6:125|6:126|6:106)  MARCH="icelake-client" ;;
-            # Tiger Lake
+            # Tiger Lake (client + laptop)
             6:140|6:141)  MARCH="tigerlake" ;;
-            # Alder Lake
-            6:151|6:154)  MARCH="alderlake" ;;
-            # Raptor Lake
-            6:183|6:186)  MARCH="raptorlake" ;;
+            # Rocket Lake (desktop 11th Gen non-H)
+            6:167)        MARCH="rocketlake" ;;
+            # Sapphire Rapids (server Xeon W5/W7/Platinum/Gold)
+            6:143)        MARCH="sapphirerapids" ;;
+            # Alder Lake (client + desktop + HX)
+            6:151|6:154|6:168)  MARCH="alderlake" ;;
+            # Raptor Lake (all variants: S, P, HX, refresh)
+            6:183|6:186|6:180|6:181)  MARCH="raptorlake" ;;
             # Meteor Lake
             6:170)        MARCH="meteorlake" ;;
-            # Haswell (client + Xeon EP v3)
-            6:60|6:63|6:69|6:70) MARCH="haswell" ;;
-            6:58|6:62)    MARCH="ivybridge" ;;
-            6:42|6:45)    MARCH="sandybridge" ;;
+            # Arrow Lake (desktop 14th Gen)
+            6:192)        MARCH="arrowlake" ;;
+            # Lunar Lake (ultra-thin)
+            6:191)        MARCH="lunarlake" ;;
             *)            MARCH="x86-64-v3" ;;
         esac
     elif [ "$VENDOR" = "AuthenticAMD" ]; then
         case "${FAMILY}:${MODEL}" in
+            # Bulldozer family
+            21:*)              MARCH="bdver2" ;;
+            # Zen 1 (Summit Ridge, Raven Ridge)
+            23:1|23:8|23:17)   MARCH="znver1" ;;
+            # Zen 2 (Matisse, Renoir)
+            23:*)              MARCH="znver2" ;;
             # Zen 3 (Vermeer, Cezanne)
-            25:33|25:80|25:68) MARCH="znver3" ;;
             25:*)              MARCH="znver3" ;;
             # Zen 4 (Raphael, Phoenix)
             26:*)              MARCH="znver4" ;;
-            # Zen 2 (Matisse, Renoir)
-            23:113|23:96)      MARCH="znver2" ;;
-            23:*)              MARCH="znver2" ;;
-            # Zen 1
-            23:1|23:8|23:17)   MARCH="znver1" ;;
-            # Bulldozer family
-            21:*)              MARCH="bdver2" ;;
+            # Zen 5+ (future)
+            27:*)              MARCH="znver5" ;;
             *)                 MARCH="x86-64-v3" ;;
         esac
     fi
@@ -373,16 +381,16 @@ if [ -f /proc/cpuinfo ]; then
 
     # Note about GCC version requirements
     case "$MARCH" in
-        alderlake|raptorlake)
+        rocketlake|sapphirerapids|alderlake|raptorlake|znver3)
             echo "  NOTE: Requires GCC 11+ for -march=$MARCH" >> "$LOG_FILE" ;;
-        meteorlake)
-            echo "  NOTE: Requires GCC 14+ for -march=$MARCH" >> "$LOG_FILE" ;;
         tigerlake)
             echo "  NOTE: Requires GCC 10+ for -march=$MARCH" >> "$LOG_FILE" ;;
-        znver3)
-            echo "  NOTE: Requires GCC 11+ for -march=$MARCH" >> "$LOG_FILE" ;;
         znver4)
             echo "  NOTE: Requires GCC 13+ for -march=$MARCH" >> "$LOG_FILE" ;;
+        meteorlake|arrowlake|lunarlake)
+            echo "  NOTE: Requires GCC 14+ for -march=$MARCH" >> "$LOG_FILE" ;;
+        znver5)
+            echo "  NOTE: Requires GCC 14+ for -march=$MARCH (verify)" >> "$LOG_FILE" ;;
     esac
 fi
 
