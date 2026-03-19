@@ -13,7 +13,7 @@
 | **BIOS** | 2.13.1 (08/08/2025) |
 | **CPU** | Intel Xeon W5-3433 @ 2.0GHz / 4.2GHz turbo (Sapphire Rapids) |
 | **Cores/Threads** | 16C/32T (single socket) |
-| **RAM** | 128GB DDR5 ECC (4x64GB) |
+| **RAM** | 128GB DDR5-5600 ECC RDIMM (2x64GB / 16 slots, 4TB max) |
 | **Architecture** | x86_64 |
 | **Chassis** | Tower (type 3) |
 | **Kernel** | 6.12.0-124.31.1.el10_1.x86_64 |
@@ -190,7 +190,12 @@ VMD-managed NVMe at domains 10000, 10001, 10002:
 ## ECC Memory
 
 - **EDAC driver**: i10nm_edac (loaded automatically, with skx_edac_common)
-- **RAM**: 128GB DDR5 ECC (4x64GB DIMMs)
+- **RAM**: 128GB DDR5 ECC (2x64GB RDIMMs in DIMM1 + DIMM2)
+- **Module**: Samsung M321R8GA0EB0-CWMXH, dual-rank, 80-bit (64 data + 16 ECC)
+- **Speed**: DDR5-5600 rated, running at 4400 MT/s (BIOS-configured)
+- **Voltage**: 1.1V
+- **Slots**: 16 total, 2 populated, 14 empty
+- **Max capacity**: 4 TB (per SMBIOS)
 - **Error reporting**: `/sys/devices/system/edac/mc/`
 
 ## Enterprise/Server Software Stack
