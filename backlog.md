@@ -15,9 +15,9 @@
 ## Medium Priority — Tooling Improvements
 
 ### harvest.sh Enhancements
-- [ ] Section 3 expansion: full `dmidecode -t bios/system/baseboard/processor/memory` (ECC type, DIMM layout, socket, max turbo, board model, SMBIOS version) [repo]
-- [ ] Section 16: BIOS Power Config — C-state status, CPU governor, pstate mode [repo]
-- [ ] Section 17: CPU Topology — NUMA nodes, cache hierarchy, socket count (`lscpu --extended`) [repo]
+- [x] Section 3 expansion: SMBIOS, DMI processor, full memory layout (DIMMs, speed, slots) [repo]
+- [x] Section 16: CPU Topology — NUMA, cache, cores/threads/sockets via lscpu [repo]
+- [x] Section 17: Power & Performance — governor, pstate, turbo, battery, chassis type [repo]
 - [ ] Boot media exclusion: detect and flag Ventoy/live USB drives by device ID or VTOYEFI label [repo]
 - [x] Fix `-march` detection — added Sapphire Rapids, Rocket Lake, Arrow Lake, Lunar Lake, extra variants [repo]
 
