@@ -23,12 +23,12 @@
 
 ### deep_harvest.sh Enhancements
 - [x] NVIDIA GPU details: `nvidia-smi` + driver version if proprietary driver loaded [repo]
-- [ ] Firmware loading from sysfs: try `/sys/class/firmware/` when dmesg rotates [repo]
+- [x] Firmware loading from sysfs: walk loaded modules + match firmware files when dmesg rotates [repo]
 
 ### kernel-config-template.sh Enhancements
-- [ ] Power profile auto-detect: workstation (no battery, chassis tower) → default GOV_PERFORMANCE [repo]
-- [ ] Multi-GPU detection: count NVIDIA GPUs, note in kernel_config.sh header [repo]
-- [ ] SATA vs NVMe boot: auto-determine boot drive from harvest data [repo]
+- [x] Power profile auto-detect: desktop → GOV_PERFORMANCE, laptop → GOV_SCHEDUTIL [repo]
+- [x] Multi-GPU detection: count NVIDIA GPUs, show in header and summary [repo]
+- [x] SATA vs NVMe boot: auto-detect from harvest, SATA as module when NVMe is boot [repo]
 
 ### Install Script Improvements
 - [ ] Stage3 auto-discovery: auto-discover latest stage3 from mirror directory listing in part2 scripts [repo]
