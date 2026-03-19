@@ -160,6 +160,18 @@ echo "  BOOT (sda2): $(blkid -s UUID -o value "${TARGET}2")"
 echo "  ROOT (sda3): $(blkid -s UUID -o value "${TARGET}3")"
 echo ""
 
+# Validate partitions have valid UUIDs (catches stale cache / format failures)
+for part in "${TARGET}1" "${TARGET}2" "${TARGET}3"; do
+    UUID=$(blkid -s UUID -o value "$part" 2>/dev/null || true)
+    if [[ -z "$UUID" ]]; then
+        echo "ERROR: $part has no UUID — format may have failed"
+        echo "  Try: partprobe && blkid $part"
+        exit 1
+    fi
+done
+echo "[OK] All partitions verified."
+echo ""
+
 # ============================================================================
 # STEP 6: MOUNT FOR GENTOO INSTALL
 # ============================================================================

@@ -177,6 +177,18 @@ echo "  BOOT (nvme0n1p2): $(blkid -s UUID -o value "${PART_PREFIX}2")"
 echo "  ROOT (nvme0n1p3): $(blkid -s UUID -o value "${PART_PREFIX}3")"
 echo ""
 
+# Validate partitions have valid UUIDs (catches stale cache / format failures)
+for part in "${PART_PREFIX}1" "${PART_PREFIX}2" "${PART_PREFIX}3"; do
+    UUID=$(blkid -s UUID -o value "$part" 2>/dev/null || true)
+    if [[ -z "$UUID" ]]; then
+        echo "ERROR: $part has no UUID — format may have failed"
+        echo "  Try: partprobe && blkid $part"
+        exit 1
+    fi
+done
+echo "[OK] All partitions verified."
+echo ""
+
 # ============================================================================
 # STEP 6: MOUNT FOR GENTOO INSTALL
 # ============================================================================

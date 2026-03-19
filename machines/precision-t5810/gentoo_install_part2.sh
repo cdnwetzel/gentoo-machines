@@ -13,11 +13,29 @@ MACHINE_NAME="precision-t5810"
 MACHINE_LABEL="Dell Precision T5810"
 GENTOO="/mnt/gentoo"
 
-# Stage3 — UPDATE THIS URL to the latest before running!
-# Check: https://gentoo.osuosl.org/releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc/
+# Stage3 — auto-discovers latest from mirror, falls back to hardcoded if offline
 MIRROR="https://gentoo.osuosl.org"
 STAGE3_DIR="releases/amd64/autobuilds/current-stage3-amd64-desktop-openrc"
-STAGE3_FILE="stage3-amd64-desktop-openrc-20260222T170100Z.tar.xz"
+STAGE3_FALLBACK="stage3-amd64-desktop-openrc-20260222T170100Z.tar.xz"
+
+# Auto-discover latest stage3 from mirror (fall back to hardcoded if offline)
+echo "Checking mirror for latest stage3..."
+STAGE3_FILE=""
+if command -v wget &>/dev/null; then
+    LATEST=$(wget -qO- "${MIRROR}/${STAGE3_DIR}/latest-stage3-amd64-desktop-openrc.txt" 2>/dev/null \
+        | grep -v '^#' | grep 'stage3' | head -1 | awk '{print $1}' | xargs basename 2>/dev/null)
+    [[ -n "$LATEST" ]] && STAGE3_FILE="$LATEST"
+elif command -v curl &>/dev/null; then
+    LATEST=$(curl -sfL "${MIRROR}/${STAGE3_DIR}/latest-stage3-amd64-desktop-openrc.txt" 2>/dev/null \
+        | grep -v '^#' | grep 'stage3' | head -1 | awk '{print $1}' | xargs basename 2>/dev/null)
+    [[ -n "$LATEST" ]] && STAGE3_FILE="$LATEST"
+fi
+if [[ -z "$STAGE3_FILE" ]]; then
+    echo "  Mirror unreachable — using fallback: $STAGE3_FALLBACK"
+    STAGE3_FILE="$STAGE3_FALLBACK"
+else
+    echo "  Found: $STAGE3_FILE"
+fi
 STAGE3_URL="${MIRROR}/${STAGE3_DIR}/${STAGE3_FILE}"
 DIGESTS_URL="${STAGE3_URL}.DIGESTS"
 
