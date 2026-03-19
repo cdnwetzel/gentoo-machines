@@ -68,10 +68,49 @@ if [ -f /proc/meminfo ]; then
     fi
 fi
 
-# 3. Motherboard & BIOS (Identify Chipset & Laptop Specifics)
+# 3. Motherboard, BIOS & Memory Layout
 echo -e "\n[3. MOTHERBOARD/DMI - CHIPSET]" >> "$LOG_FILE"
 if command -v dmidecode &> /dev/null; then
+    # BIOS and board info
     dmidecode -t 0,2 | grep -E 'Vendor|Product Name|Version|Release Date' >> "$LOG_FILE"
+    # SMBIOS version
+    SMBIOS_VER=$(dmidecode 2>/dev/null | grep -m1 'SMBIOS' | head -1)
+    [[ -n "$SMBIOS_VER" ]] && echo "  $SMBIOS_VER" >> "$LOG_FILE"
+
+    # Processor summary from DMI (supplements lscpu)
+    echo -e "\n[3b. DMI PROCESSOR]" >> "$LOG_FILE"
+    dmidecode -t 4 2>/dev/null | grep -E 'Socket Designation|Version|Max Speed|Current Speed|Core Count|Thread Count|Voltage' >> "$LOG_FILE"
+
+    # Memory layout
+    echo -e "\n[3c. DMI MEMORY LAYOUT]" >> "$LOG_FILE"
+    # Physical memory array (max capacity, slots, ECC)
+    dmidecode -t 16 2>/dev/null | grep -E 'Location|Use|Error Correction|Maximum Capacity|Number Of Devices' >> "$LOG_FILE"
+    # Individual DIMMs (populated only)
+    echo "  --- Populated DIMMs ---" >> "$LOG_FILE"
+    DIMM_NUM=0
+    dmidecode -t 17 2>/dev/null | awk '
+        /^Memory Device/ { slot=""; size=""; type=""; speed=""; cspeed=""; mfr=""; part=""; rank=""; loc=""; form="" }
+        /Locator:/ && !/Bank/ { loc=$2 }
+        /Size:/ { size=$2" "$3 }
+        /Form Factor:/ { form=$3 }
+        /Type:/ && !/Detail/ && !/Technology/ { type=$2 }
+        /Type Detail:/ { next }
+        /Speed:/ && !/Configured/ { speed=$2" "$3 }
+        /Configured Memory Speed:/ { cspeed=$4" "$5 }
+        /Manufacturer:/ { mfr=$2 }
+        /Part Number:/ { part=$0; sub(/.*Part Number: */, "", part) }
+        /Rank:/ { rank=$2 }
+        /^$/ {
+            if (size != "" && size !~ /No Module/) {
+                printf "  %s: %s %s %s (rated %s, running %s) rank=%s mfr=%s part=%s\n", loc, size, type, form, speed, cspeed, rank, mfr, part
+            }
+        }
+    ' >> "$LOG_FILE"
+    # Slot summary
+    TOTAL_SLOTS=$(dmidecode -t 17 2>/dev/null | grep -c 'Memory Device' || echo 0)
+    POPULATED=$(dmidecode -t 17 2>/dev/null | grep 'Size:' | grep -cv 'No Module' || echo 0)
+    EMPTY=$((TOTAL_SLOTS - POPULATED))
+    echo "  Slots: ${POPULATED} populated / ${TOTAL_SLOTS} total (${EMPTY} empty)" >> "$LOG_FILE"
 else
     echo "dmidecode not found. Reading from sysfs..." >> "$LOG_FILE"
     for f in board_vendor board_name board_version bios_vendor bios_version; do
@@ -391,6 +430,63 @@ if [ -f /proc/cpuinfo ]; then
             echo "  NOTE: Requires GCC 14+ for -march=$MARCH" >> "$LOG_FILE" ;;
         znver5)
             echo "  NOTE: Requires GCC 14+ for -march=$MARCH (verify)" >> "$LOG_FILE" ;;
+    esac
+fi
+
+# 16. CPU Topology (NUMA, cache, cores vs threads)
+echo -e "\n[16. CPU TOPOLOGY]" >> "$LOG_FILE"
+if command -v lscpu &> /dev/null; then
+    lscpu | grep -E 'Thread|Core|Socket|NUMA|Cache|CPU\(s\):|CPU max|CPU min|Virtualization' >> "$LOG_FILE"
+else
+    echo "  lscpu not available" >> "$LOG_FILE"
+fi
+
+# 17. Power & Performance Profile
+echo -e "\n[17. POWER & PERFORMANCE]" >> "$LOG_FILE"
+# CPU frequency governor
+if [ -f /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+    GOV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+    DRIVER=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver 2>/dev/null || echo "unknown")
+    echo "  Governor: $GOV (driver: $DRIVER)" >> "$LOG_FILE"
+    if [ -f /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq ]; then
+        MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq)
+        MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
+        echo "  Freq range: $((MIN / 1000)) MHz - $((MAX / 1000)) MHz" >> "$LOG_FILE"
+    fi
+else
+    echo "  cpufreq: not available (may be disabled in BIOS)" >> "$LOG_FILE"
+fi
+# Intel pstate vs acpi-cpufreq
+if [ -d /sys/devices/system/cpu/intel_pstate ]; then
+    echo "  Intel pstate: active" >> "$LOG_FILE"
+    [ -f /sys/devices/system/cpu/intel_pstate/no_turbo ] && \
+        echo "  Turbo: $([ $(cat /sys/devices/system/cpu/intel_pstate/no_turbo) = 0 ] && echo enabled || echo disabled)" >> "$LOG_FILE"
+fi
+# Battery presence (laptop vs desktop)
+if [ -d /sys/class/power_supply ]; then
+    BATS=$(find /sys/class/power_supply -name 'BAT*' -o -name 'battery' 2>/dev/null | head -3)
+    if [ -n "$BATS" ]; then
+        echo "  Battery: present (laptop)" >> "$LOG_FILE"
+        for bat in $BATS; do
+            [ -f "$bat/status" ] && echo "    $(basename "$bat"): $(cat "$bat/status") $(cat "$bat/capacity" 2>/dev/null)%" >> "$LOG_FILE"
+        done
+    else
+        ACS=$(find /sys/class/power_supply -name 'AC*' -o -name 'ADP*' 2>/dev/null | head -1)
+        if [ -n "$ACS" ]; then
+            echo "  Battery: none (desktop/workstation, AC only)" >> "$LOG_FILE"
+        else
+            echo "  Battery: no power_supply devices" >> "$LOG_FILE"
+        fi
+    fi
+fi
+# Chassis type for workstation vs laptop detection
+if [ -f /sys/class/dmi/id/chassis_type ]; then
+    CHASSIS=$(cat /sys/class/dmi/id/chassis_type)
+    case "$CHASSIS" in
+        3|4|5|6|7|15|16|17|24) echo "  Chassis: desktop/tower/server (type $CHASSIS)" >> "$LOG_FILE" ;;
+        8|9|10|14|31|32)       echo "  Chassis: laptop/portable (type $CHASSIS)" >> "$LOG_FILE" ;;
+        30)                     echo "  Chassis: tablet (type $CHASSIS)" >> "$LOG_FILE" ;;
+        *)                      echo "  Chassis: type $CHASSIS" >> "$LOG_FILE" ;;
     esac
 fi
 
