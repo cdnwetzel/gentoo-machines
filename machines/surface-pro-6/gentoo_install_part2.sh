@@ -11,6 +11,7 @@
 # ============================================================================
 
 set -euo pipefail
+[[ $EUID -ne 0 ]] && echo "ERROR: Must run as root (sudo)" && exit 1
 
 GENTOO="/mnt/gentoo"
 MIRROR="https://gentoo.osuosl.org"

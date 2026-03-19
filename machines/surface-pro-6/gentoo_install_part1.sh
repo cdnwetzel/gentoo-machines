@@ -18,6 +18,7 @@
 # ============================================================================
 
 set -euo pipefail
+[[ $EUID -ne 0 ]] && echo "ERROR: Must run as root (sudo)" && exit 1
 
 TARGET="/dev/nvme0n1"
 PART_PREFIX="${TARGET}p"

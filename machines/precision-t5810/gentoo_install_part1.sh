@@ -33,6 +33,7 @@ VENTOY_USB_ID="SABRENT_DD56419883896"
 # ============================================================================
 
 set -euo pipefail
+[[ $EUID -ne 0 ]] && echo "ERROR: Must run as root (sudo)" && exit 1
 
 echo "=== Gentoo Install Part 1: Disk Wipe & Partition ==="
 echo "    Target: $MACHINE_NAME / $DISK_MODEL"

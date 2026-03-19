@@ -41,6 +41,7 @@ VENTOY_USB_ID="SABRENT_DD56419883896"
 # ============================================================================
 
 set -euo pipefail
+[[ $EUID -ne 0 ]] && echo "ERROR: Must run as root (sudo)" && exit 1
 
 echo "=== Gentoo Install Part 2: Stage3 + Chroot Prep ==="
 echo "    Machine: $MACHINE_LABEL"

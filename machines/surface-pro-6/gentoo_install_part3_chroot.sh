@@ -268,6 +268,11 @@ emerge --verbose --update --deep --newuse @world
 echo ""
 echo "[OK] Phase 6 complete."
 echo ""
+echo "--- Merging updated config files ---"
+echo "  If dispatch-conf shows diffs, press 'u' to use the new version"
+echo "  or 'z' to zap (keep current). Most should be auto-merged."
+dispatch-conf || echo "  [WARN] dispatch-conf failed or not available — run manually after install"
+echo ""
 
 # ============================================================================
 # PHASE 7: PORTAGE INFRASTRUCTURE

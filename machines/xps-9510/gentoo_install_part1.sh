@@ -20,6 +20,7 @@
 # ============================================================================
 
 set -euo pipefail
+[[ $EUID -ne 0 ]] && echo "ERROR: Must run as root (sudo)" && exit 1
 
 OS_DISK="/dev/nvme0n1"
 DATA_DISK="/dev/nvme1n1"

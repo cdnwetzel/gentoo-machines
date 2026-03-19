@@ -161,6 +161,24 @@ fi
 echo -e "\n[8. STORAGE - DRIVE CONTROLLER]" >> "$LOG_FILE"
 lsblk -o NAME,FSTYPE,MOUNTPOINT,SIZE >> "$LOG_FILE"
 
+# Detect Ventoy / live USB boot media
+echo "" >> "$LOG_FILE"
+VENTOY_FOUND=0
+if lsblk -o NAME,LABEL,FSTYPE 2>/dev/null | grep -qi 'VTOYEFI\|Ventoy\|ventoy'; then
+    VENTOY_FOUND=1
+    echo "  WARNING: Ventoy live USB detected — do NOT format this device:" >> "$LOG_FILE"
+    lsblk -o NAME,LABEL,FSTYPE,SIZE,TRAN 2>/dev/null | grep -iE 'VTOYEFI|Ventoy|ventoy' >> "$LOG_FILE"
+elif lsblk -o NAME,MODEL 2>/dev/null | grep -qi 'Ventoy'; then
+    VENTOY_FOUND=1
+    echo "  WARNING: Ventoy USB detected by model name" >> "$LOG_FILE"
+fi
+if [ $VENTOY_FOUND -eq 0 ]; then
+    # Check for generic live USB indicators
+    if findmnt /run/live 2>/dev/null | grep -q '.'; then
+        echo "  NOTE: Live USB boot detected (mounted at /run/live)" >> "$LOG_FILE"
+    fi
+fi
+
 # 9. CPU_FLAGS_X86 (for make.conf CPU_FLAGS_X86 variable)
 echo -e "\n[9. CPU_FLAGS_X86]" >> "$LOG_FILE"
 if command -v cpuid2cpuflags &> /dev/null; then
