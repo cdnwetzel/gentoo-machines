@@ -31,9 +31,9 @@
 - [x] SATA vs NVMe boot: auto-detect from harvest, SATA as module when NVMe is boot [repo]
 
 ### Install Script Improvements
-- [ ] Stage3 auto-discovery: auto-discover latest stage3 from mirror directory listing in part2 scripts [repo]
+- [x] Stage3 auto-discovery: fetch latest from mirror via latest-stage3-*.txt, fallback to hardcoded [repo]
 - [x] Standardize root handling: root check added to all part1 + part2 scripts (4 machines) [repo]
-- [ ] Post-format blkid verification in part1 scripts (lsblk shows stale cache) [repo]
+- [x] Post-format blkid verification — validate UUIDs, exit on failure with partprobe hint [repo]
 - [x] Audit all machines' make.conf for `$(nproc)` usage — NUC11 fixed, all others clean [repo]
 - [ ] Integrate deep sanity check into part3 as replacement for simpler Phase 13 [repo]
 - [x] Add dispatch-conf after Phase 6 @world emerge in all part3 scripts [repo]
