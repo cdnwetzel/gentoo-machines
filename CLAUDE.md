@@ -35,7 +35,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Production | Gentoo |
-| 7 | Dell Precision 7960 | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 (production AI/ML) |
+| 7 | Dell Precision 7960 | Xeon W5-3433 16C/32T (Sapphire Rapids) | RTX PRO 6000 96GB + RTX A1000 8GB | Reference only (harvested) | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
@@ -416,5 +416,5 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 - **ASRock B550**: First AMD — `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`, SATA SSDs still in use
 - **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11. Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).
-- **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install
+- **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install. Harvested 2026-03-19. Xeon W5-3433 16C/32T (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, RTX PRO 6000 Blackwell 96GB + RTX A1000 8GB, NVIDIA 590.48.01 CUDA 13.1, 4x Samsung PM9C1a 1.8TB RAID10 via VMD, Aquantia 10GbE + Intel 1GbE, `-march=sapphirerapids`
 - **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).

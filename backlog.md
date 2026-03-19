@@ -92,7 +92,7 @@
 - [x] Generate T5810 install scripts (part1/2/3) with SABRENT Ventoy exclusion safety [repo]
 - [x] T5810 Gentoo build: all 13 phases complete, deep sanity passed 0 fail/0 warn, ready for first boot (2026-03-11) [hardware]
 - [x] Harvest Dell Precision T5810 (Fedora 43 live USB) — harvest + configs generated + sanity-checked 2026-03-11 [hardware]
-- [ ] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) — SSH access via VPN [hardware]
+- [x] Harvest Dell Precision 7960 (RHEL 10.1, reference only — stays production AI/ML) — harvested 2026-03-19 via SSH, HARDWARE.md generated [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [x] MBP 2015: WiFi NVRAM txt — not needed, 5GHz works (ch153, 540Mbit/s), dmesg warnings cosmetic [repo+hardware]
 - [x] MBP 2015: blacklist thunderbolt module to save ~2W idle power [repo+hardware]
