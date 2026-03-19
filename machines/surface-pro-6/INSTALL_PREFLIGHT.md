@@ -380,7 +380,7 @@ sensors  # should show coretemp values
 ```bash
 # Clone repo to home
 cd ~
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 
 # Restore XFCE settings

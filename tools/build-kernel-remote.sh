@@ -17,10 +17,10 @@ set -euo pipefail
 # --- Target Definitions ---
 # Format: TARGETS[name]="user@host"
 declare -A TARGETS=(
-    [xps-9510]="chris@xps-9510"
-    [mbp-2015]="chris@gentoo-mbp"
-    [surface-pro-6]="chris@surface-pro-6"
-    [nuc11]="chris@nuc11"
+    [xps-9510]="${USER}@xps-9510"
+    [mbp-2015]="${USER}@gentoo-mbp"
+    [surface-pro-6]="${USER}@surface-pro-6"
+    [nuc11]="${USER}@nuc11"
 )
 
 BUILD_DIR="/tmp/kernel-build"

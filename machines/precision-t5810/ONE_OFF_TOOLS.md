@@ -1,11 +1,10 @@
-# Precision T5810 - One-Off Commands & Tooling Candidates
+# Precision T5810 - Manual Commands & Tooling Candidates
 
-Session date: 2026-03-11
-Machine: Dell Precision Tower T5810 (Xeon E5-2699 v4, Fedora 43 live USB)
+Machine: Dell Precision Tower T5810 (Xeon E5-2699 v4)
 
-## Manual Commands Run (outside prebuilt scripts)
+## Manual Commands
 
-These commands were run manually during this session. Each is a candidate for
+Commands run outside the prebuilt scripts during T5810 bring-up. Each is a candidate for
 inclusion in harvest.sh, deep_harvest.sh, or new tooling.
 
 ### DMI / BIOS Details (candidates for harvest.sh)
@@ -44,7 +43,7 @@ cat /sys/devices/system/cpu/intel_pstate/status
 **Current gap**: harvest.sh doesn't capture CPU power management state.
 Workstations often have C-states disabled in BIOS for performance.
 
-## Tooling Improvements Made This Session
+## Tooling Improvements (from T5810 bring-up)
 
 ### harvest.sh
 1. **Fixed GCC -march for Broadwell-EP**: Added model 79 (Xeon E5 v4), model 86 (Xeon D)
@@ -101,7 +100,7 @@ Workstations often have C-states disabled in BIOS for performance.
   - Hard-fail if target device has VTOYEFI partition
   - **Implemented in T5810 part1**: 3-layer protection (udevadm ID check, lsblk model scan, NVMe-only gate)
 
-## Part 1/2 Execution Learnings (2026-03-11)
+## Part 1/2 Execution Learnings
 
 Issues encountered running part1 and part2 on the T5810:
 
@@ -146,21 +145,7 @@ Issues encountered running part1 and part2 on the T5810:
 - **Impact**: All make.conf files in the repo should be checked. The kernel_config.sh `$(nproc)` is fine because that runs in bash.
 - [ ] **TODO**: Audit all machines' make.conf for `$(nproc)` usage. Add validation to generate-config.sh.
 
-### Claude Code Auto-Backgrounding Long Commands (part3)
-- **Problem**: Claude Code auto-backgrounds commands that take >2 minutes with a 10-minute timeout. `emerge @world` can take 20-60+ minutes — auto-background kills it silently.
-- **Workaround**: Run emerge in a background shell with output redirected to a log file, then poll the log:
-  ```bash
-  sudo chroot /mnt/gentoo /bin/bash -c 'emerge ... > /tmp/emerge.log 2>&1' &
-  # Monitor: sudo tail -f /mnt/gentoo/tmp/emerge.log
-  ```
-- **Problem**: Multiple retries spawned **3 concurrent emerge processes** competing for portage locks. Had to `kill -9` duplicates.
-- **Log buffering**: emerge output to file has ~16-second buffer delay. The log mtime is accurate but `tail` shows stale content. Use `sudo find ... -newer` or `stat --format=%Y` to verify liveness.
-- **Lesson**: For long-running chroot commands, ALWAYS use the redirect-to-logfile pattern from the start. Never retry without checking if the previous process is still running first.
-- [ ] **TODO**: Add process-check helper to part3 that verifies no existing emerge is running before starting a new one
-
 ## Install Script Generalization Learnings
-
-Session: 2026-03-11 (install scripts)
 
 ### Pattern: Machine Config at Top, Universal Logic Below
 All three install scripts (part1/part2/part3) now use a **config header** pattern:

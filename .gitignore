@@ -43,6 +43,9 @@ authorized_keys
 # NetworkManager connection profiles (may contain WiFi/VPN credentials)
 *.nmconnection
 
+# Kernel config backups
+**/.config.backup-*
+
 # Temporary / editor files
 *.swp
 *.swo

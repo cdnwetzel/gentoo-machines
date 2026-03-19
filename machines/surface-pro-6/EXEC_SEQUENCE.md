@@ -130,7 +130,7 @@ uname -r                            # should show gentoo-sources version
 
 ```bash
 cd ~
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 bash shared/restore-desktop.sh       # XFCE keybindings, panels, displays
 sudo bash shared/restore-system.sh   # elogind, ACPI lid, LightDM display setup

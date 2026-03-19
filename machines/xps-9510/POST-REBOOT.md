@@ -81,11 +81,11 @@ This restores: elogind config, ACPI lid toggle, LightDM display setup.
 ### 8. Push Repo Changes
 ```bash
 cd /data/gentoo-machines
-git config user.name "Chris Wetzel"
-git config user.email "chris@cwetzel.com"
-git remote set-url origin git@github.com:cdnwetzel/gentoo-machines.git
+git config user.name "Your Name"
+git config user.email "your@email.com"
+git remote set-url origin git@github.com:YOUR_USER/gentoo-machines.git
 # Or use HTTPS with token:
-# git remote set-url origin https://<TOKEN>@github.com/cdnwetzel/gentoo-machines.git
+# git remote set-url origin https://<TOKEN>@github.com/YOUR_USER/gentoo-machines.git
 git push origin main
 ```
 
@@ -94,7 +94,7 @@ git push origin main
 cd ~
 git clone /data/gentoo-machines
 # Or from GitHub after push:
-# git clone git@github.com:cdnwetzel/gentoo-machines.git
+# git clone git@github.com:YOUR_USER/gentoo-machines.git
 ```
 
 ## Python / AI ML Environment

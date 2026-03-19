@@ -205,7 +205,6 @@ Shared files in `shared/` apply to all machines:
 | `shared/INSTALL_GOTCHAS.md` | Universal install gotchas (28 lessons from all machines) |
 | `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `backlog.md` | Prioritized open items tracker |
-| `checkpoint.md` | Session-by-session progress log |
 
 Machine-specific `make.conf` files go to `/etc/portage/make.conf`.
 

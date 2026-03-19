@@ -195,7 +195,7 @@ All checks pass:
    - CML patch was posted but never merged; ICL-client patch was NAK'd
    - Root cause is Dell BIOS only exposing 3 of 8 C-states via ACPI — firmware deficiency
    - **Decision: keep as local patch only**, LKML submission not viable
-4. **intel_idle patch cleanup**: Updated Signed-off-by to `Chris Wetzel <chris@cwetzel.com>`, improved commit message
+4. **intel_idle patch cleanup**: Updated Signed-off-by and improved commit message
 5. **pybugz configured**: `~/.bugzrc` with Gentoo Bugzilla API key (outside repo)
 
 ### Commits

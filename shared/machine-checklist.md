@@ -7,7 +7,7 @@ Run on the target machine (any Linux distro — Fedora, Ubuntu, etc.):
 
 ```bash
 # Clone the repo
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 
 # Basic hardware inventory

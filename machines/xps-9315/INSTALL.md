@@ -233,7 +233,7 @@ cd /mnt/gentoo/root
 emerge-webrsync  # Only if git not available
 
 # Clone this repo
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 ```
 
@@ -593,7 +593,7 @@ Or click the network icon in the system tray.
 ```bash
 # Clone the repo to your home directory
 cd ~
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 
 # Run hardware verification

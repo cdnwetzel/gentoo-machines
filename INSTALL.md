@@ -72,7 +72,7 @@ If the target machine is running another Linux distro, capture hardware info fir
 
 ```bash
 # Clone this repo on the target machine (while still running current OS)
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 
 # Run hardware inventory (requires root)
@@ -293,7 +293,7 @@ ls /mnt/gentoo
 
 ```bash
 # Clone into the new system (will be available inside chroot)
-git clone https://github.com/cdnwetzel/gentoo-machines.git /mnt/gentoo/root/gentoo-machines
+git clone https://github.com/YOUR_USER/gentoo-machines.git /mnt/gentoo/root/gentoo-machines
 ```
 
 Or if git isn't available on the live USB, download the ZIP from GitHub and extract it.
@@ -608,7 +608,7 @@ After booting into your new Gentoo system:
 ```bash
 # Clone the repo to your home directory
 cd ~
-git clone https://github.com/cdnwetzel/gentoo-machines.git gentoo-machines
+git clone https://github.com/YOUR_USER/gentoo-machines.git gentoo-machines
 cd gentoo-machines
 
 # Run hardware verification
@@ -745,7 +745,7 @@ To add support for a machine not yet in the repository:
 Boot the target machine in its current OS (any Linux distro works) and run:
 
 ```bash
-git clone https://github.com/cdnwetzel/gentoo-machines.git
+git clone https://github.com/YOUR_USER/gentoo-machines.git
 cd gentoo-machines
 sudo tools/harvest.sh
 sudo -E tools/deep_harvest.sh
