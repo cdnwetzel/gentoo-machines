@@ -7,11 +7,13 @@
 #   5 min  - screen blanks (DPMS)
 #   6 min  - DPMS sleep
 #   7 min  - DPMS off
-#   10 min - HIBERNATE (xfce4-power-manager)
-#   15 min - HIBERNATE safety net (elogind IdleAction)
-#   10%    - HIBERNATE last resort (low-battery-hibernate.sh)
+#   10 min - SUSPEND s2idle (xfce4-power-manager)
+#   15 min - SUSPEND s2idle safety net (elogind IdleAction)
+#   10%    - HIBERNATE last resort (crash = stops drain)
+#   5%     - HIBERNATE last resort (low-battery-hibernate.sh)
 #
-# On AC: suspend at 30 min (s2idle is fine when plugged in)
+# On AC: suspend at 30 min
+# Hibernate crashes on SP6 but is kept as critical-battery action — crash stops drain
 
 set -euo pipefail
 
@@ -22,7 +24,7 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-battery -n 
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-sleep-on-battery -n -t int -s 6
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-off-on-battery -n -t int -s 7
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-battery -n -t int -s 10
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -n -t int -s 2
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -n -t int -s 1
 
 # --- On AC ---
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -n -t int -s 15
@@ -54,8 +56,8 @@ xfconf-query -c xfce4-screensaver -p /saver/idle-activation/delay -n -t int -s 5
 echo ""
 echo "[OK] XFCE4 Power Manager configured."
 echo ""
-echo "  On battery: blank 5m, DPMS sleep/off 6/7m, HIBERNATE 10m"
+echo "  On battery: blank 5m, DPMS sleep/off 6/7m, SUSPEND 10m"
 echo "  On AC:      blank 15m, DPMS sleep/off 20/25m, suspend 30m"
-echo "  Critical:   HIBERNATE at 10%"
+echo "  Critical:   HIBERNATE at 10% (crash = stops drain)"
 echo ""
 echo "  Verify: xfconf-query -c xfce4-power-manager -l -v"

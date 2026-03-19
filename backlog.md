@@ -36,7 +36,7 @@
 - [x] SP6: create sysctl tuning file — swappiness, dirty_ratio, sched_autogroup, TCP tuning [repo]
 - [x] SP6: wire `disable-wakeup.start` to `/etc/local.d/` — added to part3 phase 11 [repo]
 - [x] SP6: add `sys-power/powertop` to world file + `CPU_FREQ_STAT` to kernel config [repo]
-- [ ] SP6: fix overnight battery drain — idle-hibernate plumbing done (elogind drop-in, XFCE PM, idle-hint-bridge, resume-device.start), but **hibernate itself crashes the kernel** on freeze. Next: test_resume to isolate driver. Suspects: mwifiex, i915, btmrvl, surface_aggregator [hardware]
+- [x] SP6: fix overnight battery drain — hibernate crashes (KBL i915 + NVMe swap file, 6 attempts, all modes), switched to optimized s2idle: restored PSR + DC states (~1-1.5%/hr), idle action changed to suspend. Hibernate kept as critical-battery last resort (crash stops drain). Revisit hibernate on future kernel. [hardware]
 
 ## Medium Priority — Other
 - [x] MBP 2015: investigate FaceTime camera (facetimehd out-of-tree driver) — closed: works but high-maintenance (manual rebuild every kernel update, no ebuild, suspend issues), not worth it [repo+hardware]

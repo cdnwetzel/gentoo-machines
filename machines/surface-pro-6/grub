@@ -19,8 +19,7 @@ GRUB_TIMEOUT_STYLE=menu
 
 # Append parameters to the linux kernel command line
 # hibernate-setup.sh appends resume=UUID=... resume_offset=... to the live copy
-#GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2 fbcon=font:TER16x32"
-GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_dc=0 fbcon=font:TER16x32 zswap.enabled=0 pm_debug_messages=1"
+GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2 fbcon=font:TER16x32"
 #
 # Examples:
 #
