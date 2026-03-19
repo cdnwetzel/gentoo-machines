@@ -19,10 +19,10 @@
 - [ ] Section 16: BIOS Power Config — C-state status, CPU governor, pstate mode [repo]
 - [ ] Section 17: CPU Topology — NUMA nodes, cache hierarchy, socket count (`lscpu --extended`) [repo]
 - [ ] Boot media exclusion: detect and flag Ventoy/live USB drives by device ID or VTOYEFI label [repo]
-- [ ] Fix `-march` detection for Sapphire Rapids (currently suggests generic x86-64-v3) [repo]
+- [x] Fix `-march` detection — added Sapphire Rapids, Rocket Lake, Arrow Lake, Lunar Lake, extra variants [repo]
 
 ### deep_harvest.sh Enhancements
-- [ ] NVIDIA GPU details: `nvidia-smi -q` if proprietary driver loaded [repo]
+- [x] NVIDIA GPU details: `nvidia-smi` + driver version if proprietary driver loaded [repo]
 - [ ] Firmware loading from sysfs: try `/sys/class/firmware/` when dmesg rotates [repo]
 
 ### kernel-config-template.sh Enhancements
@@ -34,7 +34,7 @@
 - [ ] Stage3 auto-discovery: auto-discover latest stage3 from mirror directory listing in part2 scripts [repo]
 - [ ] Standardize root handling: add root check or sudo prefix across all install scripts [repo]
 - [ ] Post-format blkid verification in part1 scripts (lsblk shows stale cache) [repo]
-- [ ] Audit all machines' make.conf for `$(nproc)` usage — Portage doesn't evaluate shell commands [repo]
+- [x] Audit all machines' make.conf for `$(nproc)` usage — NUC11 fixed, all others clean [repo]
 - [ ] Integrate deep sanity check into part3 as replacement for simpler Phase 13 [repo]
 - [ ] Add `dispatch-conf` or `etc-update` step to part3 after Phase 6 [repo]
 
