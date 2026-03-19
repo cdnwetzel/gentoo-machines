@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project context and technical reference for this repository. Used by contributors and tooling (including Claude Code) to understand the structure, conventions, and machine-specific details.
+Project context and technical reference for this repository. Used by contributors and automated tooling to understand the structure, conventions, and machine-specific details.
 
 ## Project Overview
 
@@ -147,7 +147,7 @@ tools/build-kernel-remote.sh <target> {pull|build|deploy|all}
 ```
 
 ### generate-config.sh
-AI-powered config generation for new machines using Claude CLI:
+Assisted config generation for new machines using Claude CLI:
 ```bash
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 # Example: tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
