@@ -112,6 +112,11 @@ if grep -q 'i915' "$HARVEST"; then
     fi
 fi
 grep -qiE 'nvidia|nouveau' "$HARVEST" && HAS_NVIDIA_GPU=1
+NVIDIA_GPU_COUNT=0
+if [ $HAS_NVIDIA_GPU -eq 1 ]; then
+    NVIDIA_GPU_COUNT=$(grep -c 'VGA compatible controller.*NVIDIA\|3D controller.*NVIDIA' "$HARVEST" 2>/dev/null || echo "1")
+    [ "$NVIDIA_GPU_COUNT" -eq 0 ] && NVIDIA_GPU_COUNT=1
+fi
 grep -qiE 'amdgpu|radeon' "$HARVEST" && HAS_AMD_GPU=1
 
 # --- WiFi detection ---
@@ -152,6 +157,20 @@ HAS_NVME=0
 HAS_SATA=0
 grep -q 'nvme' "$HARVEST" && HAS_NVME=1
 grep -qiE 'ahci|sata' "$HARVEST" && HAS_SATA=1
+
+# Boot drive detection: check harvest storage section for root mount
+BOOT_DRIVE_TYPE="unknown"
+if grep -qE 'nvme[0-9].*/$' "$HARVEST" 2>/dev/null || grep -qE 'nvme.*[[:space:]]/[[:space:]]' "$HARVEST" 2>/dev/null; then
+    BOOT_DRIVE_TYPE="nvme"
+elif grep -qE 'sd[a-z].*/$' "$HARVEST" 2>/dev/null || grep -qE 'sd[a-z].*[[:space:]]/[[:space:]]' "$HARVEST" 2>/dev/null; then
+    BOOT_DRIVE_TYPE="sata"
+elif [ $HAS_NVME -eq 1 ] && [ $HAS_SATA -eq 0 ]; then
+    BOOT_DRIVE_TYPE="nvme"
+elif [ $HAS_SATA -eq 1 ] && [ $HAS_NVME -eq 0 ]; then
+    BOOT_DRIVE_TYPE="sata"
+elif [ $HAS_NVME -eq 1 ]; then
+    BOOT_DRIVE_TYPE="nvme"  # modern default when both present
+fi
 
 # --- Platform vendor ---
 PLATFORM="generic"
@@ -225,10 +244,10 @@ grep -qi 'DVD\|Blu-ray\|CD-ROM\|sr0\|HL-DT-ST' "$HARVEST" && HAS_OPTICAL=1
 
 # --- Summary ---
 echo "  CPU: $CPU_MODEL_NAME ($CPU_VENDOR, NR_CPUS=$NR_CPUS)"
-echo "  GPU: Intel=$HAS_INTEL_GPU($INTEL_GPU_GEN) NVIDIA=$HAS_NVIDIA_GPU AMD=$HAS_AMD_GPU"
+echo "  GPU: Intel=$HAS_INTEL_GPU($INTEL_GPU_GEN) NVIDIA=$HAS_NVIDIA_GPU(x$NVIDIA_GPU_COUNT) AMD=$HAS_AMD_GPU"
 echo "  WiFi: ${WIFI_DRIVER:-none}"
 echo "  Audio: $AUDIO_TYPE ($AUDIO_CODEC)"
-echo "  Storage: NVMe=$HAS_NVME SATA=$HAS_SATA Optical=$HAS_OPTICAL"
+echo "  Storage: NVMe=$HAS_NVME SATA=$HAS_SATA Optical=$HAS_OPTICAL Boot=$BOOT_DRIVE_TYPE"
 echo "  Platform: $PLATFORM"
 echo "  Chassis: $([ $IS_LAPTOP -eq 1 ] && echo 'Laptop' || echo 'Desktop/Tower') (type=$CHASSIS_TYPE)"
 echo "  EDAC=$HAS_EDAC NUMA=$HAS_NUMA"
@@ -260,7 +279,7 @@ cat >> "$OUTPUT" << EOF
 # Date: $(date +%Y-%m-%d)
 #
 # CPU: $CPU_MODEL_NAME
-# GPU: $([ $HAS_INTEL_GPU -eq 1 ] && echo "Intel i915 ($INTEL_GPU_GEN)")$([ $HAS_NVIDIA_GPU -eq 1 ] && echo " + NVIDIA (proprietary)")$([ $HAS_AMD_GPU -eq 1 ] && echo " AMD (amdgpu)")
+# GPU: $([ $HAS_INTEL_GPU -eq 1 ] && echo "Intel i915 ($INTEL_GPU_GEN)")$([ $HAS_NVIDIA_GPU -eq 1 ] && echo " + NVIDIA x${NVIDIA_GPU_COUNT} (proprietary)")$([ $HAS_AMD_GPU -eq 1 ] && echo " AMD (amdgpu)")
 # WiFi: $WIFI_DRIVER
 # Audio: $AUDIO_TYPE$([ -n "$AUDIO_CODEC" ] && echo " ($AUDIO_CODEC)")
 # Storage: $([ $HAS_NVME -eq 1 ] && echo "NVMe")$([ $HAS_SATA -eq 1 ] && echo " + SATA")
@@ -332,12 +351,23 @@ $SC --enable SCHED_SMT
 $SC --enable SCHED_AUTOGROUP
 EOF
 
+# Power profile: desktops/workstations → PERFORMANCE, laptops → SCHEDUTIL
+if [ $IS_LAPTOP -eq 1 ]; then
+    DEFAULT_GOV="SCHEDUTIL"
+else
+    DEFAULT_GOV="PERFORMANCE"
+fi
+
 if [ "$CPU_VENDOR" = "GenuineIntel" ]; then
+    cat >> "$OUTPUT" << EOF
+\$SC --enable X86_INTEL_PSTATE
+\$SC --enable CPU_FREQ_GOV_PERFORMANCE
+\$SC --enable CPU_FREQ_GOV_POWERSAVE
+\$SC --enable CPU_FREQ_GOV_SCHEDUTIL
+\$SC --enable CPU_FREQ_DEFAULT_GOV_${DEFAULT_GOV}
+\$SC --enable INTEL_IDLE
+EOF
     cat >> "$OUTPUT" << 'EOF'
-$SC --enable X86_INTEL_PSTATE
-$SC --enable CPU_FREQ_GOV_POWERSAVE
-$SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
-$SC --enable INTEL_IDLE
 $SC --enable MICROCODE
 $SC --enable X86_X2APIC
 
@@ -356,11 +386,15 @@ $SC --module INTEL_PCH_THERMAL
 $SC --module PROC_THERMAL_MMIO_RAPL
 EOF
 elif [ "$CPU_VENDOR" = "AuthenticAMD" ]; then
+    cat >> "$OUTPUT" << EOF
+\$SC --enable X86_AMD_PSTATE
+\$SC --enable CPU_FREQ_GOV_PERFORMANCE
+\$SC --enable CPU_FREQ_GOV_POWERSAVE
+\$SC --enable CPU_FREQ_GOV_SCHEDUTIL
+\$SC --enable CPU_FREQ_DEFAULT_GOV_${DEFAULT_GOV}
+\$SC --enable MICROCODE
+EOF
     cat >> "$OUTPUT" << 'EOF'
-$SC --enable X86_AMD_PSTATE
-$SC --enable CPU_FREQ_GOV_POWERSAVE
-$SC --enable CPU_FREQ_DEFAULT_GOV_POWERSAVE
-$SC --enable MICROCODE
 $SC --enable X86_X2APIC
 $SC --enable AMD_IOMMU
 
@@ -492,14 +526,23 @@ EOF
 fi
 
 if [ $HAS_SATA -eq 1 ]; then
-    cat >> "$OUTPUT" << 'EOF'
-# SATA AHCI — built-in if boot drive, module if secondary
-# TODO: verify if SATA is boot drive or secondary
+    if [ "$BOOT_DRIVE_TYPE" = "sata" ]; then
+        cat >> "$OUTPUT" << 'EOF'
+# SATA AHCI — built-in (boot drive, no initramfs)
 $SC --enable ATA
 $SC --enable SATA_AHCI
 $SC --enable BLK_DEV_SD
 
 EOF
+    else
+        cat >> "$OUTPUT" << 'EOF'
+# SATA AHCI — module (secondary storage, NVMe is boot)
+$SC --enable ATA
+$SC --module SATA_AHCI
+$SC --module BLK_DEV_SD
+
+EOF
+    fi
 fi
 
 cat >> "$OUTPUT" << 'EOF'

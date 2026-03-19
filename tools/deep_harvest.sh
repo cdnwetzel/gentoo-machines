@@ -44,10 +44,26 @@ fi
 if [ -n "$FW_LIST" ]; then
     echo "$FW_LIST" | tee -a "$LOG_FILE"
 else
-    echo "No firmware detected via dmesg or journalctl." >> "$LOG_FILE"
-    echo "Checking /sys/module for loaded firmware drivers..." >> "$LOG_FILE"
-    ls /lib/firmware/ 2>/dev/null | head -20 >> "$LOG_FILE"
-    echo "(listing truncated, check /lib/firmware/ for full contents)" >> "$LOG_FILE"
+    echo "No firmware detected via dmesg or journalctl (buffer may have rotated)." >> "$LOG_FILE"
+    echo "Checking sysfs for firmware requests..." >> "$LOG_FILE"
+    # Walk loaded modules and check for firmware files on disk
+    for mod in $(lsmod 2>/dev/null | awk 'NR>1 {print $1}'); do
+        FW_DIR=""
+        case "$mod" in
+            i915)       FW_DIR="i915" ;;
+            iwlwifi)    FW_DIR="iwlwifi-*" ;;
+            brcmfmac)   FW_DIR="brcm/brcmfmac*" ;;
+            mwifiex*)   FW_DIR="mrvl/*8897*" ;;
+            amdgpu)     FW_DIR="amdgpu" ;;
+            nvidia*)    echo "  $mod: firmware embedded in driver" >> "$LOG_FILE"; continue ;;
+            *)          continue ;;
+        esac
+        FILES=$(find /lib/firmware/ -path "/lib/firmware/$FW_DIR" -name '*.bin' -o -path "/lib/firmware/$FW_DIR" -name '*.ucode' 2>/dev/null | head -5)
+        if [ -n "$FILES" ]; then
+            echo "  $mod:" >> "$LOG_FILE"
+            echo "$FILES" | sed 's/^/    /' >> "$LOG_FILE"
+        fi
+    done
 fi
 
 # 4. PCI DEVICES
