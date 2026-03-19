@@ -192,7 +192,7 @@ grep -q 'S3 deep: supported' "$HARVEST" && SUSPEND_S3=1
 
 # --- Ethernet detection ---
 ETH_DRIVERS=""
-for drv in igc e1000e r8169 r8152 igb ixgbe mlx5_core ax88179 cdc_ether; do
+for drv in igc e1000e r8169 r8152 igb ixgbe mlx5_core atlantic ax88179 cdc_ether; do
     if grep -q "$drv" "$HARVEST"; then
         ETH_DRIVERS="$ETH_DRIVERS $drv"
     fi
@@ -230,7 +230,7 @@ esac
 
 # --- EDAC / ECC detection ---
 HAS_EDAC=0
-grep -qi 'sb_edac\|skx_edac\|amd64_edac\|edac' "$HARVEST" && HAS_EDAC=1
+grep -qi 'sb_edac\|skx_edac\|i10nm_edac\|amd64_edac\|edac' "$HARVEST" && HAS_EDAC=1
 
 # --- NUMA (multi-socket or Xeon server) ---
 HAS_NUMA=0
@@ -426,6 +426,8 @@ EOF
         echo '$SC --module EDAC_SBRIDGE  # Sandy Bridge through Broadwell-EP' >> "$OUTPUT"
     elif grep -qi 'skx_edac' "$HARVEST"; then
         echo '$SC --module EDAC_SKX  # Skylake-SP Xeon' >> "$OUTPUT"
+    elif grep -qi 'i10nm_edac' "$HARVEST"; then
+        echo '$SC --module EDAC_I10NM  # Ice Lake / Sapphire Rapids Xeon' >> "$OUTPUT"
     elif grep -qi 'amd64_edac' "$HARVEST"; then
         echo '$SC --module EDAC_AMD64' >> "$OUTPUT"
     else
@@ -1128,6 +1130,7 @@ for drv in $ETH_DRIVERS; do
         igb)       echo '$SC --module IGB' >> "$OUTPUT" ;;
         ixgbe)     echo '$SC --module IXGBE' >> "$OUTPUT" ;;
         mlx5_core) echo '$SC --module MLX5_CORE' >> "$OUTPUT" ;;
+        atlantic)  echo '$SC --module AQTION' >> "$OUTPUT" ;;
     esac
 done
 

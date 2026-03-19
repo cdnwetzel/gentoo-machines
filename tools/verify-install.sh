@@ -315,7 +315,11 @@ case "$MACHINE" in
         # WiFi resume hook
         check_file /etc/elogind/system-sleep/wifi-reload.sh "WiFi resume hook"
         # HiDPI
-        check_file /home/*/.*Xresources "Xresources (HiDPI)" 2>/dev/null || warn "No .Xresources found for HiDPI"
+        if ls /home/*/.Xresources &>/dev/null; then
+            pass "Xresources (HiDPI)"
+        else
+            warn "No .Xresources found for HiDPI"
+        fi
         ;;
     mbp-2015)
         # Apple SMC

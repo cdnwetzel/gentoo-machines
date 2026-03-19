@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh, update-system.sh
+tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, build-kernel-remote.sh, generate-config.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -153,6 +153,14 @@ tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 # Example: tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
 ```
 Analyzes harvest data against a base config and generates `.config`, `make.conf`, and `HARDWARE.md`.
+
+### verify-install.sh
+Post-reboot deep verification — auto-detects machine from DMI:
+```bash
+sudo tools/verify-install.sh
+```
+
+8 verification sections: kernel/boot, GPU (i915/nvidia-smi/nouveau clash), networking (WiFi driver + firmware + NM state), audio (ALSA + PipeWire), storage (zram + swap), services (machine-conditional), user/permissions, and machine-specific checks (SP6 SAM/battery, MBP applesmc/sensors, XPS PRIME/TLP, T5810 ECC errors). Exit code = failure count.
 
 ## Kernel Build Commands
 
