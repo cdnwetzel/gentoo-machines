@@ -30,5 +30,12 @@ case "$1" in
         nmcli device set wlp1s0 managed yes 2>>"$LOG" || true
         nmcli networking off 2>>"$LOG" && sleep 1 && nmcli networking on 2>>"$LOG"
         echo "$(date): post-resume: NetworkManager cycling done" >> "$LOG"
+        # Force immediate time sync after resume (clock may have drifted during s2idle)
+        if command -v chronyc &>/dev/null; then
+            sleep 5  # wait for network to be usable
+            chronyc makestep 2>>"$LOG" && \
+                echo "$(date): post-resume: chrony time step applied" >> "$LOG" || \
+                echo "$(date): post-resume: chrony makestep failed (no network yet?)" >> "$LOG"
+        fi
         ;;
 esac

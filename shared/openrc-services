@@ -16,6 +16,9 @@ rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
 
+# Time synchronization — all machines (fixes clock drift after sleep/reboot)
+rc-update add chronyd default
+
 # [LAPTOPS] Thermal management — Intel laptops only
 rc-update add thermald default           # MBP 2015, XPS 9315, XPS 9510, Surface Pro 6, NUC11
 

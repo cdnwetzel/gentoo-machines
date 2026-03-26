@@ -7,6 +7,7 @@ media-libs/libva-intel-driver
 media-sound/alsa-utils
 media-sound/pavucontrol
 media-video/pipewire
+net-misc/chrony
 net-misc/networkmanager
 net-misc/remmina
 net-misc/sstp-client

@@ -32,6 +32,7 @@ sys-fs/udisks
 
 # Networking
 gnome-extra/nm-applet
+net-misc/chrony
 net-misc/dhcpcd
 net-misc/networkmanager
 net-misc/openssh

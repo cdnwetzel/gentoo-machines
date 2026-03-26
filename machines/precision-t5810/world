@@ -30,6 +30,7 @@ sys-fs/udisks
 
 # Networking (wired only — Intel I217-LM / e1000e)
 gnome-extra/nm-applet
+net-misc/chrony
 net-misc/dhcpcd
 net-misc/networkmanager
 net-misc/openssh
