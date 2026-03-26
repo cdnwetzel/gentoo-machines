@@ -32,10 +32,11 @@
 #
 # Config strategy:
 #   Same-series (e.g., 6.18.12 → 6.18.16):
-#     Copy running .config → make olddefconfig
+#     Copy running .config → kernel_config.sh → make olddefconfig
 #   Cross-series (e.g., 6.12 → 6.18):
 #     make defconfig → kernel_config.sh → make olddefconfig
-#     Falls back to .config copy + warning if no script exists
+#   kernel_config.sh is always applied (idempotent) to ensure machine-specific
+#   settings are never lost — even if the base .config came from another machine.
 #
 # Usage:
 #   sudo update-system.sh                  # full prompted workflow (default)
@@ -467,7 +468,12 @@ do_check() {
     update_type=$(classify_update "$running" "$target")
     if [[ "$update_type" == "same-series" ]]; then
         info "Update type: ${GREEN}same-series${RESET} (${running} → ${target})"
-        info "Config strategy: copy running .config → make olddefconfig"
+        if [[ -f "${REPO_DIR}/machines/${machine}/kernel_config.sh" ]]; then
+            info "Config strategy: copy running .config → kernel_config.sh → make olddefconfig"
+        else
+            info "Config strategy: copy running .config → make olddefconfig"
+            warn "No kernel_config.sh — machine-specific settings may be missing"
+        fi
     else
         info "Update type: ${YELLOW}cross-series${RESET} (${running} → ${target})"
         if [[ -f "${REPO_DIR}/machines/${machine}/kernel_config.sh" ]]; then
@@ -622,11 +628,10 @@ do_prepare() {
     # --- Migrate config ---
     header "Config Migration (${update_type})"
     if [[ "$update_type" == "same-series" ]]; then
-        # Same-series: copy running config → olddefconfig
+        # Same-series: copy running config as base
         info "Same-series update: copying running config"
         if $DRY_RUN; then
             info "[dry-run] Would copy running .config → ${KERNEL_SRC}/.config"
-            info "[dry-run] Would run: make olddefconfig"
         else
             if [[ -f "/proc/config.gz" ]]; then
                 zcat /proc/config.gz > "${KERNEL_SRC}/.config"
@@ -640,44 +645,44 @@ do_prepare() {
             else
                 error "Cannot find running .config — no /proc/config.gz, no /boot/config, no repo .config"
             fi
+        fi
+    else
+        # Cross-series: start from defconfig (clean slate)
+        info "Cross-series update: starting from defconfig"
+        if $DRY_RUN; then
+            info "[dry-run] Would run: make defconfig"
+        else
+            cd "${KERNEL_SRC}"
+            make defconfig
+            info "Generated defconfig"
+        fi
+    fi
+
+    # --- Apply machine-specific kernel_config.sh (all update types) ---
+    # kernel_config.sh uses scripts/config which is idempotent — safe to
+    # re-apply on every build. This ensures machine-specific settings are
+    # never lost, even if the base .config came from another machine or
+    # a previous build that missed the script.
+    if [[ -f "${machine_dir}/kernel_config.sh" ]]; then
+        if $DRY_RUN; then
+            info "[dry-run] Would run: bash ${machine_dir}/kernel_config.sh"
+            info "[dry-run] Would run: make olddefconfig"
+        else
+            cd "${KERNEL_SRC}"
+            bash "${machine_dir}/kernel_config.sh"
+            info "Applied kernel_config.sh"
+            make olddefconfig
+            info "Resolved dependencies via olddefconfig"
+        fi
+    else
+        warn "No kernel_config.sh found — relying on base .config only"
+        warn "Machine-specific settings may be missing or inherited from another machine"
+        if $DRY_RUN; then
+            info "[dry-run] Would run: make olddefconfig"
+        else
             cd "${KERNEL_SRC}"
             make olddefconfig
             info "Config updated via olddefconfig"
-        fi
-    else
-        # Cross-series: prefer kernel_config.sh, fallback to copy
-        if [[ -f "${machine_dir}/kernel_config.sh" ]]; then
-            info "Cross-series update: defconfig → kernel_config.sh → olddefconfig"
-            if $DRY_RUN; then
-                info "[dry-run] Would run: make defconfig"
-                info "[dry-run] Would run: bash ${machine_dir}/kernel_config.sh"
-                info "[dry-run] Would run: make olddefconfig"
-            else
-                cd "${KERNEL_SRC}"
-                make defconfig
-                info "Generated defconfig"
-                bash "${machine_dir}/kernel_config.sh"
-                info "Applied kernel_config.sh"
-                make olddefconfig
-                info "Resolved dependencies via olddefconfig"
-            fi
-        else
-            warn "No kernel_config.sh found — falling back to .config copy"
-            warn "Cross-series config copy may miss new Kconfig options!"
-            if $DRY_RUN; then
-                info "[dry-run] Would copy running .config → ${KERNEL_SRC}/.config"
-                info "[dry-run] Would run: make olddefconfig"
-            else
-                if [[ -f "/proc/config.gz" ]]; then
-                    zcat /proc/config.gz > "${KERNEL_SRC}/.config"
-                elif [[ -f "${machine_dir}/.config" ]]; then
-                    cp "${machine_dir}/.config" "${KERNEL_SRC}/.config"
-                else
-                    error "Cannot find any .config source"
-                fi
-                cd "${KERNEL_SRC}"
-                make olddefconfig
-            fi
         fi
     fi
 

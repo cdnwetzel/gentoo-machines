@@ -58,7 +58,9 @@ echo "[Phase 2] Processor configuration..."
 
 $SC --enable SMP
 $SC --set-val NR_CPUS 44
-$SC --enable MCORE2
+# MCORE2 is x86_32 only — does not exist on x86_64 builds.
+# X86_NATIVE_CPU uses -march=native (must build on target machine).
+$SC --enable X86_NATIVE_CPU
 
 
 $SC --enable SCHED_MC
@@ -86,7 +88,9 @@ $SC --module ACPI_THERMAL_REL
 $SC --module INTEL_PCH_THERMAL
 $SC --module PROC_THERMAL_MMIO_RAPL
 
-# EDAC — ECC memory error detection
+# EDAC — ECC memory error detection (256GB DDR4 ECC)
+# RAS is required for EDAC to be available
+$SC --enable RAS
 $SC --enable EDAC
 $SC --module EDAC_DECODE_MCE
 $SC --module EDAC_SBRIDGE  # Sandy Bridge through Broadwell-EP

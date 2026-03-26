@@ -42,7 +42,8 @@ $SC --enable APPLE_PROPERTIES
 # --------------------------------------------------------------------------
 $SC --enable SMP
 $SC --set-val NR_CPUS 4
-$SC --enable MCORE2
+# MCORE2 is x86_32 only — CPU march handled by CFLAGS in make.conf
+$SC --enable X86_NATIVE_CPU
 
 $SC --enable SCHED_MC
 $SC --enable SCHED_SMT

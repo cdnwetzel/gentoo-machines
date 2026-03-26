@@ -65,7 +65,8 @@ echo "[Phase 2] Processor configuration (Alder Lake hybrid)..."
 
 $SC --enable SMP
 $SC --set-val NR_CPUS 12
-$SC --enable MCORE2
+# MCORE2 is x86_32 only — CPU march handled by CFLAGS in make.conf
+$SC --enable X86_NATIVE_CPU
 
 # Hybrid scheduling (Alder Lake P-Core/E-Core)
 $SC --enable X86_HYBRID_CPUS 2>/dev/null || echo "  [INFO] X86_HYBRID_CPUS not available in this kernel"

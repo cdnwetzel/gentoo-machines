@@ -154,16 +154,12 @@ echo "[Phase 2] Processor configuration..."
 \$SC --set-val NR_CPUS $NR_CPUS
 EOF
 
-# CPU type selection
-if [ "$CPU_VENDOR" = "GenuineIntel" ]; then
-    echo '$SC --enable MCORE2' >> "$OUTPUT"
-    echo "" >> "$OUTPUT"
-elif [ "$CPU_VENDOR" = "AuthenticAMD" ]; then
-    cat >> "$OUTPUT" << 'EOF'
-# TODO: verify correct AMD CPU type for your processor
-$SC --enable MZEN3  # Zen 3+ (Ryzen 5000+)
-EOF
-fi
+# CPU type selection — MCORE2/MZEN3 are x86_32 only, not available on x86_64.
+# X86_NATIVE_CPU uses -march=native (must build on target machine).
+# CPU march is also handled by CFLAGS in make.conf (-march=broadwell, -march=znver3, etc.)
+echo '# X86_NATIVE_CPU uses -march=native (build on target machine)' >> "$OUTPUT"
+echo '$SC --enable X86_NATIVE_CPU' >> "$OUTPUT"
+echo "" >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'EOF'
 

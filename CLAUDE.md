@@ -137,7 +137,7 @@ tools/update-system.sh --machine xps-9510 check   # override auto-detection
 
 The `full` workflow (default) prompts Y/n/skip before each phase and saves progress to `/var/lib/kernel-update/full-progress`. After install it detects the reboot boundary and exits; re-running `full` resumes with verify + clean. Individual subcommands work standalone for manual use.
 
-Config strategy: same-series (copy .config + olddefconfig), cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11, precision-t5810.
+Config strategy: kernel_config.sh is always applied (idempotent) on every build. Same-series: copy .config + kernel_config.sh + olddefconfig. Cross-series: defconfig + kernel_config.sh + olddefconfig. Machine registry covers xps-9510, mbp-2015, surface-pro-6, nuc11, precision-t5810.
 
 ### build-kernel-remote.sh
 Cross-compile and deploy kernels over SSH (auto-detects KVER from target):
