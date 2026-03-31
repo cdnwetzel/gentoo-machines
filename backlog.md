@@ -1,9 +1,8 @@
 # Backlog
 
-## Medium Priority — Kernel Config (deferred: machines not available)
+## Medium Priority — Kernel Config
 
-- [ ] XPS 9510: enable `NVME_HWMON`, `POWER_SUPPLY_HWMON`, `THERMAL_HWMON`, `INTEL_RAPL` [repo]
-- [ ] XPS 9510: fix kernel_config.sh mismatches — `SCHED_AUTOGROUP`, `BLK_DEV_THROTTLING` in script but disabled in .config [repo]
+(none — all XPS 9510 kernel config items resolved)
 
 ## Medium Priority — Hardware Tasks (require physical access)
 
@@ -44,6 +43,9 @@
 - [x] Install scripts: root checks (8 scripts), dispatch-conf (4 scripts)
 - [x] Install scripts: blkid UUID validation, stage3 auto-discovery from mirror
 - [x] tools/verify-install.sh: standalone post-reboot deep verification
+
+### Session 2026-03-31
+- [x] XPS 9510: enable NVME_HWMON in kernel_config.sh + rebuild (POWER_SUPPLY_HWMON, THERMAL_HWMON, INTEL_RAPL, SCHED_AUTOGROUP, BLK_DEV_THROTTLING were already set)
 
 ### Prior sessions
 - [x] Execute Surface Pro 6 Gentoo install

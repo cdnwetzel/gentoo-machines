@@ -149,6 +149,7 @@ echo "[Phase 5] NVMe storage (boot drive, must be built-in)..."
 # CRITICAL: NVMe MUST be =y (built-in) — boot drive, no initramfs
 $SC --enable BLK_DEV_NVME
 $SC --enable NVME_CORE
+$SC --enable NVME_HWMON
 
 # I/O scheduler (BFQ for latency-sensitive desktop workloads)
 $SC --enable BLK_DEV_THROTTLING
