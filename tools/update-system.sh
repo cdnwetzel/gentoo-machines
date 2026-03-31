@@ -117,6 +117,19 @@ warn()  { echo -e "${YELLOW}>>>${RESET} $*"; }
 error() { echo -e "${RED}>>>${RESET} $*" >&2; exit 1; }
 header() { echo -e "\n${BLUE}=== $* ===${RESET}"; }
 
+# Ensure /boot/efi is mounted (needed by linux-firmware, installkernel, grub)
+ensure_boot_efi_mounted() {
+    if [[ -d /boot/efi ]] && ! mountpoint -q /boot/efi 2>/dev/null; then
+        if grep -q '/boot/efi' /etc/fstab 2>/dev/null; then
+            if ! $DRY_RUN; then
+                mount /boot/efi && info "Mounted /boot/efi" || warn "/boot/efi mount failed — check fstab"
+            else
+                info "[dry-run] Would mount /boot/efi"
+            fi
+        fi
+    fi
+}
+
 # Get a field from a machine registry entry
 # Usage: get_machine_field xps-9510 gpu
 get_machine_field() {
@@ -825,16 +838,7 @@ do_install() {
         info "Created ${mod_dir}/source symlink"
     fi
 
-    # Ensure /boot and /boot/efi are mounted (EFI may be noauto or misordered in fstab)
-    if [[ -d /boot/efi ]] && ! mountpoint -q /boot/efi 2>/dev/null; then
-        if grep -q '/boot/efi' /etc/fstab 2>/dev/null; then
-            if ! $DRY_RUN; then
-                mount /boot/efi && info "Mounted /boot/efi" || warn "/boot/efi mount failed — check fstab"
-            else
-                info "[dry-run] Would mount /boot/efi"
-            fi
-        fi
-    fi
+    ensure_boot_efi_mounted
 
     header "Install Kernel"
     if $DRY_RUN; then
@@ -1230,6 +1234,9 @@ do_clean() {
 # ============================================================================
 do_world() {
     [[ $EUID -eq 0 ]] || error "World update requires root"
+
+    # linux-firmware, installkernel, grub all need /boot/efi during @world
+    ensure_boot_efi_mounted
 
     header "System Update (@world)"
     if $DRY_RUN; then
