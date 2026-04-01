@@ -389,6 +389,10 @@ $SC --enable INPUT_MOUSEDEV
 $SC --enable INPUT_EVDEV
 $SC --enable INPUT_UINPUT
 
+# I2C HID — required for touchpad (Synaptics over I2C, not PS/2)
+$SC --enable I2C_HID
+$SC --enable I2C_HID_ACPI
+
 # Synaptics touchpad — RMI4 over HID-I2C for multitouch + palm rejection
 $SC --enable RMI4_CORE
 $SC --enable RMI4_I2C
