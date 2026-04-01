@@ -46,6 +46,8 @@
 
 ### Session 2026-03-31
 - [x] XPS 9510: enable NVME_HWMON in kernel_config.sh + rebuild (POWER_SUPPLY_HWMON, THERMAL_HWMON, INTEL_RAPL, SCHED_AUTOGROUP, BLK_DEV_THROTTLING were already set)
+- [x] XPS 9510: update NVIDIA driver version refs 590.48→595.58.03 across docs
+- [x] Disable tap-to-click / tap-to-drag in shared touchpad config (accidental input)
 
 ### Prior sessions
 - [x] Execute Surface Pro 6 Gentoo install
