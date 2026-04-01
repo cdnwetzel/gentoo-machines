@@ -170,8 +170,17 @@ Portage processes `/etc/portage/package.use/*` files in **alphabetical order**. 
 ### ccache Permissions
 `/var/cache/ccache/tmp/` was mode `2755` (not group-writable). Portage sandbox runs as `portage` user. Fix: `chmod 2775 /var/cache/ccache/tmp`.
 
-## GPU Upgrade Considerations
-- **Current**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal) — PCIe 3.0 x16
-- **T5810 PSU**: 825W, 225W per PCIe slot
-- **Candidates**: RTX 3060 12GB ($449, 170W), RTX 3060 Ti 8GB ($400, 200W), RTX 4060 Ti 16GB ($539-599, 160W), RTX 5060 Ti 16GB ($476-579, ~150W)
-- **Note**: 2.5-slot cards may not fit dual in T5810 — measure physical slot spacing
+## GPU Upgrade Plan
+- **Current**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal GP107) — PCIe 3.0 x16
+- **Planned**: 1x RTX A1000 8GB (Ampere GA107, compute 8.6, ~70W) — hand-me-down from Precision 7960
+  - 7960 upgrade: RTX 5080 16GB (Blackwell) replaces the A1000 alongside RTX PRO 6000 96GB
+  - A1000 moves to T5810 as sole GPU for dev/test inference
+- **Power budget**: 825W PSU — Xeon ~145W + A1000 ~70W + system ~80W = ~295W (abundant headroom)
+- **Future options** (after A1000 proves out):
+  - 1-2 more RTX A1000 8GB for multi-GPU inference via PCIe
+  - Ideal: 2x RTX A4500 20GB (Ampere) with NVLink bridge — 40GB unified VRAM, ~400W total (fits 825W PSU)
+- **Driver migration**: 580.xx legacy (Pascal) → 595.x+ current branch (Ampere)
+  - Removes: `=x11-drivers/nvidia-drivers-580* ~amd64` keyword, `>=581` mask
+  - Adds: current nvidia-drivers (~amd64), `kernel-open` USE flag (Turing+ support)
+  - Cannot mix Pascal + Ampere — GTX 1050 Ti cards must be removed before driver upgrade
+- **Previous candidates** (superseded): RTX 3060 12GB, RTX 3060 Ti 8GB, RTX 4060 Ti 16GB, RTX 5060 Ti 16GB, RTX 5080 16GB

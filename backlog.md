@@ -6,6 +6,9 @@
 
 ## Medium Priority — Hardware Tasks (require physical access)
 
+- [ ] **T5810 GPU upgrade**: Replace 2x GTX 1050 Ti with 1x RTX A1000 8GB (hand-me-down from 7960) [hardware]
+  - Remove Pascal cards, install A1000, migrate nvidia-drivers 580.xx → 595.x+, enable kernel-open
+  - Update: kernel_config.sh, package.accept_keywords, package.use, HARDWARE.md, make.conf
 - [ ] Install Gentoo on NUC11 — configs ready, follow INSTALL.md [hardware]
 - [ ] Unify git identity on NUC11 + Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]
