@@ -13,7 +13,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   xps-9315/         Dell XPS 13 9315 (Alder Lake) - PRODUCTION (config maintained)
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
-  mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
+  mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - RETIRED (macOS 12, kids' machine)
   asrock-b550/      ASRock B550 / Ryzen 9 5950X (planned)
   precision-t5810/  Dell Precision T5810 / Xeon E5 - PRODUCTION
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
@@ -32,7 +32,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production (config maintained) | Windows (returned) |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
-| 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Production | Gentoo |
+| 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired | macOS 12 (kids' machine) |
 | 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Production | Gentoo |
 | 7 | Dell Precision 7960 | Xeon W5-3433 16C/32T (Sapphire Rapids) | RTX PRO 6000 96GB + RTX A1000 8GB | Reference only (harvested) | RHEL 10.1 (production AI/ML) |
@@ -65,9 +65,9 @@ All production machines track **6.18 LTS** (EOL Dec 2027) via `=sys-kernel/gento
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-*, intel/ibt-20-*)
 - **Hardware ref**: `machines/nuc11/HARDWARE.md`
 
-### MacBook Pro 12,1 Early 2015 (Production)
+### MacBook Pro 12,1 Early 2015 (Retired — macOS 12, kids' machine)
 
-- **Kernel**: Linux 6.18.12-gentoo
+- **Last Gentoo kernel**: Linux 6.18.12-gentoo
 - **Architecture**: x86_64, 2C/4T (Broadwell)
 - **Compiler flags**: `-march=broadwell -O2 -pipe`
 - **Key drivers**: i915 (module), brcmfmac (BCM43602 WiFi), btusb+btbcm (BT), snd_hda_codec_cs420x (CS4208 audio), bcm5974 (trackpad), applesmc (fan/thermal), thunderbolt (Falcon Ridge)

@@ -1,5 +1,8 @@
 # MacBook Pro 12,1 (Early 2015) — Hardware Reference
 
+> **Status**: Retired from Gentoo fleet. Returned to macOS 12 as kids' machine.
+> Configs preserved as reference for Broadwell + Apple hardware.
+
 ## System Overview
 
 | Field | Value |
