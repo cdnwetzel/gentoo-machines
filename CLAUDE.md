@@ -263,10 +263,10 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell XPS 15 9510 (Production)
 
-- **Kernel**: Linux 6.18.12-gentoo
+- **Kernel**: Linux 6.18.18-gentoo
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
-- **Key drivers**: i915 (module), nvidia 590.48.01 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
+- **Key drivers**: i915 (module), nvidia 595.58.03 (proprietary), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
 - **Firmware**: Loaded from /lib/firmware/ (i915/tgl_*, iwlwifi-QuZ-a0-hr-b0-*, intel/ibt-20-*)
 - **Critical**: All firmware-dependent drivers MUST be modules (=m), not built-in — no initramfs
 - **NVIDIA deps**: `DRM_QXL=m` required to pull in `DRM_TTM_HELPER` (nvidia-drivers build dependency on kernel 6.11+)

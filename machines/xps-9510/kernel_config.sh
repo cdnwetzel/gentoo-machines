@@ -7,7 +7,7 @@
 #   - deep_harvest.sh hardware inventory
 #   - XPS 9510 HARDWARE.md (PCI IDs, drivers, firmware)
 #   - Cross-reference with Surface Pro 6, MBP 2015, NUC11 production configs
-#   - NVIDIA driver 590.48.01 build requirements
+#   - NVIDIA driver 595.58.03 build requirements
 #   - Kconfig symbol updates for 6.18 (MCORE2 removed, renames applied)
 #
 # BASE CONFIG: Start from any existing .config (e.g., defconfig or MBP base)

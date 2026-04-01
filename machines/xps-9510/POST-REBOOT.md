@@ -183,5 +183,5 @@ emerge -av app-office/libreoffice
 | **VPN** | NetworkManager SSTP |
 | **Monitoring** | btop, htop, nvtop, lm-sensors, neofetch |
 | **CLI** | tmux, jq, tree, xclip, tesseract, zip/unzip |
-| **GPU** | nvidia-drivers 590.48, Intel i915 (module) |
+| **GPU** | nvidia-drivers 595.58.03, Intel i915 (module) |
 | **Bluetooth** | bluez, blueman, btusb/btintel (kernel) |

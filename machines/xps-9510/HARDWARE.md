@@ -80,7 +80,7 @@ Notable: **Full AVX-512** support (Tiger Lake), ideal for ML inference workloads
   - **Firmware**: `i915/tgl_dmc_ver2_12.bin`, `tgl_guc_70.1.1.bin`
   - **Features**: VAAPI hardware acceleration
 - **dGPU**: NVIDIA GeForce RTX 3050 Ti Mobile `[10de:25a0]` (GA107M, 4GB GDDR6)
-  - **Driver**: `nvidia` 590.48.01 (proprietary)
+  - **Driver**: `nvidia` 595.58.03 (proprietary)
   - **Features**: CUDA 8.6 (Ampere), PRIME/Optimus
   - **Use case**: AI/ML inference, CUDA compute
 
@@ -183,7 +183,7 @@ Connection profiles (server, credentials, DNS) are stored in NetworkManager and 
 
 | Component | Version |
 |-----------|---------|
-| nvidia-drivers | 590.48.01 |
+| nvidia-drivers | 595.58.03 |
 | CUDA Version | 13.1 |
 | GPU | RTX 3050 Ti Mobile (GA107M, 4GB GDDR6) |
 

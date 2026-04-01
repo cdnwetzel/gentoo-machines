@@ -136,7 +136,7 @@ nmtui
 ping -c3 gentoo.org
 
 # NVIDIA
-nvidia-smi           # RTX 3050 Ti, driver 590.48
+nvidia-smi           # RTX 3050 Ti, driver 595.58
 
 # Display
 xrandr               # should show 3456x2160
