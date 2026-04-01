@@ -7,12 +7,12 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | Machine | CPU | GPU | Status | Current OS |
 |---------|-----|-----|--------|------------|
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
-| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Production** | Gentoo |
+| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Retired** | macOS 12 (kids' machine) |
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Built** (awaiting first boot) | Gentoo |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 
@@ -31,7 +31,7 @@ gentoo-machines/
 │   │   ├── grub           # GRUB config (i915 GuC, NVIDIA dynamic power)
 │   │   ├── HARDWARE.md    # Hardware + software environment reference
 │   │   └── ...            # sysctl, zram, tlp, prime-run, 3-phase install scripts
-│   ├── mbp-2015/          # MacBook Pro 12,1 Early 2015 (Broadwell) - PRODUCTION
+│   ├── mbp-2015/          # MacBook Pro 12,1 Early 2015 (Broadwell) - RETIRED
 │   │   ├── .config        # Kernel config (Apple HW, THP/MGLRU tuning)
 │   │   ├── make.conf      # Portage build settings (-march=broadwell)
 │   │   ├── kernel_config.sh  # Programmatic kernel config (Apple-specific)
@@ -53,7 +53,7 @@ gentoo-machines/
 │   │   ├── make.conf      # Portage build settings (-march=tigerlake)
 │   │   └── HARDWARE.md    # Hardware reference
 │   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PLANNED
-│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - BUILT (awaiting first boot)
+│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PRODUCTION
 │   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
 │   └── surface-pro-9/     # Surface Pro 9 - PLANNED
 ├── tools/
@@ -203,10 +203,10 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 
 ### Per-Machine Differences
 
-| Setting | XPS 9510 | MBP 2015 | Surface Pro 6 | NUC11 | XPS 9315 | Future AMD |
-|---------|----------|----------|---------------|-------|----------|------------|
-| `-march=` | `tigerlake` | `broadwell` | `skylake` | `tigerlake` | `alderlake` | `znver3` |
-| `VIDEO_CARDS` | `intel iris nvidia` | `intel` | `intel` | `intel iris` | `intel iris` | `nvidia` |
+| Setting | XPS 9510 | Surface Pro 6 | T5810 | NUC11 | XPS 9315 | Future AMD |
+|---------|----------|---------------|-------|-------|----------|------------|
+| `-march=` | `tigerlake` | `skylake` | `broadwell` | `tigerlake` | `alderlake` | `znver3` |
+| `VIDEO_CARDS` | `intel iris nvidia` | `intel` | `nvidia` | `intel iris` | `intel iris` | `nvidia` |
 | AVX-512 | Yes | No | No | Yes | No | No |
 | Hybrid cores | No | No | No | No | Yes | No |
 
@@ -215,8 +215,8 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 ### Production: XPS 9510 (Hybrid GPU)
 Intel iGPU + NVIDIA RTX 3050 Ti with PRIME/Optimus, proprietary nvidia-drivers. PipeWire audio, SSTP VPN, thermald + tlp power management. Dual NVMe, 32GB RAM, zram 8GB zstd swap. Full 3-phase automated install.
 
-### Production: MacBook Pro 12,1 (2015)
-Broadwell i7 with full Apple hardware support: applesmc (35 sensors), mbpfan (fan control), bcm5974 (trackpad), brcmfmac (BCM43602 WiFi), CS4208 (audio). GRUB with `--removable` for Apple EFI. THP/MGLRU/zram tuning, Fn hotkeys via acpilight. Full 3-phase automated install.
+### Retired: MacBook Pro 12,1 (2015)
+Returned to macOS 12 as kids' machine. Configs preserved for reference. Had full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
 
 ### Production: Surface Pro 6
 Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense display with 150% HiDPI scaling. WiFi power save workarounds for suspend reliability. Full 3-phase automated install with HiDPI configuration throughout (LightDM, XFCE, GTK greeter).
@@ -227,8 +227,8 @@ Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHE
 ### Planned: ASRock B550 (First AMD)
 Ryzen 9 5950X with SATA SSDs. First AMD build — needs `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`.
 
-### Built: Precision T5810 (Xeon Broadwell-EP)
-Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Full 3-phase automated install, all 13 phases complete, deep sanity 0 fail. Awaiting first boot.
+### Production: Precision T5810 (Xeon Broadwell-EP)
+Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test for AI inference: 7B models on CPU, 1.5B on GPU. Mirrors production 7960.
 
 ### Kernel Strategy
 
