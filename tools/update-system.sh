@@ -1523,7 +1523,7 @@ fi
 # Re-exec under elogind-inhibit/systemd-inhibit to prevent the machine from
 # suspending during builds (especially on laptops with idle-hibernate).
 if [[ -z "${_UPDATE_INHIBITED:-}" ]]; then
-    for _inhibit_cmd in systemd-inhibit elogind-inhibit; do
+    for _inhibit_cmd in elogind-inhibit systemd-inhibit; do
         if command -v "$_inhibit_cmd" &>/dev/null; then
             export _UPDATE_INHIBITED=1
             info "Inhibiting sleep for duration of update"
