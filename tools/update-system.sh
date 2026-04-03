@@ -49,6 +49,9 @@
 
 set -euo pipefail
 
+# --- Save original args (before shift) for possible re-exec ---
+_ORIG_ARGS=("$@")
+
 # --- Script location (for finding repo files) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -1514,6 +1517,26 @@ MACHINE=$(detect_machine)
 
 if $DRY_RUN; then
     info "[dry-run mode]"
+fi
+
+# --- Inhibit sleep/idle for the duration of long-running operations ---
+# Re-exec under elogind-inhibit/systemd-inhibit to prevent the machine from
+# suspending during builds (especially on laptops with idle-hibernate).
+if [[ -z "${_UPDATE_INHIBITED:-}" ]]; then
+    for _inhibit_cmd in systemd-inhibit elogind-inhibit; do
+        if command -v "$_inhibit_cmd" &>/dev/null; then
+            export _UPDATE_INHIBITED=1
+            info "Inhibiting sleep for duration of update"
+            exec "$_inhibit_cmd" --what=sleep:idle \
+                --who="update-system.sh" \
+                --why="System update in progress" \
+                "$0" "${_ORIG_ARGS[@]}"
+        fi
+    done
+    # No inhibitor available — continue without (warn on laptops)
+    if [[ -d /sys/class/power_supply/BAT0 || -d /sys/class/power_supply/BAT1 ]]; then
+        warn "No sleep inhibitor found — machine may suspend during long builds"
+    fi
 fi
 
 case "$COMMAND" in
