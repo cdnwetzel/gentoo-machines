@@ -3,6 +3,7 @@ app-admin/sysklogd
 app-laptop/mbpfan
 dev-util/ccache
 gnome-extra/nm-applet
+media-fonts/noto-emoji
 media-libs/libva-intel-driver
 media-sound/alsa-utils
 media-sound/pavucontrol
@@ -36,6 +37,7 @@ x11-base/xorg-server
 x11-misc/lightdm
 x11-terms/xfce4-terminal
 xfce-base/xfce4-meta
+xfce-extra/xfce4-screenshooter
 xfce-base/xfce4-power-manager
 xfce-extra/xfce4-battery-plugin
 xfce-extra/xfce4-pulseaudio-plugin

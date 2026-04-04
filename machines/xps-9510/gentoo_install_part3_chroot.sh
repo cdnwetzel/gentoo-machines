@@ -420,6 +420,29 @@ ls /lib/firmware/iwlwifi-QuZ-a0-hr-b0-*.ucode 2>/dev/null && echo "  [OK] WiFi f
 ls /lib/firmware/i915/tgl_dmc_ver2_12.bin* 2>/dev/null && echo "  [OK] i915 DMC firmware" || echo "  [FAIL] i915 firmware!"
 ls /lib/firmware/intel/ibt-20-* 2>/dev/null && echo "  [OK] BT firmware" || echo "  [FAIL] BT firmware!"
 
+echo "[11.6] Installing emoji fontconfig..."
+cat > /etc/fonts/local.conf << 'FONTEOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <!-- Use Noto Color Emoji for emoji glyphs -->
+  <alias>
+    <family>serif</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+  <alias>
+    <family>sans-serif</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+  <alias>
+    <family>monospace</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+</fontconfig>
+FONTEOF
+fc-cache -f
+echo "  [OK] Noto Color Emoji fontconfig installed"
+
 echo ""
 echo "[OK] Phase 11 complete."
 echo ""

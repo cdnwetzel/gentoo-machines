@@ -47,6 +47,9 @@ net-vpn/networkmanager-sstp
 # Remote Desktop
 net-misc/remmina
 
+# Fonts
+media-fonts/noto-emoji
+
 # Graphics & Video
 x11-apps/xrandr
 x11-drivers/xf86-input-libinput
@@ -65,6 +68,7 @@ xfce-extra/xfce4-pulseaudio-plugin
 x11-misc/lightdm
 xfce-base/xfce4-meta
 xfce-base/xfce4-power-manager
+xfce-extra/xfce4-screenshooter
 xfce-extra/xfce4-taskmanager
 
 # Web Browsers

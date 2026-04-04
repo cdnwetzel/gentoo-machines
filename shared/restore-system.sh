@@ -15,13 +15,13 @@ echo "=== Restoring system configuration ==="
 echo
 
 # elogind (clamshell lid handling)
-echo "[1/8] Installing elogind config..."
+echo "[1/9] Installing elogind config..."
 cp "${SCRIPT_DIR}/logind.conf" /etc/elogind/logind.conf
 echo "Done."
 echo
 
 # ACPI lid toggle script
-echo "[2/8] Installing ACPI lid toggle..."
+echo "[2/9] Installing ACPI lid toggle..."
 cp "${SCRIPT_DIR}/acpi-lid.sh" /etc/acpi/actions/lid.sh
 chmod +x /etc/acpi/actions/lid.sh
 cp "${SCRIPT_DIR}/acpi-default.sh" /etc/acpi/default.sh
@@ -38,7 +38,7 @@ case "$PRODUCT" in
     *)                  HIDPI_MACHINE_DIR="" ;;
 esac
 
-echo "[3/8] Installing LightDM config..."
+echo "[3/9] Installing LightDM config..."
 if [[ -n "$HIDPI_MACHINE_DIR" && -f "$HIDPI_MACHINE_DIR/lightdm.conf" ]]; then
     cp "$HIDPI_MACHINE_DIR/lightdm.conf" /etc/lightdm/lightdm.conf
     echo "  Using HiDPI lightdm.conf (X -dpi 144)"
@@ -56,30 +56,30 @@ echo "Done."
 echo
 
 if [[ -n "$HIDPI_MACHINE_DIR" && -f "$HIDPI_MACHINE_DIR/lightdm-gtk-greeter.conf" ]]; then
-    echo "[4/8] Installing LightDM greeter HiDPI config..."
+    echo "[4/9] Installing LightDM greeter HiDPI config..."
     cp "$HIDPI_MACHINE_DIR/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
     echo "Done."
 else
-    echo "[4/8] LightDM greeter HiDPI: not needed for this display."
+    echo "[4/9] LightDM greeter HiDPI: not needed for this display."
 fi
 echo
 
 # Touchpad (tap-to-click, natural scroll)
-echo "[5/8] Installing touchpad config..."
+echo "[5/9] Installing touchpad config..."
 mkdir -p /etc/X11/xorg.conf.d
 cp "${SCRIPT_DIR}/30-touchpad.conf" /etc/X11/xorg.conf.d/30-touchpad.conf
 echo "Done."
 echo
 
 # KSM (Kernel Same-page Merging) startup
-echo "[6/8] Installing KSM startup script..."
+echo "[6/9] Installing KSM startup script..."
 cp "${SCRIPT_DIR}/ksm.start" /etc/local.d/ksm.start
 chmod +x /etc/local.d/ksm.start
 echo "Done."
 echo
 
 # /dev/ppp device node (required for SSTP VPN / pppd)
-echo "[7/8] Creating /dev/ppp device node..."
+echo "[7/9] Creating /dev/ppp device node..."
 if [ ! -c /dev/ppp ]; then
     mknod /dev/ppp c 108 0
     echo "Created /dev/ppp"
@@ -89,8 +89,15 @@ fi
 echo "Done."
 echo
 
+# Emoji font rendering (Noto Color Emoji fallback for all font families)
+echo "[8/9] Installing emoji fontconfig..."
+cp "${SCRIPT_DIR}/fontconfig-emoji.conf" /etc/fonts/local.conf
+fc-cache -f
+echo "Done."
+echo
+
 # Restart services
-echo "[8/8] Restarting services..."
+echo "[9/9] Restarting services..."
 rc-service elogind restart
 rc-service acpid restart
 echo "Done."

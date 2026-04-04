@@ -490,6 +490,29 @@ ls /lib/firmware/intel-ucode/ 2>/dev/null && echo "  [OK] Intel microcode direct
 # No i915 firmware needed (no iGPU)
 # No WiFi firmware needed (wired only)
 
+echo "[11.5] Installing emoji fontconfig..."
+cat > /etc/fonts/local.conf << 'FONTEOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <!-- Use Noto Color Emoji for emoji glyphs -->
+  <alias>
+    <family>serif</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+  <alias>
+    <family>sans-serif</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+  <alias>
+    <family>monospace</family>
+    <prefer><family>Noto Color Emoji</family></prefer>
+  </alias>
+</fontconfig>
+FONTEOF
+fc-cache -f
+echo "  [OK] Noto Color Emoji fontconfig installed"
+
 echo ""
 echo "[OK] Phase 11 complete."
 echo ""
