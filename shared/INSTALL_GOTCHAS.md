@@ -381,3 +381,29 @@ rc-service display-manager restart
 Titan X Pascal, Quadro P-series, etc.) MUST use `-kernel-open`.
 **Prevention**: kernel-config-template.sh and generate-config.sh should detect GPU
 architecture from PCI ID and auto-set the correct USE flag.
+
+## 29. Hostname Overridden by DHCP (OpenRC)
+**Problem (ASRock B550)**: `/etc/hostname` was set correctly but DHCP client
+overwrote hostname on boot, causing update-system.sh machine detection to fail.
+**Fix**: Set hostname in BOTH locations:
+```bash
+echo "asrock-b550" > /etc/hostname
+sed -i 's/^hostname=.*/hostname="asrock-b550"/' /etc/conf.d/hostname
+```
+**Impact**: update-system.sh and verify-install.sh rely on hostname for machine
+detection. Boards with generic DMI (e.g. ASRock "To Be Filled By O.E.M.") cannot
+fall back to DMI matching.
+**Prevention**: Install scripts now set both files.
+
+## 30. Desktop Profile Not Set in Headless Install
+**Problem (ASRock B550)**: Part3 chroot install builds headless. After first boot,
+no desktop environment — need to manually set desktop profile and emerge XFCE.
+**Fix**: Post-install steps:
+```bash
+eselect profile set 3    # desktop profile
+emerge --sync && emerge --update --deep --newuse @world
+emerge xfce-base/xfce4-meta
+echo "exec startxfce4" > ~/.xinitrc
+gpasswd -a chris video
+```
+**Prevention**: Consider adding a part4 desktop install phase to automate this.

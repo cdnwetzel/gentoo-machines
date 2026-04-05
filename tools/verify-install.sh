@@ -71,6 +71,13 @@ if [[ "$SYS_VENDOR" == *"Apple"* ]]; then
     MACHINE="mbp-2015"; HAS_INTEL_GPU=1; HAS_WIFI=1; HAS_BLUETOOTH=1; IS_LAPTOP=1; WIFI_DRIVER="brcmfmac"
 fi
 
+# Hostname fallback for boards with generic DMI (e.g. ASRock "To Be Filled By O.E.M.")
+if [[ "$MACHINE" == "unknown" ]]; then
+    case "$HOSTNAME" in
+        *"asrock-b550"*) MACHINE="asrock-b550"; HAS_NVIDIA=1; HAS_WIFI=1; HAS_BLUETOOTH=1; WIFI_DRIVER="iwlwifi" ;;
+    esac
+fi
+
 # Battery detection
 [ -d /sys/class/power_supply/BAT0 ] || [ -d /sys/class/power_supply/BAT1 ] && HAS_BATTERY=1
 
@@ -258,6 +265,7 @@ case "$MACHINE" in
     mbp-2015)       check_service mbpfan; check_service sshd ;;
     surface-pro-6)  check_service sshd ;;
     precision-t5810) check_service sshd ;;
+    asrock-b550) check_service sshd ;;
 esac
 
 echo ""
@@ -363,6 +371,21 @@ case "$MACHINE" in
             [ "$UE" -gt 0 ] && fail "UNCORRECTABLE ECC ERRORS DETECTED — replace faulty DIMM"
         else
             warn "EDAC not available"
+        fi
+        ;;
+    asrock-b550)
+        # AMD thermal — k10temp
+        check_module k10temp
+        # AMD CCP/PSP
+        check_module ccp
+        # AMD pinctrl
+        check_module pinctrl_amd
+        # zram
+        if [ -b /dev/zram0 ] && [ "$(cat /sys/block/zram0/disksize 2>/dev/null)" -gt 0 ]; then
+            ZRAM_SIZE=$(($(cat /sys/block/zram0/disksize) / 1024 / 1024 / 1024))
+            pass "zram0: ${ZRAM_SIZE}GB"
+        else
+            warn "zram0 not active — check zram-init config"
         fi
         ;;
     *)

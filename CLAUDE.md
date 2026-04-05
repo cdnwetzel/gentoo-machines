@@ -14,7 +14,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   nuc11/            Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
   xps-9510/         Dell XPS 15 9510 (Tiger Lake-H) - PRODUCTION
   mbp-2015/         MacBook Pro 12,1 Early 2015 (Broadwell) - RETIRED (macOS 12, kids' machine)
-  asrock-b550/      ASRock B550 / Ryzen 9 5950X - INSTALLING
+  asrock-b550/      ASRock B550 / Ryzen 9 5950X - PRODUCTION
   precision-t5810/  Dell Precision T5810 / Xeon E5 - PRODUCTION
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
@@ -33,7 +33,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired | macOS 12 (kids' machine) |
-| 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Harvested + configs generated | Fedora 43 |
+| 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Production | Gentoo |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | Production | Gentoo |
 | 7 | Dell Precision 7960 | Xeon W5-3433 16C/32T (Sapphire Rapids) | RTX PRO 6000 96GB + RTX A1000 8GB | Reference only (harvested) | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
@@ -432,9 +432,9 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/surface-pro-6/resume-device.start` | Set /sys/power/resume at boot (enables hibernate with swap file) |
 | `machines/surface-pro-6/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install |
 
-### ASRock B550 Phantom Gaming-ITX/ax (Harvested + Configs Generated)
+### ASRock B550 Phantom Gaming-ITX/ax (Production)
 
-- **Kernel**: Pending install (configs generated 2026-04-05)
+- **Kernel**: Linux 6.18.21-gentoo
 - **Architecture**: x86_64, 16C/32T (Zen 3 / Vermeer, AVX2, SHA, no AVX-512)
 - **Compiler flags**: `-march=znver3 -O2 -pipe`
 - **Key drivers**: nvidia (RTX 3060 Ti GA104, kernel-open), iwlwifi (AX200), igc (I225-V 2.5GbE), nvme, ahci, snd_hda_intel, btusb+btintel, k10temp, ccp, piix4_smbus
@@ -464,7 +464,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ## Future Machine Notes
 
-- **ASRock B550**: First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, kernel-open), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Harvest + configs generated 2026-04-05. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
+- **ASRock B550**: Production. First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, kernel-open), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Installed 2026-04-05. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
 - **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11. Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).
 - **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install. Harvested 2026-03-19. Xeon W5-3433 16C/32T (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, RTX PRO 6000 Blackwell 96GB + RTX A1000 8GB, NVIDIA 590.48.01 CUDA 13.1, 4x Samsung PM9C1a 1.8TB RAID10 via VMD, Aquantia 10GbE + Intel 1GbE, `-march=sapphirerapids`
 - **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).

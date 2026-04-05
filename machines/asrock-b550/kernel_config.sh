@@ -78,24 +78,28 @@ $SC --enable CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 
 # AMD-specific
 $SC --enable MICROCODE
-$SC --enable MICROCODE_AMD
+# MICROCODE_AMD removed ~6.6 — MICROCODE covers both Intel and AMD now
 $SC --enable X86_X2APIC
 $SC --enable AMD_IOMMU
-$SC --enable AMD_IOMMU_V2
+# AMD_IOMMU_V2 removed — PASID/SVA folded into AMD_IOMMU
 
 # AMD thermal — k10temp for Zen family
+$SC --enable AMD_NODE
 $SC --enable SENSORS_K10TEMP
 
 # AMD Address Translation Library (Zen memory error reporting)
+$SC --enable RAS
+$SC --enable MEMORY_FAILURE
 $SC --enable AMD_ATL
 
 # EDAC — AMD MCE decoder
 $SC --enable EDAC
+$SC --enable X86_MCE_AMD
 $SC --module EDAC_DECODE_MCE
-$SC --module EDAC_MCE_AMD
+# EDAC_MCE_AMD renamed to EDAC_DECODE_MCE in 6.18
 
 # KVM (AMD-V / SVM)
-$SC --module KVM
+$SC --enable KVM
 $SC --module KVM_AMD
 
 echo "  [OK] Processor"
@@ -221,6 +225,7 @@ $SC --disable DRM_I915
 $SC --enable FB
 $SC --enable FB_EFI
 $SC --enable FRAMEBUFFER_CONSOLE
+$SC --enable DRM_CLIENT_SELECTION
 $SC --enable DRM_FBDEV_EMULATION
 
 echo "  [OK] GPU"
@@ -234,7 +239,7 @@ $SC --enable SOUND
 $SC --module SND
 $SC --module SND_PCM
 $SC --module SND_HWDEP
-$SC --module SND_SEQ
+$SC --module SND_SEQUENCER
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
@@ -252,7 +257,7 @@ $SC --enable SND_HDA_RECONFIG
 $SC --enable SND_HDA_INPUT_BEEP
 $SC --set-val SND_HDA_INPUT_BEEP_MODE 0
 $SC --enable SND_HDA_PATCH_LOADER
-$SC --enable SND_HDA_POWER_SAVE
+# SND_HDA_POWER_SAVE removed — always available when PM enabled
 $SC --set-val SND_HDA_POWER_SAVE_DEFAULT 1
 
 # Disable SOF (HDA works natively)
@@ -297,6 +302,8 @@ echo "  [OK] Bluetooth"
 # ==========================================================================
 echo "[Phase 11] Ethernet..."
 
+$SC --enable NET_VENDOR_INTEL
+$SC --enable ETHTOOL_NETLINK
 $SC --module IGC
 
 # USB Ethernet (for USB-C hubs/dongles)
@@ -312,14 +319,17 @@ echo "  [OK] Ethernet"
 echo "[Phase 12] Platform drivers..."
 
 # AMD Cryptographic Co-Processor (CCP/PSP)
-$SC --module CRYPTO_DEV_CCP
-$SC --module CRYPTO_DEV_SP_PSP
+$SC --enable CRYPTO_HW
+$SC --enable CRYPTO_DEV_CCP
+$SC --module CRYPTO_DEV_CCP_DD
+$SC --enable CRYPTO_DEV_SP_PSP
 
 # AMD FCH watchdog (sp5100_tco)
 $SC --module SP5100_TCO
 
 # AMD FCH GPIO
-$SC --module PINCTRL_AMD
+$SC --enable PINCTRL
+$SC --enable PINCTRL_AMD
 
 # WMI
 $SC --module ACPI_WMI
@@ -346,6 +356,8 @@ $SC --enable INPUT_EVDEV
 $SC --enable INPUT_UINPUT
 
 # Logitech wireless peripherals (HID++, Unifying receiver)
+$SC --enable HIDRAW
+$SC --enable LEDS_CLASS_MULTICOLOR
 $SC --module HID_LOGITECH
 $SC --module HID_LOGITECH_HIDPP
 $SC --module HID_LOGITECH_DJ
@@ -360,7 +372,7 @@ echo "[Phase 14] I2C and SMBus..."
 # AMD FCH SMBus (piix4 driver, NOT i801 which is Intel)
 $SC --module I2C_PIIX4
 $SC --module I2C_SMBUS
-$SC --module I2C_DEV
+$SC --module I2C_CHARDEV
 
 # SPD EEPROM reading (ee1004 for DDR4)
 $SC --module EEPROM_EE1004
@@ -461,11 +473,11 @@ echo "[Phase 20] Hardware crypto..."
 $SC --module CRYPTO_AES_NI_INTEL
 $SC --module CRYPTO_GHASH_CLMUL_NI_INTEL
 $SC --module CRYPTO_POLYVAL_CLMUL_NI
-$SC --module CRYPTO_SHA256_SSSE3
-$SC --module CRYPTO_SHA512_SSSE3
+# CRYPTO_SHA256_SSSE3 / SHA512_SSSE3 removed — x86 acceleration is now
+# automatic via CRYPTO_LIB_SHA256_ARCH / SHA512_ARCH (default y on x86_64)
 
-# AMD CCP — hardware random number generator
-$SC --module CRYPTO_DEV_CCP
+# AMD CCP — hardware random number generator (already enabled in Phase 12)
+$SC --enable CRYPTO_DEV_CCP
 
 echo "  [OK] Crypto"
 
@@ -479,6 +491,7 @@ $SC --enable SECCOMP
 $SC --enable SECURITY_YAMA
 # AMD-specific mitigations (Spectre v2, etc.)
 $SC --enable MITIGATION_RETPOLINE
+$SC --enable MITIGATION_RETHUNK
 $SC --enable MITIGATION_SRSO
 
 echo "  [OK] Security"
@@ -507,14 +520,12 @@ $SC --disable SOUND_OSS_CORE
 $SC --disable PCMCIA
 $SC --disable PARPORT
 
-# iSCSI (not needed)
+# iSCSI (not needed) — symbols renamed in 6.18
 $SC --disable BE2ISCSI
-$SC --disable BNX2I
-$SC --disable CXGB4I
-$SC --disable CXGB3I
-$SC --disable QLA4XXX
+$SC --disable SCSI_BNX2_ISCSI
 $SC --disable SCSI_CXGB3_ISCSI
 $SC --disable SCSI_CXGB4_ISCSI
+$SC --disable SCSI_QLA_ISCSI
 
 # WiFi drivers not present
 $SC --disable BRCMUTIL

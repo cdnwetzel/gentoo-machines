@@ -219,6 +219,8 @@ env-update && source /etc/profile
 
 echo "[4.3] Setting hostname..."
 echo "$HOSTNAME_VALUE" > /etc/hostname
+# Also set in conf.d/hostname to override DHCP-assigned hostname (OpenRC)
+sed -i "s/^hostname=.*/hostname=\"${HOSTNAME_VALUE}\"/" /etc/conf.d/hostname
 
 cat > /etc/hosts << EOF
 127.0.0.1       localhost

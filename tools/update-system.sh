@@ -86,6 +86,7 @@ declare -A MACHINES=(
     [surface-pro-6]="hostname=surface-pro-6|dmi=Surface Pro|gpu=intel|patches="
     [nuc11]="hostname=nuc11|dmi=NUC11TNBi5|gpu=intel|patches=intel_idle-add-tiger-lake"
     [precision-t5810]="hostname=precision-t5810|dmi=Precision Tower 5810|gpu=nvidia|patches="
+    [asrock-b550]="hostname=asrock-b550|dmi=Asrock B550|gpu=nvidia|patches="
 )
 
 # ============================================================================

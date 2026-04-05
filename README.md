@@ -11,7 +11,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
 | [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Production** (config maintained) | macOS 12 (kids' machine) |
-| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Building** | Gentoo (installing) |
+| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Production** | Gentoo |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
@@ -52,7 +52,7 @@ gentoo-machines/
 │   │   ├── .config        # Kernel config (derived from xps-9315)
 │   │   ├── make.conf      # Portage build settings (-march=tigerlake)
 │   │   └── HARDWARE.md    # Hardware reference
-│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - BUILDING
+│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PRODUCTION
 │   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PRODUCTION
 │   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
 │   └── surface-pro-9/     # Surface Pro 9 - PLANNED
@@ -225,7 +225,7 @@ Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense 
 ### Production (config maintained): MacBook Pro 12,1 (2015)
 Returned to macOS 12 as kids' machine. Kernel config and install scripts maintained in the repo. Full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
 
-### Building: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
+### Production: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
 Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, `kernel-open`), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
 ### Reference Only: Precision 7960 (Multi-GPU Xeon W)
