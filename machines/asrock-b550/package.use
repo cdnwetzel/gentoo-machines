@@ -1,0 +1,15 @@
+# Gentoo package.use - ASRock B550
+
+# Auto grub-mkconfig on make install (kernel updates)
+sys-kernel/installkernel grub
+
+# NVIDIA proprietary driver (RTX 3060 Ti GA104 Ampere)
+# Ampere (GA104) supports kernel-open modules (Turing+ only)
+x11-drivers/nvidia-drivers kernel-open modules tools
+media-libs/mesa -video_cards_nouveau
+
+# NetworkManager — WiFi + BT support (Intel AX200)
+net-misc/networkmanager wifi bluetooth
+
+# xfce4-screensaver wayland requirement
+gui-libs/libwlembed gtk
