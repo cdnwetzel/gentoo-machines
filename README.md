@@ -7,14 +7,14 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | Machine | CPU | GPU | Status | Current OS |
 |---------|-----|-----|--------|------------|
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
-| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Retired** | macOS 12 (kids' machine) |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
-| [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
+| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Production** (config maintained) | macOS 12 (kids' machine) |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Building** | Gentoo (installing) |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
-| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
+| [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
+| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 
 NVIDIA machines use **proprietary nvidia-drivers**. The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
 
@@ -216,20 +216,20 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 ### Production: XPS 9510 (Hybrid GPU)
 Intel iGPU + NVIDIA RTX 3050 Ti with PRIME/Optimus, proprietary nvidia-drivers. PipeWire audio, SSTP VPN, thermald + tlp power management. Dual NVMe, 32GB RAM, zram 8GB zstd swap. Full 3-phase automated install.
 
-### Retired: MacBook Pro 12,1 (2015)
-Returned to macOS 12 as kids' machine. Configs preserved for reference. Had full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
+### Production: Precision T5810 (Xeon Broadwell-EP)
+Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test for AI inference: 7B models on CPU, 1.5B on GPU. Mirrors production 7960.
 
 ### Production: Surface Pro 6
 Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense display with 150% HiDPI scaling. WiFi power save workarounds for suspend reliability. Full 3-phase automated install with HiDPI configuration throughout (LightDM, XFCE, GTK greeter).
 
-### Reference Only: Precision 7960 (Multi-GPU Xeon W)
-Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
+### Production (config maintained): MacBook Pro 12,1 (2015)
+Returned to macOS 12 as kids' machine. Kernel config and install scripts maintained in the repo. Full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
 
 ### Building: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
 Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, `kernel-open`), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
-### Production: Precision T5810 (Xeon Broadwell-EP)
-Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test for AI inference: 7B models on CPU, 1.5B on GPU. Mirrors production 7960.
+### Reference Only: Precision 7960 (Multi-GPU Xeon W)
+Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
 
 ### Kernel Strategy
 
