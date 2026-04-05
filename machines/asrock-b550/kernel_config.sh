@@ -84,7 +84,7 @@ $SC --enable AMD_IOMMU
 $SC --enable AMD_IOMMU_V2
 
 # AMD thermal — k10temp for Zen family
-$SC --enable K10TEMP
+$SC --enable SENSORS_K10TEMP
 
 # AMD Address Translation Library (Zen memory error reporting)
 $SC --enable AMD_ATL
