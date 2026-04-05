@@ -11,7 +11,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
-| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Planned | Fedora 42 |
+| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Building** | Gentoo (installing) |
 | [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
@@ -52,7 +52,7 @@ gentoo-machines/
 │   │   ├── .config        # Kernel config (derived from xps-9315)
 │   │   ├── make.conf      # Portage build settings (-march=tigerlake)
 │   │   └── HARDWARE.md    # Hardware reference
-│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PLANNED
+│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - BUILDING
 │   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PRODUCTION
 │   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
 │   └── surface-pro-9/     # Surface Pro 9 - PLANNED
@@ -153,7 +153,7 @@ sudo tools/update-system.sh clean          # eclean-kernel -n 3 (keep current + 
 | Flag | Description |
 |------|-------------|
 | `--dry-run` | Preview what each phase would do without making changes |
-| `--machine NAME` | Override auto-detection (valid: xps-9510, mbp-2015, surface-pro-6, nuc11) |
+| `--machine NAME` | Override auto-detection (valid: xps-9510, mbp-2015, surface-pro-6, nuc11, asrock-b550, precision-t5810) |
 | `-h`, `--help` | Show usage |
 
 **Config strategy:** same-series updates (e.g., 6.18.12 → 6.18.16) copy the running `.config` and run `make olddefconfig`. Cross-series migrations (e.g., 6.12 → 6.18) start from `make defconfig`, apply the machine's `kernel_config.sh`, then run `make olddefconfig`.
@@ -203,12 +203,13 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 
 ### Per-Machine Differences
 
-| Setting | XPS 9510 | Surface Pro 6 | T5810 | NUC11 | XPS 9315 | Future AMD |
-|---------|----------|---------------|-------|-------|----------|------------|
-| `-march=` | `tigerlake` | `skylake` | `broadwell` | `tigerlake` | `alderlake` | `znver3` |
-| `VIDEO_CARDS` | `intel iris nvidia` | `intel` | `nvidia` | `intel iris` | `intel iris` | `nvidia` |
-| AVX-512 | Yes | No | No | Yes | No | No |
-| Hybrid cores | No | No | No | No | Yes | No |
+| Setting | XPS 9510 | Surface Pro 6 | T5810 | B550 | NUC11 | XPS 9315 |
+|---------|----------|---------------|-------|------|-------|----------|
+| `-march=` | `tigerlake` | `skylake` | `broadwell` | `znver3` | `tigerlake` | `alderlake` |
+| `VIDEO_CARDS` | `intel iris nvidia` | `intel` | `nvidia` | `nvidia` | `intel iris` | `intel iris` |
+| AVX-512 | Yes | No | No | No | Yes | No |
+| Hybrid cores | No | No | No | No | No | Yes |
+| CPU vendor | Intel | Intel | Intel | AMD | Intel | Intel |
 
 ## Machine Notes
 
@@ -224,8 +225,8 @@ Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense 
 ### Reference Only: Precision 7960 (Multi-GPU Xeon W)
 Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
 
-### Planned: ASRock B550 (First AMD)
-Ryzen 9 5950X with SATA SSDs. First AMD build — needs `CONFIG_CPU_SUP_AMD`, `CONFIG_AMD_IOMMU`, `-march=znver3`.
+### Building: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
+Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, `kernel-open`), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
 ### Production: Precision T5810 (Xeon Broadwell-EP)
 Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test for AI inference: 7B models on CPU, 1.5B on GPU. Mirrors production 7960.
