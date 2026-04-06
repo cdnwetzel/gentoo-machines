@@ -253,10 +253,9 @@ while IFS= read -r line; do
 
     # --- CHECK 5: Unknown config option ---
     if [[ -z "$DB_ENTRY" ]]; then
-        # Check if suppressed with 2>/dev/null || true
+        # Check if suppressed with 2>/dev/null || true — skip silently
         if [[ "$line" =~ 2\>/dev/null ]] || [[ "$line" =~ \|\|[[:space:]]*true ]]; then
-            # Script already handles this gracefully
-            info "$LINE_NUM" "$SYMBOL: not found in kernel source (handled by script)"
+            continue
         else
             info "$LINE_NUM" "$SYMBOL: not found in kernel source (typo? wrong kernel version?)"
         fi
