@@ -156,10 +156,11 @@ find -L "$KSRC" -name 'Kconfig*' -not -path '*/.git/*' -print0 2>/dev/null | \
     /^[\t ][[:space:]]*int[[:space:]]/ { type = "int" }
     /^[\t ][[:space:]]*hex[[:space:]]/ { type = "hex" }
 
-    # depends on
+    # depends on (strip trailing # comments before recording)
     /^[\t ][[:space:]]*depends on[[:space:]]+/ {
         dep = $0
         sub(/^[\t ][[:space:]]*depends on[[:space:]]+/, "", dep)
+        sub(/[[:space:]]*#.*$/, "", dep)
         sub(/[[:space:]]*$/, "", dep)
         if (depends != "") depends = depends " && "
         depends = depends dep
@@ -296,7 +297,7 @@ while IFS= read -r line; do
                 # x86 auto-selected symbols (always set on x86_64)
                 X86_LOCAL_APIC|X86_THERMAL_VECTOR|IA32_FEAT_CTL|GENERIC_CLOCKEVENTS|USB_ARCH_HAS_HCD|PAGE_SIZE_LESS_THAN_256KB|SUSPEND_POSSIBLE) continue ;;
                 # Non-x86 architectures (irrelevant in OR deps)
-                ARM64|RISCV|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH|PPC_BOOK3S|PPC_E500|PPC_BOOK3S_64) continue ;;
+                ARM64|RISCV|RISCV_SBI|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH|PPC_BOOK3S|PPC_E500|PPC_BOOK3S_64) continue ;;
                 # Subsystem parent menus (always on in any desktop config)
                 USB_SUPPORT|HID_SUPPORT|NETDEVICES|NET_CORE|INPUT_MISC|USB_NET_DRIVERS|USB_PCI|NLS|SCSI|LOONGARCH|X86_PLATFORM_DEVICES|DMADEVICES|COMMON_CLK|HIGH_RES_TIMERS|EVENTFD|FB_CORE|BLK_CGROUP|POWERCAP|VIRTUALIZATION|VHOST_MENU|SND_HDA|SND_HDA_CORE|SND_PCI|SND_SOC|SND_HDA|CPU_MITIGATIONS|HYPERVISOR_GUEST|PTP_1588_CLOCK_OPTIONAL|BT_BREDR|IIO_BUFFER|USB_USBNET|NEW_LEDS|LEDS_CLASS) continue ;;
                 # Compiler / toolchain capabilities (auto-detected, not settable)
@@ -331,7 +332,7 @@ while IFS= read -r line; do
                 # x86 auto-selected symbols (always set on x86_64)
                 X86_LOCAL_APIC|X86_THERMAL_VECTOR|IA32_FEAT_CTL|GENERIC_CLOCKEVENTS|USB_ARCH_HAS_HCD|PAGE_SIZE_LESS_THAN_256KB|SUSPEND_POSSIBLE) continue ;;
                 # Non-x86 architectures (irrelevant in OR deps)
-                ARM64|RISCV|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH|PPC_BOOK3S|PPC_E500|PPC_BOOK3S_64) continue ;;
+                ARM64|RISCV|RISCV_SBI|ARM|MIPS|POWERPC|S390|SPARC|LOONGARCH|PPC_BOOK3S|PPC_E500|PPC_BOOK3S_64) continue ;;
                 # Subsystem parent menus
                 USB_SUPPORT|HID_SUPPORT|NETDEVICES|NET_CORE|INPUT_MISC|USB_NET_DRIVERS|USB_PCI|NLS|SCSI|LOONGARCH|X86_PLATFORM_DEVICES|DMADEVICES|COMMON_CLK|HIGH_RES_TIMERS|EVENTFD|FB_CORE|BLK_CGROUP|POWERCAP|VIRTUALIZATION|VHOST_MENU|SND_HDA|SND_HDA_CORE|SND_PCI|SND_SOC|CPU_MITIGATIONS|HYPERVISOR_GUEST|PTP_1588_CLOCK_OPTIONAL|BT_BREDR|IIO_BUFFER|USB_USBNET) continue ;;
                 # Common lib/feature selections

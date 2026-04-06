@@ -50,7 +50,6 @@ $SC --disable MOUSE_BCM5974
 $SC --disable KEYBOARD_APPLESPI
 $SC --disable SPI_PXA2XX
 $SC --disable SPI_PXA2XX_PCI
-$SC --disable SPI_PXA2XX_PLATFORM
 $SC --disable MOUSE_APPLETOUCH
 
 # Remove Broadcom WiFi (MBP uses BCM43602)
@@ -66,6 +65,7 @@ $SC --disable SND_HDA_CODEC_CS420X
 
 # Remove SATA AHCI as built-in (Surface uses NVMe)
 # Keep AHCI as module for USB docks if needed
+$SC --enable ATA
 $SC --module SATA_AHCI
 
 # Remove Thunderbolt/USB4 (Surface Pro 6 has no Thunderbolt)
@@ -117,8 +117,8 @@ $SC --enable INTEL_IDLE
 $SC --enable X86_X2APIC
 
 # Kaby Lake-R thermal/power (confirmed via /sys/class/thermal)
+$SC --enable PERF_EVENTS
 $SC --enable INTEL_RAPL
-$SC --module INTEL_RAPL_MSR
 $SC --module PERF_EVENTS_INTEL_RAPL
 $SC --enable X86_PKG_TEMP_THERMAL
 $SC --enable INTEL_POWERCLAMP
@@ -365,7 +365,7 @@ $SC --module SURFACE_AGGREGATOR_HUB
 $SC --module SURFACE_AGGREGATOR_TABLET_SWITCH
 
 # Surface battery (requires SAM + serdev UART connection)
-$SC --module SURFACE_BATTERY
+# Note: actual symbol is BATTERY_SURFACE (set in Phase 12 power section below)
 
 # Surface ACPI and power
 $SC --module SURFACE_ACPI_NOTIFY
@@ -477,6 +477,7 @@ $SC --enable MFD_INTEL_LPSS_ACPI
 $SC --enable MFD_INTEL_LPSS_PCI
 
 # DesignWare 8250 UART (SAM communicates via dw-apb-uart on LPSS UART 00:1e.0)
+$SC --enable SERIAL_8250
 $SC --enable SERIAL_8250_DW
 
 # DesignWare I2C (i2c-0..3 confirmed via sysfs)
