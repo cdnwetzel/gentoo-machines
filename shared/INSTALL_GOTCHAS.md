@@ -406,4 +406,28 @@ emerge xfce-base/xfce4-meta
 echo "exec startxfce4" > ~/.xinitrc
 gpasswd -a chris video
 ```
-**Prevention**: Consider adding a part4 desktop install phase to automate this.
+**Prevention**: Part3 scripts now use `default/linux/amd64/23.0/desktop` profile.
+
+## 31. Stale EFI Boot Entries from Previous OS
+**Problem (ASRock B550)**: After installing Gentoo over Fedora + Windows, old EFI
+boot entries remained (Fedora, Windows Boot Manager, duplicates).
+**Fix**: Clean up manually after install:
+```bash
+efibootmgr                    # list entries
+efibootmgr -b 0000 -B        # delete by number
+```
+**Impact**: Cosmetic — old entries may appear in BIOS boot menu but won't boot.
+**Prevention**: Varies by machine. Not scriptable since entry numbers differ.
+
+## 32. set -euo pipefail Kills Install Scripts on Benign Failures
+**Problem (ASRock B550)**: Part1 and part3 scripts die on commands that return
+non-zero in normal operation (grep with no match, ls with missing globs, blkid
+before kernel picks up new partitions).
+**Fix**: Guard all commands that can legitimately return non-zero:
+```bash
+grep pattern file || true                              # grep no-match
+ls /boot/vmlinuz-* 2>/dev/null || echo "[WARN] ..."    # glob no-match
+$(blkid ... 2>/dev/null || echo 'NOT FOUND')           # blkid timing
+```
+**Prevention**: Audit all scripts with pipefail in mind. Any bare grep, ls with
+globs, or command substitution that can fail needs a guard.

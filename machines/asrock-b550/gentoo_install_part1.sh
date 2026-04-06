@@ -121,7 +121,7 @@ if [[ -n "$MOUNTED" ]]; then
     echo ""
 fi
 
-MODEL=$(cat /sys/block/nvme0n1/device/model 2>/dev/null | tr -s ' ' || echo 'unknown')
+MODEL=$(cat /sys/block/"$(basename "$TARGET")"/device/model 2>/dev/null | tr -s ' ' || echo 'unknown')
 echo "*** THIS WILL DESTROY ALL DATA ON $TARGET ***"
 echo "    Model: $MODEL"
 echo "    Size:  $(lsblk -no SIZE "$TARGET" | head -1)"
@@ -219,9 +219,9 @@ lsblk -o NAME,SIZE,TYPE,FSTYPE,PARTLABEL,LABEL "$TARGET"
 echo ""
 
 echo "UUIDs (save these for fstab):"
-echo "  EFI  (${PART_PREFIX}1): $(blkid -s UUID -o value "${PART_PREFIX}1")"
-echo "  BOOT (${PART_PREFIX}2): $(blkid -s UUID -o value "${PART_PREFIX}2")"
-echo "  ROOT (${PART_PREFIX}3): $(blkid -s UUID -o value "${PART_PREFIX}3")"
+echo "  EFI  (${PART_PREFIX}1): $(blkid -s UUID -o value "${PART_PREFIX}1" 2>/dev/null || echo 'NOT FOUND')"
+echo "  BOOT (${PART_PREFIX}2): $(blkid -s UUID -o value "${PART_PREFIX}2" 2>/dev/null || echo 'NOT FOUND')"
+echo "  ROOT (${PART_PREFIX}3): $(blkid -s UUID -o value "${PART_PREFIX}3" 2>/dev/null || echo 'NOT FOUND')"
 echo ""
 
 # Validate partitions have valid UUIDs

@@ -121,8 +121,8 @@ do_phase1_bootstrap() {
     emerge-webrsync
     emerge --sync
 
-    echo "[1.2] Setting profile..."
-    eselect profile set default/linux/amd64/23.0
+    echo "[1.2] Setting profile (desktop for XFCE/LightDM)..."
+    eselect profile set default/linux/amd64/23.0/desktop
 
     echo "[1.3] Updating @world with USE flags..."
     echo "  This may take 10-20 minutes..."
@@ -168,7 +168,7 @@ do_phase2_kernel() {
     make install
 
     echo "[2.8] Verifying kernel installation..."
-    ls -la /boot/vmlinuz-* /boot/config-* /boot/System.map-*
+    ls -la /boot/vmlinuz-* /boot/config-* /boot/System.map-* 2>/dev/null || echo "  [WARN] Some boot files may be missing — check /boot/"
 }
 
 do_phase3_bootloader() {
@@ -206,7 +206,7 @@ EOF
     grub-mkconfig -o /boot/grub/grub.cfg
 
     echo "[3.5] Verifying GRUB sees kernel..."
-    grep menuentry /boot/grub/grub.cfg
+    grep menuentry /boot/grub/grub.cfg || echo "  [WARN] No menuentry found in grub.cfg!"
 }
 
 do_phase4_sysconfig() {
@@ -258,7 +258,7 @@ do_phase5_networking() {
         net-wireless/bluez
 
     echo "[5.2] Verifying wpa_supplicant dbus support..."
-    emerge -pv net-wireless/wpa_supplicant | grep dbus || echo "  WARNING: Check dbus USE flag!"
+    emerge -pv net-wireless/wpa_supplicant 2>/dev/null | grep dbus || echo "  WARNING: Check dbus USE flag!"
 
     echo "[5.3] Enabling NetworkManager..."
     rc-update add NetworkManager default
@@ -318,6 +318,7 @@ do_phase8_services() {
     rc-update add zram-init boot
     rc-update add alsasound boot
     rc-update add bluetooth default
+    rc-update add chronyd default
 
     echo ""
     echo "[8.2] Verifying critical services..."
@@ -453,7 +454,7 @@ do_phase13_verify() {
     ls /usr/share/xsessions/xfce.desktop &>/dev/null && echo "[OK] xfce.desktop exists" || { echo "[FAIL] xfce.desktop!"; FAIL=$((FAIL+1)); }
 
     # --- Services ---
-    REQUIRED_SVCS="dbus NetworkManager display-manager acpid sshd metalog local netmount"
+    REQUIRED_SVCS="dbus NetworkManager display-manager acpid sshd metalog local netmount chronyd"
     for svc in $REQUIRED_SVCS; do
         rc-update show default 2>/dev/null | grep -q "$svc" && echo "[OK] $svc enabled" || { echo "[FAIL] $svc NOT enabled!"; FAIL=$((FAIL+1)); }
     done

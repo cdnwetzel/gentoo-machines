@@ -357,6 +357,8 @@ $SC --enable INPUT_UINPUT
 
 # Logitech wireless peripherals (HID++, Unifying receiver)
 $SC --enable HIDRAW
+$SC --enable NEW_LEDS
+$SC --enable LEDS_CLASS
 $SC --enable LEDS_CLASS_MULTICOLOR
 $SC --module HID_LOGITECH
 $SC --module HID_LOGITECH_HIDPP

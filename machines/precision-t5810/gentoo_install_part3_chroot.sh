@@ -82,8 +82,8 @@ echo "[1.1] Syncing portage tree..."
 emerge-webrsync
 emerge --sync
 
-echo "[1.2] Setting profile..."
-eselect profile set default/linux/amd64/23.0
+echo "[1.2] Setting profile (desktop for XFCE/LightDM)..."
+eselect profile set default/linux/amd64/23.0/desktop
 
 echo "[1.3] Updating @world with USE flags..."
 echo "  This may take 10-20 minutes..."
@@ -140,7 +140,7 @@ echo "[2.7] Installing kernel..."
 make install
 
 echo "[2.8] Verifying kernel installation..."
-ls -la /boot/vmlinuz-* /boot/config-* /boot/System.map-*
+ls -la /boot/vmlinuz-* /boot/config-* /boot/System.map-* 2>/dev/null || echo "  [WARN] Some boot files may be missing — check /boot/"
 
 echo ""
 echo "[OK] Phase 2 complete."
@@ -194,7 +194,7 @@ echo "[3.4] Generating GRUB config..."
 grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "[3.5] Verifying GRUB sees kernel..."
-grep menuentry /boot/grub/grub.cfg
+grep menuentry /boot/grub/grub.cfg || echo "  [WARN] No menuentry found in grub.cfg!"
 
 echo ""
 echo "[OK] Phase 3 complete."
@@ -262,7 +262,7 @@ if [[ $HAS_WIFI -eq 1 ]]; then
         net-wireless/wireless-regdb
 
     echo "[5.2] Verifying wpa_supplicant dbus support..."
-    emerge -pv net-wireless/wpa_supplicant | grep dbus || echo "  WARNING: Check dbus USE flag!"
+    emerge -pv net-wireless/wpa_supplicant 2>/dev/null | grep dbus || echo "  WARNING: Check dbus USE flag!"
 else
     echo "[5.1] Installing networking packages (wired only — no WiFi on this machine)..."
     emerge --verbose net-misc/networkmanager \
@@ -355,6 +355,7 @@ rc-update add alsasound boot
 if [[ $HAS_BLUETOOTH -eq 1 ]]; then
     rc-update add bluetooth default
 fi
+rc-update add chronyd default
 
 if [[ $IS_LAPTOP -eq 1 ]]; then
     # Laptop-only services
