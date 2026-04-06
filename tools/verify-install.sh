@@ -32,6 +32,8 @@ check_service() {
 check_module() {
     if lsmod | grep -qw "$1"; then
         pass "Module: $1"
+    elif [ -d "/sys/module/$1" ]; then
+        pass "Module: $1 (built-in)"
     else
         warn "Module $1 not loaded"
     fi
