@@ -18,7 +18,8 @@
 #                   show news (requires root)
 #   world         - Update @world + preserved-rebuild + depclean (requires root)
 #   config-update - Merge updated config files (auto-accept new versions) (requires root)
-#   check         - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy
+#   check         - Pre-flight: versions, disk, NVIDIA compat, patches, config strategy,
+#                   drift detection (does a fresh prepare actually change anything?)
 #   prepare       - Backup .config, migrate config (copy or script), apply patches, lint
 #   build         - make -j$(nproc) with timing
 #   install       - modules_install + make install + NVIDIA rebuild + verify state
@@ -67,6 +68,11 @@ KERNEL_SRC="/usr/src/linux"
 # --- Flags ---
 DRY_RUN=false
 MACHINE_OVERRIDE=""
+
+# --- State shared across phases (set by do_check, read by do_full) ---
+# 0 = no rebuild needed (running kernel matches a fresh prepare)
+# 1 = rebuild needed (default — safe assumption when undetermined)
+REBUILD_NEEDED=1
 
 # --- Colors ---
 RED='\033[1;31m'
@@ -593,8 +599,144 @@ do_check() {
         info "kernel_config.sh: not present"
     fi
 
+    # Drift check — sets REBUILD_NEEDED for do_full to consume
+    header "Rebuild Check"
+    check_rebuild_needed "$machine" "$(get_running_release)" "$(get_target_release)"
+
     echo ""
-    info "Run '${0##*/} prepare' to start the update."
+    if (( REBUILD_NEEDED == 0 )); then
+        info "${GREEN}System is up to date — no rebuild needed.${RESET}"
+        info "Run '${0##*/} verify' to re-check the running system, or '${0##*/} clean' to prune old kernels."
+    else
+        info "Run '${0##*/} prepare' to start the update."
+    fi
+}
+
+# ============================================================================
+# check_rebuild_needed — Detect whether a rebuild would actually change anything
+# ============================================================================
+# Sets the global REBUILD_NEEDED:
+#   0 = no rebuild needed (running == target AND a fresh prepare would
+#       produce a .config identical to the installed one)
+#   1 = rebuild needed (any precondition fails, drift detected, or
+#       check could not be completed — fail safe)
+#
+# Approach: simulate a same-series prepare in a tempdir.
+#   1. Seed sandbox with /boot/config-<target>
+#   2. Stage scripts/config locally so kernel_config.sh's `./scripts/config` works
+#   3. Run kernel_config.sh in the sandbox (idempotent transform)
+#   4. `make O=$tmpdir olddefconfig` to resolve dependencies
+#   5. Hash semantic config lines and compare against the installed config
+#
+# Cost: ~10-15s on slow machines (kernel_config.sh dominates), <5s on fast.
+# ============================================================================
+check_rebuild_needed() {
+    local machine="$1" running_release="$2" target_release="$3"
+    REBUILD_NEEDED=1   # safe default
+
+    if [[ -z "$target_release" ]]; then
+        warn "Cannot determine target release — assuming rebuild needed"
+        return 0
+    fi
+
+    if [[ "$running_release" != "$target_release" ]]; then
+        info "Rebuild needed: running ${running_release} ≠ target ${target_release}"
+        return 0
+    fi
+
+    if [[ ! -f "/boot/vmlinuz-${target_release}" ]]; then
+        info "Rebuild needed: /boot/vmlinuz-${target_release} not installed"
+        return 0
+    fi
+
+    if [[ ! -f "/boot/config-${target_release}" ]]; then
+        warn "Cannot drift-check: /boot/config-${target_release} missing — assuming rebuild needed"
+        return 0
+    fi
+
+    local kconfig_script="${REPO_DIR}/machines/${machine}/kernel_config.sh"
+    if [[ ! -f "$kconfig_script" ]]; then
+        warn "Cannot drift-check: no kernel_config.sh for ${machine} — assuming rebuild needed"
+        return 0
+    fi
+
+    if [[ ! -x "${KERNEL_SRC}/scripts/config" ]]; then
+        warn "Cannot drift-check: ${KERNEL_SRC}/scripts/config missing — assuming rebuild needed"
+        return 0
+    fi
+
+    if [[ ! -x "${KERNEL_SRC}/scripts/kconfig/conf" ]]; then
+        warn "Cannot drift-check: ${KERNEL_SRC}/scripts/kconfig/conf missing (run a build first) — assuming rebuild needed"
+        return 0
+    fi
+
+    # Map host arch to kernel ARCH/SRCARCH
+    local arch
+    case "$(uname -m)" in
+        x86_64|i?86)  arch=x86 ;;
+        aarch64)      arch=arm64 ;;
+        *)            arch=$(uname -m) ;;
+    esac
+
+    info "Simulating fresh prepare in sandbox (this takes ~10-15s)..."
+
+    local tmpdir
+    tmpdir=$(mktemp -d "/tmp/update-system-drift.XXXXXX")
+
+    # Seed: same starting point as same-series prepare
+    cp "/boot/config-${target_release}" "$tmpdir/.config"
+
+    # Stage scripts/config so kernel_config.sh's `./scripts/config` resolves
+    mkdir -p "$tmpdir/scripts"
+    cp "${KERNEL_SRC}/scripts/config" "$tmpdir/scripts/config"
+    chmod +x "$tmpdir/scripts/config"
+
+    if ! ( cd "$tmpdir" && bash "$kconfig_script" >/dev/null 2>&1 ); then
+        warn "Drift check failed: kernel_config.sh errored in sandbox — assuming rebuild needed"
+        rm -rf "$tmpdir"
+        return 0
+    fi
+
+    # Resolve dependencies via direct conf invocation with KCONFIG_CONFIG.
+    # We avoid `make olddefconfig` because the source tree is dirty after a
+    # build (`make O=` refuses) and `make` would try to rebuild scripts/basic
+    # under the user's UID. conf is already built, so we just point it at the
+    # sandbox file and let it parse the in-tree Kconfig hierarchy directly.
+    if ! ( cd "${KERNEL_SRC}" && \
+            srctree="${KERNEL_SRC}" \
+            ARCH="$arch" SRCARCH="$arch" \
+            CC=gcc HOSTCC=gcc LD=ld \
+            KCONFIG_CONFIG="$tmpdir/.config" \
+            ./scripts/kconfig/conf --olddefconfig Kconfig >/dev/null 2>&1 ); then
+        warn "Drift check failed: scripts/kconfig/conf errored in sandbox — assuming rebuild needed"
+        rm -rf "$tmpdir"
+        return 0
+    fi
+
+    # Compare semantic config lines (ignore comments, sort for order-independence)
+    local sandbox_hash installed_hash
+    sandbox_hash=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "$tmpdir/.config" \
+        | sort | sha256sum | cut -d' ' -f1)
+    installed_hash=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "/boot/config-${target_release}" \
+        | sort | sha256sum | cut -d' ' -f1)
+
+    if [[ "$sandbox_hash" == "$installed_hash" ]]; then
+        rm -rf "$tmpdir"
+        info "${GREEN}No drift${RESET}: installed ${target_release} matches a fresh prepare"
+        REBUILD_NEEDED=0
+        return 0
+    fi
+
+    # Drift detected — count differing lines as a hint
+    local diff_lines
+    diff_lines=$(diff \
+        <(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "/boot/config-${target_release}" | sort) \
+        <(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "$tmpdir/.config" | sort) \
+        | grep -cE '^[<>]' || true)
+    rm -rf "$tmpdir"
+    warn "Drift detected: ${diff_lines} config lines differ between installed and a fresh prepare"
+    info "Rebuild needed to converge installed kernel with kernel_config.sh"
+    return 0
 }
 
 # ============================================================================
@@ -1433,6 +1575,19 @@ do_full() {
         do_config_update
     run_full_phase check          "Pre-flight report (versions, disk, patches)" \
         do_check "$machine"
+
+    # If do_check determined no rebuild is needed, auto-mark prepare/build/install
+    # as done so the workflow drops straight to verify/clean. Also clear any stale
+    # pending-verify state so the post-install reboot prompt doesn't fire.
+    if (( REBUILD_NEEDED == 0 )) && ! $DRY_RUN; then
+        echo ""
+        info "${GREEN}Skipping prepare/build/install — installed kernel matches a fresh prepare.${RESET}"
+        rm -f "$PENDING_FILE"
+        for skip_phase in prepare build install; do
+            phase_done "$skip_phase" || mark_done "$skip_phase"
+        done
+    fi
+
     run_full_phase prepare "Backup config + migrate + apply patches + lint" \
         do_prepare "$machine"
     run_full_phase build   "Compile kernel with make -j$(nproc)" \
