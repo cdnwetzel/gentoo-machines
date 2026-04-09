@@ -958,17 +958,40 @@ do_verify() {
         fi
     fi
 
+    # ------------------------------------------------------------------
+    # Known-benign patterns: filtered from error counts but reported as info
+    # so a change in count is still visible. Each entry MUST have a comment
+    # explaining WHY it's benign — future-you will need it.
+    # ------------------------------------------------------------------
+    # General (apply to every machine)
+    local benign_dmesg='error\.recovery|failsafe|fail.over|aer.*corrected|manage.error'
+    benign_dmesg+='|rdinit=/init failed'                            # no initramfs — kernel falls back to /sbin/init, harmless
+    local benign_services=''                                        # space-separated service names expected to be stopped
+
+    case "$machine" in
+        surface-pro-6)
+            benign_dmesg+='|mwifiex.*nxp/rgpower_.*\.bin'           # Marvell regulatory power tables not shipped by linux-firmware; WiFi works without
+            benign_dmesg+='|dw-apb-uart.*failed to request DMA'     # SP6 SAM UART chain — DMA optional, polling fallback fine
+            benign_services='xdm'                                    # SP6 uses lightdm; xdm shipped in default runlevel but never started
+            ;;
+    esac
+
     header "Boot Messages"
-    local error_count
-    local dmesg_filter='(error\.recovery|failsafe|fail.over|aer.*corrected|manage.error)'
-    error_count=$(dmesg 2>/dev/null | grep -i -E "(error|fail)" | grep -icv -E "$dmesg_filter" || true)
-    if (( error_count == 0 )); then
-        info "No errors or failures in dmesg"
+    local raw_errors filtered_errors benign_dmesg_count
+    raw_errors=$(dmesg 2>/dev/null | grep -ciE "(error|fail)" || true)
+    filtered_errors=$(dmesg 2>/dev/null | grep -iE "(error|fail)" | grep -icvE "$benign_dmesg" || true)
+    benign_dmesg_count=$(( raw_errors - filtered_errors ))
+    if (( filtered_errors == 0 )); then
+        if (( benign_dmesg_count > 0 )); then
+            info "No errors in dmesg (${benign_dmesg_count} known-benign filtered)"
+        else
+            info "No errors or failures in dmesg"
+        fi
     else
-        warn "${error_count} lines with error/fail in dmesg (excluding benign patterns)"
-        dmesg 2>/dev/null | grep -i -E "(error|fail)" | grep -iv -E "$dmesg_filter" | head -10
-        if (( error_count > 10 )); then
-            warn "... and $(( error_count - 10 )) more (run 'dmesg | grep -i error' to see all)"
+        warn "${filtered_errors} lines with error/fail in dmesg (${benign_dmesg_count} known-benign filtered)"
+        dmesg 2>/dev/null | grep -iE "(error|fail)" | grep -ivE "$benign_dmesg" | head -10
+        if (( filtered_errors > 10 )); then
+            warn "... and $(( filtered_errors - 10 )) more (run 'dmesg | grep -i error' to see all)"
         fi
     fi
 
@@ -990,24 +1013,43 @@ do_verify() {
     fi
 
     header "Firmware"
-    local fw_errors
-    fw_errors=$(dmesg 2>/dev/null | grep -ci "firmware.*error\|firmware.*fail\|firmware.*missing" || true)
-    if (( fw_errors == 0 )); then
-        info "No firmware errors in dmesg"
+    local fw_raw fw_filtered fw_benign
+    fw_raw=$(dmesg 2>/dev/null | grep -ciE "firmware.*(error|fail|missing)" || true)
+    fw_filtered=$(dmesg 2>/dev/null | grep -iE "firmware.*(error|fail|missing)" | grep -icvE "$benign_dmesg" || true)
+    fw_benign=$(( fw_raw - fw_filtered ))
+    if (( fw_filtered == 0 )); then
+        if (( fw_benign > 0 )); then
+            info "No firmware errors in dmesg (${fw_benign} known-benign filtered)"
+        else
+            info "No firmware errors in dmesg"
+        fi
     else
-        warn "${fw_errors} firmware-related errors in dmesg:"
-        dmesg 2>/dev/null | grep -i "firmware.*error\|firmware.*fail\|firmware.*missing" | head -5
+        warn "${fw_filtered} firmware-related errors in dmesg (${fw_benign} known-benign filtered):"
+        dmesg 2>/dev/null | grep -iE "firmware.*(error|fail|missing)" | grep -ivE "$benign_dmesg" | head -5
     fi
 
     header "Services"
     if command -v rc-status &>/dev/null; then
-        local failed
-        failed=$(rc-status 2>/dev/null | grep -c "crashed\|stopped" || true)
-        if (( failed == 0 )); then
+        local failed_raw_count failed_lines failed_filtered_count benign_svc_count
+        failed_raw_count=$(rc-status 2>/dev/null | grep -cE "crashed|stopped" || true)
+        if (( failed_raw_count == 0 )); then
             info "All OpenRC services running"
         else
-            warn "${failed} services crashed or stopped:"
-            rc-status 2>/dev/null | grep -E "crashed|stopped"
+            failed_lines=$(rc-status 2>/dev/null | grep -E "crashed|stopped")
+            if [[ -n "$benign_services" ]]; then
+                # Match service name at start of line (rc-status indents with spaces)
+                local benign_re="^[[:space:]]*(${benign_services// /|})[[:space:]]"
+                failed_lines=$(echo "$failed_lines" | grep -vE "$benign_re" || true)
+            fi
+            failed_filtered_count=$(echo -n "$failed_lines" | grep -c . || true)
+            benign_svc_count=$(( failed_raw_count - failed_filtered_count ))
+            if (( failed_filtered_count == 0 )); then
+                info "All services running (${benign_svc_count} known-benign stopped: ${benign_services})"
+            else
+                warn "${failed_filtered_count} services crashed or stopped:"
+                echo "$failed_lines"
+                (( benign_svc_count > 0 )) && info "(${benign_svc_count} known-benign filtered: ${benign_services})"
+            fi
         fi
     fi
 
