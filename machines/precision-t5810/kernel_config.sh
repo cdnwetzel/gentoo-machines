@@ -78,7 +78,7 @@ $SC --enable X86_X2APIC
 $SC --enable INTEL_RAPL
 $SC --enable X86_PKG_TEMP_THERMAL
 $SC --enable INTEL_POWERCLAMP
-$SC --enable CORETEMP
+$SC --enable SENSORS_CORETEMP
 
 # DPTF thermal framework
 # TODO: verify DPTF INT340X device present in ACPI tables
@@ -92,6 +92,7 @@ $SC --module PROC_THERMAL_MMIO_RAPL
 # RAS is required for EDAC to be available
 $SC --enable RAS
 $SC --enable EDAC
+$SC --enable PCI_MMCONFIG
 $SC --module EDAC_DECODE_MCE
 $SC --module EDAC_SBRIDGE  # Sandy Bridge through Broadwell-EP
 
@@ -100,8 +101,8 @@ $SC --enable NUMA
 $SC --enable X86_64_ACPI_NUMA
 $SC --enable ACPI_NUMA
 
-# KVM
-$SC --module KVM
+# KVM (bool — enable, not module)
+$SC --enable KVM
 $SC --module KVM_INTEL
 
 echo "  [OK] Processor"
@@ -174,6 +175,7 @@ $SC --module USB_STORAGE
 $SC --module USB_UAS
 
 # Optical drive (DVD-ROM)
+$SC --enable BLK_DEV
 $SC --enable BLK_DEV_SR
 $SC --enable ISO9660_FS
 $SC --enable UDF_FS
@@ -228,6 +230,7 @@ $SC --enable DRM_KMS_HELPER
 $SC --enable FB
 $SC --enable FB_EFI
 $SC --enable FRAMEBUFFER_CONSOLE
+$SC --enable DRM_CLIENT_SELECTION
 $SC --enable DRM_FBDEV_EMULATION
 
 echo "  [OK] GPU"
@@ -242,7 +245,6 @@ $SC --enable SOUND
 $SC --module SND
 $SC --module SND_PCM
 $SC --module SND_HWDEP
-$SC --module SND_SEQ
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
@@ -260,7 +262,6 @@ $SC --enable SND_HDA_RECONFIG
 $SC --enable SND_HDA_INPUT_BEEP
 $SC --set-val SND_HDA_INPUT_BEEP_MODE 0
 $SC --enable SND_HDA_PATCH_LOADER
-$SC --enable SND_HDA_POWER_SAVE
 $SC --set-val SND_HDA_POWER_SAVE_DEFAULT 1
 
 # Disable SOF (HDA works natively)
@@ -302,7 +303,7 @@ echo "  [OK] Bluetooth"
 # ==========================================================================
 echo "[Phase 11] Thunderbolt..."
 
-$SC --module THUNDERBOLT
+$SC --module USB4
 $SC --module INTEL_WMI_THUNDERBOLT
 
 echo "  [OK] Thunderbolt"
@@ -314,7 +315,6 @@ echo "[Phase 12] Platform drivers..."
 
 # Dell platform — parent toggle required
 $SC --enable X86_PLATFORM_DRIVERS_DELL
-$SC --module DELL_LAPTOP
 $SC --module DELL_WMI
 $SC --module DELL_SMBIOS
 $SC --enable DELL_SMBIOS_WMI
@@ -347,6 +347,7 @@ echo "  [OK] USB/HID"
 # ==========================================================================
 echo "[Phase 17] USB Ethernet..."
 
+$SC --enable NET_VENDOR_INTEL
 $SC --module E1000E
 # USB Ethernet (for USB-C hubs/dongles)
 $SC --module USB_RTL8152
@@ -389,8 +390,6 @@ $SC --disable ACPI_BATTERY
 # MEI (Management Engine)
 $SC --module INTEL_MEI
 $SC --module INTEL_MEI_ME
-$SC --module INTEL_MEI_HDCP
-$SC --module INTEL_MEI_PXP
 
 # Watchdog
 $SC --module ITCO_WDT
@@ -469,8 +468,8 @@ echo "[Phase 24] Hardware crypto..."
 $SC --module CRYPTO_AES_NI_INTEL
 $SC --module CRYPTO_GHASH_CLMUL_NI_INTEL
 $SC --module CRYPTO_POLYVAL_CLMUL_NI
-$SC --module CRYPTO_SHA256_SSSE3
-$SC --module CRYPTO_SHA512_SSSE3
+$SC --module CRYPTO_SHA256
+$SC --module CRYPTO_SHA512
 
 echo "  [OK] Crypto"
 
@@ -505,10 +504,6 @@ $SC --disable PARPORT
 
 # iSCSI (not needed)
 $SC --disable BE2ISCSI
-$SC --disable BNX2I
-$SC --disable CXGB4I
-$SC --disable CXGB3I
-$SC --disable QLA4XXX
 $SC --disable SCSI_CXGB3_ISCSI
 $SC --disable SCSI_CXGB4_ISCSI
 
