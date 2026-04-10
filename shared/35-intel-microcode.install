@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# Quiet override for /usr/lib/kernel/preinst.d/35-intel-microcode.install
+# (shipped by sys-firmware/intel-microcode).
+#
+# Install path: /etc/kernel/preinst.d/35-intel-microcode.install
+#
+# Gentoo's installkernel uses dropindirs_sort, which dedupes plugins by
+# basename and prefers /etc over /usr/lib — so this file fully shadows the
+# upstream one without being clobbered on intel-microcode upgrades.
+#
+# Why: the upstream non-systemd hook hardcodes `--list-all --list`, which
+# dumps every microcode bundle (~300 lines) on every `make install`. The
+# systemd sibling at /usr/lib/kernel/install.d/35-intel-microcode-systemd.install
+# only adds those flags when KERNEL_INSTALL_VERBOSE=1; this file matches that
+# behavior. Drops the iucode_tool dump while still generating intel-uc.img
+# identically.
+#
+# Verbatim copy of upstream with --list-all and --list removed.
+
+die() {
+	echo -e " ${NOCOLOR-\e[1;31m*\e[0m }${*}" >&2
+	exit 1
+}
+
+einfo() {
+	echo -e " ${NOCOLOR-\e[1;32m*\e[0m }${*}" >&2
+}
+
+main() {
+	[[ -n ${NOCOLOR+yes} ]] && NOCOLOR=
+
+	if [[ ${INSTALLKERNEL_INITRD_GENERATOR} == dracut ]]; then
+		echo "initrd_generator=${INSTALLKERNEL_INITRD_GENERATOR} bundles CPU microcode, nothing to do here."
+		exit 0
+	fi
+
+	[[ -x $(command -v iucode_tool) ]] || die "iucode_tool command not available"
+	[[ ${EUID} -eq 0 ]] || die "Please run this script as root"
+
+	local opts=(
+		--write-earlyfw="/boot/intel-uc.img"
+		--overwrite
+		--strict-checks
+		--no-ignore-broken
+		--no-downgrade
+	)
+
+	if [[ -d /lib/firmware/intel-ucode ]]; then
+		einfo "Generating Intel CPU Microcode early initramfs image..."
+		iucode_tool /lib/firmware/intel-ucode "${opts[@]}" ||
+			die "iucode_tool failed"
+	else
+		einfo "No Intel CPU Microcode installed, nothing to do here."
+	fi
+}
+
+main

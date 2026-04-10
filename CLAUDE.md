@@ -218,6 +218,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/low-battery-hibernate.sh` | Cron monitor: auto-hibernate at 5% battery (laptops); desktops use apcupsd |
 | `shared/ksm.start` | KSM enable script, installed to `/etc/local.d/ksm.start` |
 | `shared/fstrim-weekly` | Weekly SSD TRIM maintenance script |
+| `shared/35-intel-microcode.install` | Install to `/etc/kernel/preinst.d/` — quiet override for upstream Intel microcode hook (drops `--list-all --list` dump on every `make install`) |
 | `shared/xhost-local.desktop` | XDG autostart: `xhost +local:` for X11 access |
 | `patches/README.md` | Patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |

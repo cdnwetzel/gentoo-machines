@@ -1002,20 +1002,26 @@ do_install() {
         fi
     fi
 
-    # NVIDIA rebuild
+    # NVIDIA rebuild — skipped if a postinst.d hook already handled it during
+    # `make install` above (avoids rebuilding nvidia-drivers twice).
     local gpu_type
     gpu_type=$(get_machine_field "$machine" gpu)
     if [[ "$gpu_type" == "nvidia" ]]; then
-        header "NVIDIA Module Rebuild"
-        if $DRY_RUN; then
-            info "[dry-run] Would run: emerge @module-rebuild"
+        if [[ -x /etc/kernel/postinst.d/99-module-rebuild.install ]] && ! $DRY_RUN; then
+            header "NVIDIA Module Rebuild"
+            info "Skipped — handled by /etc/kernel/postinst.d/99-module-rebuild.install during make install"
         else
-            info "Rebuilding out-of-tree modules (nvidia-drivers, etc.)..."
-            env -i HOME=/root TERM="${TERM:-linux}" \
-                KERNEL_DIR="${KERNEL_SRC}" \
-                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin" \
-                emerge @module-rebuild
-            info "Module rebuild complete"
+            header "NVIDIA Module Rebuild"
+            if $DRY_RUN; then
+                info "[dry-run] Would run: emerge @module-rebuild"
+            else
+                info "Rebuilding out-of-tree modules (nvidia-drivers, etc.)..."
+                env -i HOME=/root TERM="${TERM:-linux}" \
+                    KERNEL_DIR="${KERNEL_SRC}" \
+                    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin" \
+                    emerge @module-rebuild
+                info "Module rebuild complete"
+            fi
         fi
     fi
 
@@ -1108,6 +1114,7 @@ do_verify() {
     # General (apply to every machine)
     local benign_dmesg='error\.recovery|failsafe|fail.over|aer.*corrected|manage.error'
     benign_dmesg+='|rdinit=/init failed'                            # no initramfs — kernel falls back to /sbin/init, harmless
+    benign_dmesg+='|tmp\.[A-Za-z0-9]+\[[0-9]+\]: segfault'          # Claude Code Bash tool tempfile exec races (mktemp tmp.XXXXXXXX scripts unmapped mid-call)
     local benign_services=''                                        # space-separated service names expected to be stopped
 
     case "$machine" in
@@ -1115,6 +1122,11 @@ do_verify() {
             benign_dmesg+='|mwifiex.*nxp/rgpower_.*\.bin'           # Marvell regulatory power tables not shipped by linux-firmware; WiFi works without
             benign_dmesg+='|dw-apb-uart.*failed to request DMA'     # SP6 SAM UART chain — DMA optional, polling fallback fine
             benign_services='xdm'                                    # SP6 uses lightdm; xdm shipped in default runlevel but never started
+            ;;
+        xps-9510)
+            benign_dmesg+='|pci 0000:01:00\.0: ROM .* failed to assign'  # NVIDIA RTX 3050 Ti option ROM — BIOS doesn't allocate the BAR, kernel proxies via vBIOS shadow; nvidia-drivers loads fine
+            benign_dmesg+='|_TZ\.ETMD'                                    # Dell BIOS bug: ACPI thermal zone references undefined symbol; thermald handles thermal mgmt regardless
+            benign_dmesg+='|NVRM: nvAssertFailedNoLog.*kernel_gsp\.c:1446' # GSP-RM firmware cosmetic assertion (nvidia-drivers 595.58.03 + kernel 6.18); no functional impact, awaiting driver fix
             ;;
     esac
 
@@ -1386,6 +1398,40 @@ do_clean() {
         before_count=$(( before_count + 1 ))
     done
     info "Kernels in /boot before cleanup: ${before_count}"
+
+    # Prune .old build-backups for the running kernel version. installkernel's
+    # updatever() renames the prior build to vmlinuz-${VER}.old before installing
+    # the new one. After a successful boot+verify on the same version (e.g. a
+    # rebuild without a version bump), the .old triplet is dead weight that
+    # eclean-kernel ignores entirely (it tracks distinct versions, not build
+    # backups). Only touch files matching the *running* version — never another.
+    local running_kver
+    running_kver=$(uname -r)
+    local stale_old=(
+        "/boot/vmlinuz-${running_kver}.old"
+        "/boot/System.map-${running_kver}.old"
+        "/boot/config-${running_kver}.old"
+    )
+    local stale_found=0
+    for f in "${stale_old[@]}"; do
+        [[ -f "$f" ]] && stale_found=$(( stale_found + 1 ))
+    done
+    if (( stale_found > 0 )); then
+        if $DRY_RUN; then
+            info "[dry-run] Would remove ${stale_found} stale .old file(s) for running kernel ${running_kver}:"
+            for f in "${stale_old[@]}"; do
+                [[ -f "$f" ]] && info "  $f"
+            done
+        else
+            info "Removing ${stale_found} stale .old file(s) for running kernel ${running_kver}"
+            for f in "${stale_old[@]}"; do
+                if [[ -f "$f" ]]; then
+                    rm -f "$f"
+                    info "  removed $(basename "$f")"
+                fi
+            done
+        fi
+    fi
 
     if $DRY_RUN; then
         info "[dry-run] Would run: eclean-kernel -n 3"
