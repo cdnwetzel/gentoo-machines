@@ -476,27 +476,27 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **RAM**: 8GB DDR4-2666 single-channel (1 of 2 SODIMM slots populated)
 - **Always-on**: elogind drop-in disables all sleep/suspend, no lid (mini PC)
 - **Network**: Wired Ethernet primary (r8169), WiFi available (iwlwifi 3165)
-- **Hardware ref**: `machines/beelink-minis-n5095/HARDWARE.md`
+- **Hardware ref**: `machines/beelink-minis/HARDWARE.md`
 
 ### Beelink MINI S Machine-Specific Files
 
 | File | Purpose |
 |------|---------|
-| `machines/beelink-minis-n5095/kernel_config.sh` | Programmatic kernel config (Jasper Lake + SATA + WiFi) |
-| `machines/beelink-minis-n5095/make.conf` | Portage: `-march=tremont`, VIDEO_CARDS="intel", 4GB tmpfs |
-| `machines/beelink-minis-n5095/HARDWARE.md` | Full hardware inventory |
-| `machines/beelink-minis-n5095/INSTALL_GOTCHAS.md` | Install lessons learned |
-| `machines/beelink-minis-n5095/world` | Package set (WiFi + BT, no NVIDIA) |
-| `machines/beelink-minis-n5095/package.accept_keywords` | ~amd64 keywords: gentoo-sources 6.18 LTS |
-| `machines/beelink-minis-n5095/package.use` | USE: installkernel+grub, NM wifi+bluetooth |
-| `machines/beelink-minis-n5095/package.env` | Large package disk fallback |
-| `machines/beelink-minis-n5095/portage_env_notmpfs.conf` | Disk PORTAGE_TMPDIR for large builds |
-| `machines/beelink-minis-n5095/sysctl-performance.conf` | VM/network tuning for 8GB RAM + SATA |
-| `machines/beelink-minis-n5095/zram-init.conf` | 4GB zstd compressed swap config |
-| `machines/beelink-minis-n5095/grub` | GRUB defaults |
-| `machines/beelink-minis-n5095/gentoo_install_part1.sh` | Partition 256GB SATA SSD |
-| `machines/beelink-minis-n5095/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
-| `machines/beelink-minis-n5095/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (WiFi + BT + always-on) |
+| `machines/beelink-minis/kernel_config.sh` | Programmatic kernel config (Jasper Lake + SATA + WiFi) |
+| `machines/beelink-minis/make.conf` | Portage: `-march=tremont`, VIDEO_CARDS="intel", 4GB tmpfs |
+| `machines/beelink-minis/HARDWARE.md` | Full hardware inventory |
+| `machines/beelink-minis/INSTALL_GOTCHAS.md` | Install lessons learned |
+| `machines/beelink-minis/world` | Package set (WiFi + BT, no NVIDIA) |
+| `machines/beelink-minis/package.accept_keywords` | ~amd64 keywords: gentoo-sources 6.18 LTS |
+| `machines/beelink-minis/package.use` | USE: installkernel+grub, NM wifi+bluetooth |
+| `machines/beelink-minis/package.env` | Large package disk fallback |
+| `machines/beelink-minis/portage_env_notmpfs.conf` | Disk PORTAGE_TMPDIR for large builds |
+| `machines/beelink-minis/sysctl-performance.conf` | VM/network tuning for 8GB RAM + SATA |
+| `machines/beelink-minis/zram-init.conf` | 4GB zstd compressed swap config |
+| `machines/beelink-minis/grub` | GRUB defaults |
+| `machines/beelink-minis/gentoo_install_part1.sh` | Partition 256GB SATA SSD |
+| `machines/beelink-minis/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/beelink-minis/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (WiFi + BT + always-on) |
 
 ## Future Machine Notes
 
