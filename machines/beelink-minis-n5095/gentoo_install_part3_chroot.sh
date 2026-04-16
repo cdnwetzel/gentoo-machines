@@ -305,6 +305,7 @@ rc-update add netmount default
 rc-update add zram-init boot
 rc-update add alsasound boot
 rc-update add chronyd default
+rc-update add cronie default
 
 echo ""
 echo "[8.3] Current runlevels:"
@@ -392,7 +393,13 @@ echo "[11.2] Configuring zram-init..."
 cp "$CONFIGS/zram-init.conf" /etc/conf.d/zram-init
 echo "  [OK] zram-init configured (4GB zstd swap)"
 
-echo "[11.3] Installing sysctl tuning..."
+echo "[11.3] Installing weekly fstrim cron job..."
+mkdir -p /etc/cron.weekly
+cp "$SHARED/fstrim-weekly" /etc/cron.weekly/fstrim
+chmod 755 /etc/cron.weekly/fstrim
+echo "  [OK] fstrim weekly cron job installed"
+
+echo "[11.4] Installing sysctl tuning..."
 if [[ -f /etc/sysctl.d/99-beelink-minis-performance.conf ]]; then
     echo "  [OK] Already installed by part2"
 else
@@ -400,7 +407,7 @@ else
         echo "  [WARN] sysctl-performance.conf not found"
 fi
 
-echo "[11.4] Verifying firmware files..."
+echo "[11.5] Verifying firmware files..."
 FW_FAIL=0
 ls /lib/firmware/iwlwifi-7265D-*.ucode 2>/dev/null | head -1 \
     && echo "  [OK] iwlwifi 7265D firmware (for 3165 card)" \
@@ -413,7 +420,7 @@ ls /lib/firmware/regulatory.db 2>/dev/null \
     || echo "  [WARN] regulatory.db missing (wireless-regdb not installed?)"
 echo "  [INFO] Intel BT (8087:0a2a) has ROM firmware — no file needed"
 
-echo "[11.5] Installing emoji fontconfig..."
+echo "[11.6] Installing emoji fontconfig..."
 cat > /etc/fonts/local.conf << 'FONTEOF'
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
@@ -435,7 +442,7 @@ FONTEOF
 fc-cache -f
 echo "  [OK] Noto Color Emoji fontconfig installed"
 
-echo "[11.6] Identifying HDA audio codec (informational)..."
+echo "[11.7] Identifying HDA audio codec (informational)..."
 cat /proc/asound/card0/codec#0 2>/dev/null | head -3 || \
     echo "  [INFO] No audio codec info yet — check on first boot"
 
