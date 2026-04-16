@@ -203,6 +203,11 @@ passwd "$USERNAME"
 
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
+echo "[4.6] Relaxing pam_faillock (home machine: 10 attempts, 5 min lockout)..."
+sed -i 's/pam_faillock.so preauth/pam_faillock.so preauth deny=10 unlock_time=300/' /etc/pam.d/system-auth
+sed -i 's/pam_faillock.so authfail/pam_faillock.so authfail deny=10 unlock_time=300/' /etc/pam.d/system-auth
+echo "  [OK] pam_faillock: deny=10, unlock_time=300"
+
 echo "[OK] Phase 4 complete."
 echo ""
 
@@ -290,6 +295,10 @@ rc-update add bluetooth default
 rc-update add thermald default
 rc-update add display-manager default
 rc-update add sshd default
+
+echo "[8.2] Enabling SSH pubkey authentication..."
+sed -i 's/^#PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+echo "  [OK] PubkeyAuthentication enabled"
 rc-update add metalog default
 rc-update add local default
 rc-update add netmount default
@@ -298,7 +307,7 @@ rc-update add alsasound boot
 rc-update add chronyd default
 
 echo ""
-echo "[8.2] Current runlevels:"
+echo "[8.3] Current runlevels:"
 echo "  Default:"
 rc-update show default
 echo "  Boot:"
@@ -364,11 +373,26 @@ echo "=========================================="
 echo "=== PHASE 11: Beelink Hardware ==="
 echo "=========================================="
 
-echo "[11.1] Configuring zram-init..."
+echo "[11.1] Configuring always-on (no sleep/suspend)..."
+mkdir -p /etc/elogind/logind.conf.d
+cat > /etc/elogind/logind.conf.d/always-on.conf << 'ALWAYSON'
+[Login]
+HandleSuspendKey=ignore
+HandleSuspendKeyLongPress=ignore
+HandleHibernateKey=ignore
+HandleHibernateKeyLongPress=ignore
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+IdleAction=ignore
+ALWAYSON
+echo "  [OK] elogind always-on drop-in installed"
+
+echo "[11.2] Configuring zram-init..."
 cp "$CONFIGS/zram-init.conf" /etc/conf.d/zram-init
 echo "  [OK] zram-init configured (4GB zstd swap)"
 
-echo "[11.2] Installing sysctl tuning..."
+echo "[11.3] Installing sysctl tuning..."
 if [[ -f /etc/sysctl.d/99-beelink-minis-performance.conf ]]; then
     echo "  [OK] Already installed by part2"
 else
@@ -376,7 +400,7 @@ else
         echo "  [WARN] sysctl-performance.conf not found"
 fi
 
-echo "[11.3] Verifying firmware files..."
+echo "[11.4] Verifying firmware files..."
 FW_FAIL=0
 ls /lib/firmware/iwlwifi-7265D-*.ucode 2>/dev/null | head -1 \
     && echo "  [OK] iwlwifi 7265D firmware (for 3165 card)" \
@@ -389,7 +413,7 @@ ls /lib/firmware/regulatory.db 2>/dev/null \
     || echo "  [WARN] regulatory.db missing (wireless-regdb not installed?)"
 echo "  [INFO] Intel BT (8087:0a2a) has ROM firmware — no file needed"
 
-echo "[11.4] Installing emoji fontconfig..."
+echo "[11.5] Installing emoji fontconfig..."
 cat > /etc/fonts/local.conf << 'FONTEOF'
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
@@ -411,7 +435,7 @@ FONTEOF
 fc-cache -f
 echo "  [OK] Noto Color Emoji fontconfig installed"
 
-echo "[11.5] Identifying HDA audio codec (informational)..."
+echo "[11.6] Identifying HDA audio codec (informational)..."
 cat /proc/asound/card0/codec#0 2>/dev/null | head -3 || \
     echo "  [INFO] No audio codec info yet — check on first boot"
 
