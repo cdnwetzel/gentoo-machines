@@ -180,7 +180,7 @@ $SC --module PMT_TELEMETRY
 $SC --module PMT_CLASS
 
 # KVM (VMX + VT-d confirmed present)
-$SC --module KVM
+$SC --enable KVM
 $SC --module KVM_INTEL
 
 echo "  [OK] Processor"
@@ -370,7 +370,7 @@ $SC --enable CFG80211_WEXT
 $SC --module MAC80211
 $SC --module IWLWIFI
 $SC --module IWLMVM
-$SC --module IWLWIFI_LEDS
+$SC --enable IWLWIFI_LEDS
 
 # Disable Marvell (SP6-only)
 $SC --disable MWIFIEX
