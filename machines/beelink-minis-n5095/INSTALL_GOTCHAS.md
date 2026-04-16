@@ -124,7 +124,28 @@ During `sys-kernel/gentoo-sources` merge you'll see `copying sources` for 2–5
 minutes with no other output. Not a hang — just unpack + copy of the full
 6.18.x tree to `/usr/src/`. Normal.
 
-## 7. `app-alternatives/cpio` file collision warning is expected
+## 8. `discard=async` is btrfs-only — breaks ext4 root mount
+
+**Symptom**: first boot comes up with a read-only root filesystem. SSH keys
+can't be written, NetworkManager can't start, sshd fails, systemd-tmpfiles
+fails — everything cascades from the read-only root.
+
+**Cause**: `gentoo_install_part2.sh` generated fstab with `discard=async` on
+the ext4 root partition. `discard=async` is a **btrfs-only mount option**.
+For ext4, the kernel rejects it with `Unexpected value for 'discard'`, and
+the root remount-rw fails silently, leaving the system read-only.
+
+**Fix** (applied to `gentoo_install_part2.sh`): removed `discard=async`
+entirely. Use weekly `fstrim` via cronie instead (lower overhead, works on
+any filesystem).
+
+**Recovery if hit on a live system**: boot with GRUB edit (`ro` → `rw` on
+kernel line), then edit `/etc/fstab` to remove `discard=async`, reboot.
+
+**Lesson**: always verify mount options are valid for the target filesystem.
+`discard` (boolean) works on ext4; `discard=async` does not.
+
+## 9. `app-alternatives/cpio` file collision warning is expected
 
 Phase 1 emits a scary-looking multi-line warning about `/bin/cpio` colliding,
 ending with "Package merged despite file collisions". **This is intentional** —
