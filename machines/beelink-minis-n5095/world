@@ -1,0 +1,99 @@
+# /var/lib/portage/world - Beelink MINI S (N5095A)
+# Cloned from Surface Pro 6 minus laptop/battery/TLP bits.
+# Adds nothing Surface-specific. ~60 packages total.
+
+# System Administration
+app-admin/metalog
+app-admin/sudo
+app-portage/cpuid2cpuflags
+app-portage/gentoolkit
+sys-apps/dmidecode
+sys-apps/i2c-tools
+sys-apps/lm-sensors
+sys-apps/pciutils
+sys-apps/usbutils
+
+# Boot & Kernel
+sys-boot/grub
+sys-firmware/intel-microcode
+sys-kernel/gentoo-sources
+sys-kernel/installkernel
+sys-kernel/linux-firmware
+
+# TPM 2.0 (hardware is present per ACPI TPM2 table)
+app-crypt/tpm2-tools
+
+# Power & Thermal Management (desktop — no TLP, no acpilight, no battery plugin)
+sys-block/zram-init
+sys-power/acpid
+sys-power/powertop
+sys-power/thermald
+
+# Session & Auth
+sys-auth/elogind
+sys-fs/udisks
+
+# Networking
+gnome-extra/nm-applet
+net-misc/chrony
+net-misc/dhcpcd
+net-misc/networkmanager
+net-misc/openssh
+net-wireless/wireless-regdb
+net-wireless/wpa_supplicant
+x11-apps/xhost
+
+# Bluetooth
+net-wireless/bluez
+net-wireless/blueman
+
+# VPN
+net-vpn/networkmanager-sstp
+
+# Remote Desktop
+net-misc/remmina
+
+# Fonts
+media-fonts/noto-emoji
+
+# Graphics & Video
+x11-apps/xrandr
+x11-drivers/xf86-input-libinput
+
+# Audio (PipeWire)
+media-sound/alsa-utils
+media-sound/pavucontrol
+media-video/pipewire
+media-video/wireplumber
+xfce-extra/xfce4-pulseaudio-plugin
+
+# XFCE Desktop
+x11-misc/lightdm
+xfce-base/xfce4-meta
+xfce-base/xfce4-power-manager
+xfce-extra/xfce4-screenshooter
+xfce-extra/xfce4-taskmanager
+
+# Web Browsers (binary packages — compiling on Tremont would be brutal)
+www-client/firefox-bin
+www-client/google-chrome
+
+# CLI Tools
+app-arch/zip
+app-misc/jq
+app-misc/fastfetch
+app-misc/tmux
+app-text/tesseract
+app-text/tree
+net-fs/sshfs
+sys-process/btop
+sys-process/htop
+x11-misc/xclip
+
+# Development
+app-editors/vscode
+dev-db/unixODBC
+dev-python/pip
+dev-util/geany
+dev-vcs/git
+net-libs/nodejs
