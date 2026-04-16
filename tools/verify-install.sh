@@ -21,7 +21,7 @@ check_file()    { [ -f "$1" ] && pass "$2" || fail "$2 ($1 missing)"; }
 check_dir()     { [ -d "$1" ] && pass "$2" || fail "$2 ($1 missing)"; }
 check_cmd()     { command -v "$1" &>/dev/null && pass "$2" || fail "$2 ($1 not found)"; }
 check_service() {
-    if rc-status 2>/dev/null | grep -q "$1"; then
+    if rc-status -a 2>/dev/null | grep -q "$1"; then
         pass "Service: $1"
     elif rc-update show 2>/dev/null | grep -q "$1"; then
         warn "Service $1 enabled but not running"
@@ -66,6 +66,7 @@ case "$PRODUCT" in
     *"Surface Pro"*)    MACHINE="surface-pro-6"; HAS_INTEL_GPU=1; HAS_WIFI=1; HAS_BLUETOOTH=1; IS_LAPTOP=1; WIFI_DRIVER="mwifiex_pcie" ;;
     *"Precision T5810"*|*"Precision Tower 5810"*) MACHINE="precision-t5810"; HAS_NVIDIA=1 ;;
     *"Precision 7960"*) MACHINE="precision-7960"; HAS_NVIDIA=1 ;;
+    *"MINI S"*)         MACHINE="beelink-minis"; HAS_INTEL_GPU=1; HAS_WIFI=1; HAS_BLUETOOTH=1; WIFI_DRIVER="iwlwifi" ;;
 esac
 
 # MacBook detection via Apple vendor
@@ -268,6 +269,7 @@ case "$MACHINE" in
     surface-pro-6)  check_service sshd ;;
     precision-t5810) check_service sshd ;;
     asrock-b550) check_service sshd ;;
+    beelink-minis) check_service sshd; check_service thermald ;;
 esac
 
 echo ""
@@ -382,6 +384,28 @@ case "$MACHINE" in
         check_module ccp
         # AMD pinctrl
         check_module pinctrl_amd
+        # zram
+        if [ -b /dev/zram0 ] && [ "$(cat /sys/block/zram0/disksize 2>/dev/null)" -gt 0 ]; then
+            ZRAM_SIZE=$(($(cat /sys/block/zram0/disksize) / 1024 / 1024 / 1024))
+            pass "zram0: ${ZRAM_SIZE}GB"
+        else
+            warn "zram0 not active — check zram-init config"
+        fi
+        ;;
+    beelink-minis)
+        # Intel Jasper Lake iGPU
+        check_module i915
+        # Realtek Ethernet (primary network)
+        check_module r8169
+        ETH_LINK=$(ip -o link show 2>/dev/null | grep -oE 'e[nt][a-z0-9]+' | head -1)
+        if [ -n "$ETH_LINK" ]; then
+            CARRIER=$(cat /sys/class/net/"$ETH_LINK"/carrier 2>/dev/null)
+            [ "$CARRIER" = "1" ] && pass "Ethernet $ETH_LINK: link up" || warn "Ethernet $ETH_LINK: no carrier"
+        fi
+        # AHCI/SATA storage (no NVMe on this board)
+        check_module ahci
+        # Audio — HDA Intel Jasperlake
+        check_module snd_hda_intel
         # zram
         if [ -b /dev/zram0 ] && [ "$(cat /sys/block/zram0/disksize 2>/dev/null)" -gt 0 ]; then
             ZRAM_SIZE=$(($(cat /sys/block/zram0/disksize) / 1024 / 1024 / 1024))

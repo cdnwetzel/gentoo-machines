@@ -1,6 +1,6 @@
 # Beelink MINI S (N5095A) — Hardware Reference
 
-Harvested 2026-04-14 from Fedora 43 live USB on the target machine.
+Harvested 2026-04-14 from Fedora 43 live USB; updated 2026-04-16 from running Gentoo 6.18.22.
 Sources: `tools/harvest.sh`, `tools/deep_harvest.sh`, `dmidecode`, `lspci`, `lsusb`, `smartctl`, `dmesg`, `/proc/cpuinfo`.
 
 ## Identity
@@ -142,7 +142,7 @@ The drive has seen substantial runtime — plan to take SMART snapshots periodic
 | Driver choice | **Legacy HDA** (`snd_hda_intel`) — simpler than SOF, no firmware blobs |
 | SOF availability | `snd_sof_pci_intel_icl` / `cnl` loadable but we disable it |
 | NHLT ACPI table | Present (SOF topology, unused by our config) |
-| Codec | Not yet identified — no analog probe during live boot. Likely Realtek ALC269/ALC897-class. Resolve on first Gentoo boot via `/proc/asound/card0/codec#0`. |
+| Codec | **Intel Jasperlake HDMI** (HDMI audio only — no analog codec detected on this board) |
 | HDMI audio | via `snd_hda_codec_hdmi` + `SND_HDA_I915` bridge |
 
 ## Peripheral buses
@@ -189,27 +189,27 @@ The drive has seen substantial runtime — plan to take SMART snapshots periodic
 
 - `_PLD`/`_UPC` errors on `HS03/HS04/SS01/SS02` USB ports — BIOS describes phantom ports that don't physically exist. Cosmetic. Cannot be fixed without a BIOS update. Do not treat as a verify failure.
 
-## Current (live-USB) partition layout — will be wiped
+## Partition layout (Gentoo production)
 
 ```
 /dev/sda                       238.5G
-├─sda1  vfat                    600M   (EFI)
-├─sda2  ext4                      2G   (boot)
-└─sda3  btrfs                 235.9G   (Fedora root)
+├─sda1  vfat   /boot/efi        600M   (EFI)
+├─sda2  ext4   /boot              2G
+└─sda3  ext4   /              235.9G
 ```
 
-New Gentoo layout will mirror this shape: 600 MB EFI / 2 GB /boot ext4 / remainder / ext4 (no swap partition; 4 GB zram+zstd in RAM).
+No swap partition — 4 GB zram+zstd in RAM. Weekly fstrim for SSD TRIM (no `discard` mount option — `discard=async` is btrfs-only, invalid for ext4).
 
 ## Currently-connected peripherals (harvest context only)
 
 - Dell KB216 wired USB keyboard (`413c:2113`)
 - Dell MS116 wired USB mouse (`413c:301a`)
 - KTMicro USB audio device (`31b2:0010`) — incidental, not part of the machine
-- PNY USB 3 flash drive (`154b:1006`) — Ventoy install media, will be removed
+
 
 ## Previous OS
 
-Fedora 43 Workstation (replaced by this Gentoo build). The machine was running a desktop environment successfully, which confirms all core hardware works under mainline Linux.
+Fedora 43 Workstation (replaced by Gentoo, first boot 2026-04-15). Fedora confirmed all core hardware works under mainline Linux.
 
 ## Firmware summary (from linux-firmware package)
 

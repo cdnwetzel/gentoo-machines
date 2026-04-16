@@ -38,6 +38,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 7 | Dell Precision 7960 | Xeon W5-3433 16C/32T (Sapphire Rapids) | RTX PRO 6000 96GB + RTX A1000 8GB | Reference only (harvested) | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
+| 10 | Beelink MINI S | Celeron N5095A (Jasper Lake) | Intel UHD (Gen11 LP) | Production | Gentoo |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface Pro 6 runs stock gentoo-sources; Surface Pro 9 will need **linux-surface** kernel patches.
 
@@ -463,8 +464,43 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/asrock-b550/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/asrock-b550/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (WiFi + BT + NVIDIA) |
 
+### Beelink MINI S (Production)
+
+- **Kernel**: Linux 6.18.22-gentoo
+- **Architecture**: x86_64, 4C/4T (Jasper Lake / Tremont, no HT, no AVX/AVX2)
+- **Compiler flags**: `-march=tremont -O2 -pipe`
+- **Key drivers**: i915 (module, JSL UHD Gen11 LP), iwlwifi (Wireless-AC 3165), r8169 (RTL8168h GbE), ahci (SATA SSD), snd_hda_intel, btusb+btintel
+- **Firmware**: Loaded from /lib/firmware/ (i915/icl_dmc_*, iwlwifi-7265D-*, regulatory.db)
+- **No NVIDIA**: Intel iGPU only
+- **Storage**: 256GB M.2 SATA SSD (no NVMe on this board), ext4 root
+- **RAM**: 8GB DDR4-2666 single-channel (1 of 2 SODIMM slots populated)
+- **Always-on**: elogind drop-in disables all sleep/suspend, no lid (mini PC)
+- **Network**: Wired Ethernet primary (r8169), WiFi available (iwlwifi 3165)
+- **Hardware ref**: `machines/beelink-minis-n5095/HARDWARE.md`
+
+### Beelink MINI S Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/beelink-minis-n5095/kernel_config.sh` | Programmatic kernel config (Jasper Lake + SATA + WiFi) |
+| `machines/beelink-minis-n5095/make.conf` | Portage: `-march=tremont`, VIDEO_CARDS="intel", 4GB tmpfs |
+| `machines/beelink-minis-n5095/HARDWARE.md` | Full hardware inventory |
+| `machines/beelink-minis-n5095/INSTALL_GOTCHAS.md` | Install lessons learned |
+| `machines/beelink-minis-n5095/world` | Package set (WiFi + BT, no NVIDIA) |
+| `machines/beelink-minis-n5095/package.accept_keywords` | ~amd64 keywords: gentoo-sources 6.18 LTS |
+| `machines/beelink-minis-n5095/package.use` | USE: installkernel+grub, NM wifi+bluetooth |
+| `machines/beelink-minis-n5095/package.env` | Large package disk fallback |
+| `machines/beelink-minis-n5095/portage_env_notmpfs.conf` | Disk PORTAGE_TMPDIR for large builds |
+| `machines/beelink-minis-n5095/sysctl-performance.conf` | VM/network tuning for 8GB RAM + SATA |
+| `machines/beelink-minis-n5095/zram-init.conf` | 4GB zstd compressed swap config |
+| `machines/beelink-minis-n5095/grub` | GRUB defaults |
+| `machines/beelink-minis-n5095/gentoo_install_part1.sh` | Partition 256GB SATA SSD |
+| `machines/beelink-minis-n5095/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/beelink-minis-n5095/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (WiFi + BT + always-on) |
+
 ## Future Machine Notes
 
+- **Beelink MINI S**: Production. Celeron N5095A (4C/4T, Jasper Lake/Tremont), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel 3165 WiFi/BT, Realtek GbE, 256GB M.2 SATA SSD, `-march=tremont`. Installed 2026-04-15. Always-on mini PC. 4GB tmpfs + disk fallback. S3 deep sleep supported but disabled (always-on).
 - **ASRock B550**: Production. First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, kernel-open), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Installed 2026-04-05. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
 - **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11. Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).
 - **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install. Harvested 2026-03-19. Xeon W5-3433 16C/32T (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, RTX PRO 6000 Blackwell 96GB + RTX A1000 8GB, NVIDIA 590.48.01 CUDA 13.1, 4x Samsung PM9C1a 1.8TB RAID10 via VMD, Aquantia 10GbE + Intel 1GbE, `-march=sapphirerapids`
