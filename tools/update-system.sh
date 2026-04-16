@@ -93,6 +93,7 @@ declare -A MACHINES=(
     [nuc11]="hostname=nuc11|dmi=NUC11TNBi5|gpu=intel|patches=intel_idle-add-tiger-lake"
     [precision-t5810]="hostname=precision-t5810|dmi=Precision Tower 5810|gpu=nvidia|patches="
     [asrock-b550]="hostname=asrock-b550|dmi=Asrock B550|gpu=nvidia|patches="
+    [beelink-minis]="hostname=beelink-minis|dmi=MINI S|gpu=intel|patches="
 )
 
 # ============================================================================
@@ -1270,7 +1271,7 @@ verify_machine_specific() {
         precision-t5810)
             info "No WiFi (wired desktop)"
             ;;
-        xps-9510|xps-9315|nuc11)
+        xps-9510|xps-9315|nuc11|beelink-minis)
             if grep -q "^iwlwifi " /proc/modules 2>/dev/null; then
                 info "iwlwifi loaded"
                 local wl_iface
