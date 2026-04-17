@@ -25,7 +25,7 @@
 
 ## Low Priority
 
-- [ ] Harvest ASRock B550 / Ryzen 9 5950X (Fedora 42) [hardware]
+- [x] Harvest ASRock B550 / Ryzen 9 5950X — installed Gentoo, configs trued up (2026-04-16) [hardware]
 - [ ] Harvest Surface Pro 9 (Windows 11 Pro) [hardware]
 - [ ] All machines: consider `CONFIG_SECURITY_LOCKDOWN_LSM=y` for defense-in-depth [repo]
 
