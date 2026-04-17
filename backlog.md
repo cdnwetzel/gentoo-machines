@@ -16,6 +16,7 @@
 
 ## Medium Priority — New Tool Candidates
 
+- [ ] **Nearest-base suggester for config generation**: extend `generate-config.sh` / `generate-install.sh` (or add a `tools/suggest-base.sh` helper) that scores every existing machine in the library against a new machine's harvest using `machine-profile.sh` features (CPU vendor/march, GPU topology, WiFi driver, platform vendor, chassis type, storage mix) and prints a ranked list of the closest 3 matches. Goal: make onboarding accessible — the user no longer has to know which machine is "closest" before running the generators. Stretch: auto-feed the top match as the default `<base-machine>` arg. [repo]
 - [x] **Unified install script generator**: `tools/generate-install.sh <machine> <base> <harvest-dir>` — generates all 3 part scripts from harvest section 8 + machine-profile.sh feature gates (2026-04-16) [repo]
 - [x] **Machine feature profile**: tools/machine-profile.sh — shared library, 30+ variables, sourced by kernel-config-template.sh [repo]
 
