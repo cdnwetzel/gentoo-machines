@@ -10,6 +10,7 @@ app-portage/gentoolkit
 sys-apps/dmidecode
 sys-apps/i2c-tools
 sys-apps/lm-sensors
+sys-apps/nvme-cli
 sys-apps/pciutils
 sys-apps/usbutils
 
@@ -22,6 +23,7 @@ sys-kernel/linux-firmware
 # Power & Zram
 sys-block/zram-init
 sys-power/acpid
+sys-power/cpupower
 
 # Session & Auth
 sys-auth/elogind
@@ -83,9 +85,11 @@ net-fs/sshfs
 sys-process/btop
 sys-process/htop
 sys-process/nvtop
+www-client/lynx
 x11-misc/xclip
 
 # Development
+dev-util/github-cli
 app-editors/vscode
 dev-db/unixODBC
 dev-python/pip
