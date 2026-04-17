@@ -92,12 +92,20 @@ Start from the closest existing machine's script. Key adaptations:
 
 ## Step 5: Generate Config (Automated)
 
+Three generators bootstrap most of the boilerplate from harvest data:
+
 ```bash
-# Automated approach using Claude CLI
+# Kernel config skeleton (26 phases, auto-runs kconfig-lint on the output)
+tools/kernel-config-template.sh <new-machine> /path/to/hardware_inventory.log
+
+# .config, make.conf, and HARDWARE.md (uses Claude CLI)
 tools/generate-config.sh <new-machine> <closest-base> <harvest-dir>
+
+# 3-phase install scripts (part1/part2/part3_chroot), feature-gated via machine-profile.sh
+tools/generate-install.sh <new-machine> <closest-base> <harvest-dir>
 ```
 
-This generates `.config`, `make.conf`, and `HARDWARE.md` from harvest data.
+Generated files are a starting point — review each for machine-unique quirks that the generators can't infer (e.g., Dell `i915.enable_guc=3`, Surface IPTSD config, Apple `applesmc` verification). `generate-install.sh` marks these with TODO comments.
 
 ## Step 6: Build & Test
 

@@ -1,77 +1,76 @@
-# Development Log
+# Changelog
 
-Development history for the gentoo-machines framework. Records architectural decisions, tooling evolution, and notable fixes across the project lifecycle.
+Significant development milestones for the gentoo-machines framework, ordered most recent first. For day-to-day work, see `backlog.md`.
 
-## update-system.sh — Full System Update Workflow
+## 2026-04 — Install Script Generator + Cronie Baseline
 
-### Rename and Feature Expansion
-Renamed `update-kernel.sh` → `update-system.sh` to reflect expanded scope: portage sync, @world packages, config file merging (dispatch-conf), kernel build/install, post-reboot verification, and cleanup.
+- **`tools/generate-install.sh`**: new generator for the three install scripts (`part1`/`part2`/`part3_chroot`), driven by `tools/machine-profile.sh` feature flags and harvest section 8 block-device parsing. Feature-gated output for NVIDIA, Intel microcode, Bluetooth service, laptop TLP, Apple mbpfan, Surface HiDPI, Dell EFI fallback, and desktop always-on elogind drop-ins.
+- **`tools/test-generate-install.sh`**: 42-check regression harness covering three synthetic fixtures (`intel-sata-desktop`, `amd-nvme-nvidia-desktop`, `apple-broadwell-laptop`). Each fixture asserts both presence and absence of feature-gated blocks.
+- **Cronie baseline**: added `sys-process/cronie` to `shared/world` and all machine worlds, plus the service to every part3 install script. `shared/low-battery-hibernate.sh` and `shared/fstrim-weekly` assumed cron was available; now it universally is.
+- **`machine-profile.sh` bugfix**: `NVIDIA_GPU_COUNT=$(grep -c ... || echo 1)` was capturing both the grep "0" and the fallback "1" on no-match, producing an integer-test error downstream.
 
-**Phase order**: `fetch → world → config-update → check → prepare → build → install → reboot → verify → clean` (10 phases).
+## 2026-04 — Beelink MINI S Production
 
-### eclean-kernel Integration
-Added `fetch` and `clean` subcommands. `fetch` handles `emerge --sync`, `emerge gentoo-sources`, auto-detect newest kernel, `eselect kernel set`. `clean` runs `eclean-kernel -n 3` (keep current + 2 rollback) then `grub-mkconfig`. Added `app-admin/eclean-kernel` to shared world.
+- Installed Gentoo on Beelink MINI S (Celeron N5095A, Jasper Lake). 4C/4T Tremont, no HT, no AVX/AVX2. SATA-only board (no NVMe). Always-on mini-PC — elogind drop-in disables all sleep/suspend handling.
+- Renamed directory `beelink-minis-n5095` → `beelink-minis`.
+- Forced `performance` CPU frequency governor by disabling kernel alternatives to `powersave`/`schedutil` (no throttling wanted on always-on box).
 
-### Initial Implementation
-~970 lines. Auto-detects machine via hostname + DMI fallback. Config strategy: same-series (copy .config + olddefconfig) vs cross-series (defconfig + kernel_config.sh + olddefconfig). Machine registry: xps-9510, mbp-2015, surface-pro-6, nuc11. Patch registry with version-range scoping. NVIDIA handling: source symlink fix + @module-rebuild. State persisted to `/var/lib/kernel-update/`.
+## 2026-04 — ASRock B550 Production (First AMD)
 
-## build-kernel-remote.sh Improvements
-Removed dracut reference (no initramfs), made KVER dynamic (detected from target's /usr/src/linux symlink), added all production machines to TARGETS.
+- Installed Gentoo on ASRock B550 Phantom Gaming-ITX/ax (Ryzen 9 5950X, Zen 3). First AMD platform in the fleet — AMD-specific drivers (`amd-pstate`, `k10temp`, `piix4_smbus`, `ccp`, `edac_mce_amd`) and no Intel i801/MEI/iGPU.
+- NVIDIA RTX 3060 Ti (GA104 Ampere) with `kernel-open` USE flag.
+- 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
-## Kernel Config Tooling (3 tools)
+## 2026-03 — Precision T5810 Production
 
-### kconfig-lint.sh — Static Config Validator (360 lines)
-Parses all 1812 Kconfig files into a 19414-symbol TSV database (~2s). 5 checks: `--module` on bool (FAIL), missing parent toggles (WARN), firmware driver =y (WARN), unsatisfied deps (WARN), unknown options (INFO). Immediately caught a real bug: XPS 9315 `SND_SOC_SOF_INTEL_TOPLEVEL` is bool but was set with `--module`, silently disabling SOF audio.
+- Installed Gentoo on Dell Precision T5810 (Xeon E5-2699v4, 22C/44T, Broadwell-EP). 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti (Pascal, `nvidia-drivers` 580.xx legacy branch), Samsung 990 PRO 2TB NVMe. C610/X99 chipset — no LPSS/Pinctrl, I2C via i801 SMBus only.
+- Boot media: SABRENT Ventoy USB. part1 script includes absolute device-ID exclusion to protect it.
+- Performance-first: C-states disabled in BIOS, `GOV_PERFORMANCE`, always-on workstation.
 
-### harvest.sh Enhancements (+263 lines, 15 sections total)
-Sections 9-15: CPU_FLAGS_X86 via cpuid2cpuflags, audio subsystem (SOF vs HDA), platform vendor (DMI classification), boot type (EFI/BIOS/Secure Boot), suspend capabilities, loaded firmware mapping, GCC -march suggestion.
+## 2026-03 — Kernel Config Tooling Suite
 
-### kernel-config-template.sh — Skeleton Generator (1279 lines)
-Parses harvest log to auto-detect CPU, GPU, WiFi (8 vendors), audio, storage, platform (6 vendors), Ethernet, Thunderbolt, ISH, cameras. Generates 26-phase kernel_config.sh and auto-runs kconfig-lint.
+- **`tools/kconfig-lint.sh`**: static validator for `kernel_config.sh` scripts. Parses all Kconfig files (~19K symbols, ~2s) and cross-references every `scripts/config` call. Catches 5 classes of silent bug: `--module` on bool options, missing parent toggles, firmware drivers built-in (=y) without initramfs, unsatisfied dependencies, and unknown config symbols (typos/renames).
+- **`tools/kernel-config-template.sh`**: auto-generates a 26-phase `kernel_config.sh` from harvest data. Detects CPU, GPU (Intel/NVIDIA/AMD), WiFi (8 vendors), audio (SOF/HDA + codec), storage, platform (Dell/Apple/Surface/Lenovo/HP/ASUS), Ethernet, Thunderbolt, ISH sensors, cameras.
+- **`tools/harvest.sh`** expansion: sections 9-17 cover `CPU_FLAGS_X86` via `cpuid2cpuflags`, SOF vs HDA detection, DMI platform classification, EFI/BIOS/Secure Boot, suspend capabilities, loaded firmware, GCC `-march` suggestion, CPU topology, power/performance profile, Ventoy/live-USB boot media detection.
 
-## MBP 2015 Install Scripts
-Upgraded to gold standard: 13-phase chroot install (part3), complete staging + fstab generation (part2), zram ZSTD fix.
+## 2026-03 — `tools/update-system.sh`
 
-## Surface Pro 6
+- Renamed `update-kernel.sh` → `update-system.sh` to reflect expanded scope. Phase order: `fetch → world → config-update → check → prepare → build → install → reboot → verify → clean`.
+- Guided prompted workflow with Y/n/skip at each phase, resumable via `/var/lib/kernel-update/full-progress`. Individual subcommands remain standalone.
+- Machine auto-detection (hostname + DMI fallback), patch registry with version-range scoping, config-migration strategy (same-series copies `.config` + `olddefconfig`; cross-series uses `defconfig` + `kernel_config.sh` + `olddefconfig`), `eclean-kernel -n 3` for old-kernel cleanup.
+- NVIDIA handling: source symlink fix + `@module-rebuild` on install.
 
-### HiDPI Scaling (150% / 144 DPI)
-2736x1824 PixelSense display (267 PPI). LightDM login: `xserver-command=X -dpi 144` + display-setup script. XFCE: Xft/DPI=144, cursor size 36, xrandr autostart. restore-desktop.sh auto-detects Surface via DMI.
+## 2026-02 — Surface Pro 6 Production
 
-### First Boot
-All 63 world packages installed. Desktop restore (keybindings, panels, PipeWire, displays), system restore (elogind, ACPI lid, LightDM, touchpad, KSM).
+- Installed Gentoo on Surface Pro 6 (i5-8250U, Kaby Lake-R). Marvell 88W8897 WiFi (not Intel), 8GB soldered LPDDR3, 2736x1824 PixelSense (150% HiDPI / 144 DPI).
+- HiDPI plumbed through LightDM (`xserver-command=X -dpi 144` + display-setup script), XFCE (`Xft/DPI=144`, cursor size 36, xrandr autostart), and GTK greeter. `shared/restore-desktop.sh` auto-detects Surface via DMI.
+- WiFi resume reliability: pre-suspend module unload + post-resume reload + NetworkManager cycling via elogind sleep hook; NetworkManager-managed power save (no driver-level `driver_mode` flags).
 
-### Config Validation
-Fixed critical filename mismatch bug (8 refs): `kernel_config_surface_pro6.sh` → `kernel_config.sh`. Fixed stale `-march=kabylake` → `-march=skylake`. Validated make.conf and kernel_config.sh against HARDWARE.md.
+## 2026-02 — MBP 2015 & XPS 9510 Production Baselines
 
-## XPS 9510
-
-### Touchpad Fix
-Enabled RMI4 subsystem (RMI4_CORE, RMI4_I2C, RMI4_SMB, RMI4_F11, RMI4_F12, RMI4_F30) and HID_RMI. Synaptics touchpad was falling back to generic HID without these — no two-finger scrolling, poor palm rejection.
-
-### Live System Verification
-Applied live-fixes.sh: CPU_FLAGS_X86 (31 flags, 10 more than initially predicted), INPUT_DEVICES=libinput, ccache on /data, package.env for 6 large packages, 24G portage tmpfs, fastfetch. @world rebuild: 26 packages with new CPU_FLAGS_X86. Kernel config dogfooding found and fixed 5 issues (parent toggles, bool vs tristate).
+- **XPS 15 9510**: Tiger Lake-H + NVIDIA RTX 3050 Ti hybrid graphics (PRIME/Optimus), migrated from 6.12 → 6.18 LTS, hibernate + battery thresholds + NVMe APST, RMI4 touchpad enabled, PipeWire audio.
+- **MBP 2015**: Broadwell + Apple hardware (applesmc, mbpfan, bcm5974 trackpad, brcmfmac WiFi, CS4208 audio). Power tuning (thermald, brcmfmac `power_save`, sysctl, powertop). `sys-kernel/installkernel` with `grub` USE flag for auto `grub-mkconfig` on `make install`.
+- Returned to macOS 12 as a kids' machine — kernel config and install scripts remain in the repo for reference.
 
 ## Upstream Investigations
 
-### intel_idle Tiger Lake
-Traced full git history of `intel_idle_ids[]` in upstream kernel. CML/ICL-client/TGL/RKL were never in the table (not removed — never merged). Rafael Wysocki deliberately stopped adding client CPUs after Kaby Lake (Dec 2019), relying on ACPI `_CST` fallback. Root cause is Dell BIOS only exposing 3 of 8 C-states. **Decision**: keep as local patch only — LKML submission not viable.
+### `intel_idle` Tiger Lake
+Traced the full git history of `intel_idle_ids[]` in the upstream kernel. CML, ICL-client, TGL, and RKL were never in the table — not removed, never merged. Rafael Wysocki deliberately stopped adding client CPUs after Kaby Lake (Dec 2019, commit `18734958e9bf`), relying on ACPI `_CST` fallback. The XPS 9510 BIOS exposes only 3 of 8 C-states via `_CST`. Carried as a local patch (`patches/intel_idle-add-tiger-lake.patch`); not submitted to LKML.
 
-### ipu-bridge Double-Brace
-Filed [Bug 970769](https://bugs.gentoo.org/970769) on Gentoo Bugzilla. Closed: local filesystem corruption, not present in official sources.
+### `ipu-bridge` Double-Brace
+Filed Gentoo [Bug 970769](https://bugs.gentoo.org/970769). Closed: local filesystem corruption, not present in official sources. Patch retained for reference.
 
-## MBP installkernel Fix
-Added `sys-kernel/installkernel grub` to package.use — now matches XPS 9510/9315/SP6 pattern (auto grub-mkconfig on `make install`).
-
-## Machine Status
+## Machine Status Snapshot
 
 | Machine | Status |
 |---------|--------|
 | Dell XPS 15 9510 | Production |
-| MacBook Pro 12,1 (2015) | Production |
+| ASRock B550 (Ryzen 9 5950X) | Production |
+| Dell Precision T5810 | Production |
 | Surface Pro 6 | Production |
-| Dell XPS 13 9315 | Production (config maintained) |
-| Dell Precision T5810 | Built (awaiting first boot) |
-| Intel NUC11TNBi5 | Config ready |
-| ASRock B550 / Ryzen 9 5950X | Planned |
-| Dell Precision 7960 | Reference only |
+| Beelink MINI S | Production |
+| Dell XPS 13 9315 | Config maintained (Windows returned) |
+| MacBook Pro 12,1 (2015) | Retired — config maintained (macOS kids' machine) |
+| Intel NUC11TNBi5 | Config ready — awaiting install |
+| Dell Precision 7960 | Reference only (RHEL 10.1 for production AI/ML) |
 | Surface Pro 9 | Planned |

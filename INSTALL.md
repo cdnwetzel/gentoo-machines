@@ -2,6 +2,8 @@
 
 General-purpose installation guide for deploying Gentoo on any supported machine in this repository. Each machine has a pre-built kernel `.config` and `make.conf` that eliminates the hardest part of a Gentoo install — hardware-specific kernel configuration.
 
+**Recommended path for supported machines:** use the machine-specific 3-phase automated install scripts (`gentoo_install_part1.sh` → `part2.sh` → `part3_chroot.sh`) in each production machine directory. They handle partitioning, stage3 extraction, config staging, chroot bootstrap, kernel build, package installation, and pre-reboot verification end-to-end. This manual guide covers the same ground step-by-step — use it if you prefer granular control, are adding a new machine, or need to debug a specific phase.
+
 ## Table of Contents
 
 1. [Supported Machines](#supported-machines)
@@ -31,13 +33,14 @@ Before starting, confirm your target machine has a config ready:
 | Machine | Directory | Config Status |
 |---------|-----------|---------------|
 | Dell XPS 15 9510 | `machines/xps-9510/` | Production |
-| MacBook Pro 12,1 (2015) | `machines/mbp-2015/` | Production |
+| ASRock B550 / Ryzen 9 5950X | `machines/asrock-b550/` | Production |
+| Dell Precision T5810 | `machines/precision-t5810/` | Production |
 | Surface Pro 6 | `machines/surface-pro-6/` | Production |
-| Dell XPS 13 9315 | `machines/xps-9315/` | Configs updated |
+| Beelink MINI S | `machines/beelink-minis/` | Production |
+| Dell XPS 13 9315 | `machines/xps-9315/` | Config maintained |
+| MacBook Pro 12,1 (2015) | `machines/mbp-2015/` | Retired (config maintained) |
 | Intel NUC11TNBi5 | `machines/nuc11/` | Ready to build |
-| ASRock B550 / Ryzen 9 5950X | `machines/asrock-b550/` | Planned |
-| Dell Precision T5810 | `machines/precision-t5810/` | Built (awaiting first boot) |
-| Dell Precision 7960 | `machines/precision-7960/` | Harvest only |
+| Dell Precision 7960 | `machines/precision-7960/` | Reference only (RHEL) |
 | Surface Pro 9 | `machines/surface-pro-9/` | Planned |
 
 If your machine isn't listed or is "Planned", you'll need to generate a config first. See [Adding a New Machine](#adding-a-new-machine) at the end.
@@ -738,7 +741,16 @@ reboot
 
 ## Adding a New Machine
 
-To add support for a machine not yet in the repository:
+To add support for a machine not yet in the repository, the repo ships three generators that bootstrap most of the boilerplate from harvest data:
+
+| Step | Tool | Produces |
+|------|------|----------|
+| 1 | `tools/harvest.sh` + `tools/deep_harvest.sh` | `hardware_inventory.log`, `deep_harvest.log` |
+| 2 | `tools/kernel-config-template.sh` | 26-phase `kernel_config.sh` skeleton (auto-lints output) |
+| 3 | `tools/generate-config.sh` | `.config`, `make.conf`, `HARDWARE.md` (uses Claude CLI) |
+| 4 | `tools/generate-install.sh` | `gentoo_install_part{1,2,3_chroot}.sh` — feature-gated from `machine-profile.sh` |
+
+See `shared/machine-checklist.md` for the full onboarding checklist.
 
 ### Step 1: Harvest
 
@@ -751,39 +763,42 @@ sudo tools/harvest.sh
 sudo -E tools/deep_harvest.sh
 ```
 
-Save the output logs.
+Copy both logs to your build host.
 
-### Step 2: Generate Config
-
-Copy the closest existing `.config` as a starting point:
+### Step 2: Generate the kernel config skeleton
 
 ```bash
-mkdir -p machines/new-machine
-cp machines/closest-match/.config machines/new-machine/.config
+tools/kernel-config-template.sh <new-machine> /path/to/hardware_inventory.log
 ```
 
-Then modify the config based on harvest data:
-- **Enable** drivers for hardware found in the harvest (PCI devices, modules)
-- **Disable** drivers specific to the source machine that aren't present
-- Check `HARDWARE.md` files for examples of what to change
+This produces `machines/<new-machine>/kernel_config.sh` and automatically runs `kconfig-lint.sh` on the result. Review the output for FAIL/WARN entries and hand-edit as needed.
 
-### Step 3: Create make.conf
-
-Copy and adjust compiler flags for the new CPU:
+### Step 3: Generate .config, make.conf, and HARDWARE.md
 
 ```bash
-cp machines/closest-match/make.conf machines/new-machine/make.conf
-# Edit: change -march= to match CPU microarchitecture
-# Common values: tigerlake, alderlake, znver3, broadwell, sapphirerapids
+tools/generate-config.sh <new-machine> <closest-base> /path/to/harvest-dir/
 ```
 
-### Step 4: Document
+`<closest-base>` should be an existing machine with similar hardware class (same CPU family and GPU topology). The tool uses Claude CLI to analyze harvest data against the base and emit `.config`, `make.conf` (with correct `-march=`), and a HARDWARE.md drafted from the harvest.
 
-Create `machines/new-machine/HARDWARE.md` from the harvest data. See existing HARDWARE.md files for the format.
+### Step 4: Generate the 3-phase install scripts
 
-### Step 5: Build and Validate
+```bash
+tools/generate-install.sh <new-machine> <closest-base> /path/to/harvest-dir/
+```
 
-Follow this installation guide using your new machine directory. After first boot, run the harvest scripts again on Gentoo and compare against the original harvest to verify all hardware is supported.
+Emits `gentoo_install_part{1,2,3_chroot}.sh` wired to the machine's feature profile:
+
+- **part1** — disk partitioning. Header includes all detected block devices (sizes from harvest section 8) so you can verify the target before running. Partition prefix (`p` for NVMe, bare for SATA) is selected automatically.
+- **part2** — stage3 + chroot prep. Copies only config files that actually exist in the machine directory (via a `copy_if_exists` helper), so it degrades gracefully while the machine directory is still being filled in.
+- **part3_chroot** — 13-phase chroot install. NVIDIA modprobe, Apple mbpfan, Surface HiDPI, Dell EFI fallback, laptop TLP, and desktop always-on blocks are gated on feature flags. Phase 11 (hardware-specific) is the most likely section to need hand-editing — TODO comments point at the relevant machines for reference.
+
+### Step 5: Review, build, and validate
+
+- Review each generated file. Address TODO comments — especially machine-unique quirks like Dell `i915.enable_guc=3`, Apple `applesmc` verification, or Surface IPTSD config that the generator can't infer.
+- Follow this installation guide (or the generated 3-phase scripts) to build on the target.
+- After first boot, run `sudo tools/verify-install.sh` — it auto-detects the machine from DMI and runs 8 verification sections.
+- Re-harvest on Gentoo and diff against the original harvest to confirm all hardware is driven.
 
 ---
 

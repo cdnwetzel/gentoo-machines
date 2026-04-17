@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, update-system.sh, verify-install.sh
+tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -154,6 +154,20 @@ tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
 # Example: tools/generate-config.sh precision-t5810 nuc11 /tmp/t5810-harvest/
 ```
 Analyzes harvest data against a base config and generates `.config`, `make.conf`, and `HARDWARE.md`.
+
+### generate-install.sh
+3-phase install script generator for new machines:
+```bash
+tools/generate-install.sh <new-machine> <base-machine> <harvest-dir>
+# Example: tools/generate-install.sh precision-7960 precision-t5810 /tmp/7960-harvest/
+```
+Emits `gentoo_install_part{1,2,3_chroot}.sh` feature-gated via `machine-profile.sh`. Parses harvest section 8 directly for block-device candidates (authoritative — avoids live-USB false positives). Feature gates: NVIDIA modprobe, Intel microcode, BT service, laptop TLP, Apple mbpfan, Surface HiDPI, Dell EFI fallback, desktop always-on elogind drop-in, firmware verification keyed to WiFi/BT driver. Output is a starting skeleton — machine-unique quirks (Dell `i915.enable_guc=3`, Surface IPTSD, Apple `applesmc` verification) are left as TODO comments for hand-edit.
+
+### test-generate-install.sh
+Regression harness for `generate-install.sh`. Runs the generator against three synthetic fixtures under `tools/test-fixtures/` (`intel-sata-desktop.harvest`, `amd-nvme-nvidia-desktop.harvest`, `apple-broadwell-laptop.harvest`) and asserts each feature gate fires correctly (presence + absence checks + `bash -n` on all three generated parts). 42 total checks.
+```bash
+tools/test-generate-install.sh
+```
 
 ### machine-profile.sh
 Shared hardware detection library — parses harvest.sh output into feature flags. Sourced by other tools, not run directly:

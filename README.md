@@ -7,16 +7,17 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | Machine | CPU | GPU | Status | Current OS |
 |---------|-----|-----|--------|------------|
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
-| [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
-| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** (config maintained) | Windows (returned) |
-| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | **Production** (config maintained) | macOS 12 (kids' machine) |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Production** | Gentoo |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 (22C/44T) | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
+| [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
+| [Beelink MINI S](machines/beelink-minis/) | Celeron N5095A (Jasper Lake) | Intel UHD Gen11 LP | **Production** | Gentoo |
+| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Config maintained | Windows (returned) |
+| [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired (config maintained) | macOS 12 (kids' machine) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
-| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
+| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 (Sapphire Rapids) | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
 
-NVIDIA machines use **proprietary nvidia-drivers**. The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
+NVIDIA machines use **proprietary nvidia-drivers** (`kernel-open` on Turing+). The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
 
 ## Repository Layout
 
@@ -31,39 +32,33 @@ gentoo-machines/
 │   │   ├── grub           # GRUB config (i915 GuC, NVIDIA dynamic power)
 │   │   ├── HARDWARE.md    # Hardware + software environment reference
 │   │   └── ...            # sysctl, zram, tlp, prime-run, 3-phase install scripts
-│   ├── mbp-2015/          # MacBook Pro 12,1 Early 2015 (Broadwell) - RETIRED
-│   │   ├── .config        # Kernel config (Apple HW, THP/MGLRU tuning)
-│   │   ├── make.conf      # Portage build settings (-march=broadwell)
-│   │   ├── kernel_config.sh  # Programmatic kernel config (Apple-specific)
-│   │   ├── fstab          # Single SSD layout
-│   │   ├── grub           # GRUB config (libata.force=noncq, reboot=pci)
-│   │   ├── HARDWARE.md    # Hardware reference
-│   │   └── ...            # mbpfan, zram, hotkeys, 3-phase install scripts, wifi fix
-│   ├── surface-pro-6/     # Surface Pro 6 (Kaby Lake-R) - PRODUCTION
-│   │   ├── make.conf      # Portage build settings (-march=skylake)
-│   │   ├── kernel_config.sh  # Programmatic kernel config (Marvell WiFi, Surface HW)
-│   │   ├── HARDWARE.md    # Hardware reference (5 harvest rounds)
-│   │   └── ...            # 3-phase install scripts, HiDPI, IPTSD, WiFi power save fix
-│   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - PRODUCTION (config maintained)
-│   │   ├── .config        # Kernel config
-│   │   ├── make.conf      # Portage build settings (-march=alderlake)
-│   │   └── HARDWARE.md    # Hardware reference
-│   ├── nuc11/             # Intel NUC11TNBi5 (Tiger Lake) - READY TO BUILD
-│   │   ├── .config        # Kernel config (derived from xps-9315)
-│   │   ├── make.conf      # Portage build settings (-march=tigerlake)
-│   │   └── HARDWARE.md    # Hardware reference
-│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X - PRODUCTION
-│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 - PRODUCTION
-│   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 - REFERENCE ONLY
-│   └── surface-pro-9/     # Surface Pro 9 - PLANNED
+│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X (Zen 3 + NVIDIA Ampere) - PRODUCTION
+│   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 (Broadwell-EP + dual NVIDIA) - PRODUCTION
+│   ├── surface-pro-6/     # Surface Pro 6 (Kaby Lake-R + Marvell WiFi + HiDPI) - PRODUCTION
+│   ├── beelink-minis/     # Beelink MINI S (Jasper Lake mini-PC, always-on) - PRODUCTION
+│   ├── mbp-2015/          # MacBook Pro 12,1 (Broadwell + Apple SMC + brcmfmac) - Retired
+│   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - Config maintained
+│   ├── nuc11/             # Intel NUC11TNBi5 (Tiger Lake) - Ready to build
+│   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 (Sapphire Rapids) - Reference only
+│   └── surface-pro-9/     # Surface Pro 9 - Planned
+│   # Each production machine directory typically contains:
+│   #   .config, kernel_config.sh, make.conf, HARDWARE.md, world,
+│   #   package.use, package.accept_keywords, package.env,
+│   #   sysctl-performance.conf, zram-init.conf, grub,
+│   #   gentoo_install_part{1,2,3_chroot}.sh (3-phase automated install).
 ├── tools/
-│   ├── harvest.sh         # General-purpose hardware inventory (15 sections)
-│   ├── deep_harvest.sh    # Deep hardware discovery with module/firmware detection
-│   ├── kconfig-lint.sh    # Static kernel config validator (5 checks, 19K symbols)
-│   ├── kernel-config-template.sh  # Auto-generate kernel_config.sh from harvest data
-│   ├── update-system.sh            # Prompted system update workflow with resume
-│   ├── build-kernel-remote.sh     # Cross-compile and deploy kernels over SSH
-│   └── generate-config.sh         # Assisted config generation (uses Claude CLI)
+│   ├── harvest.sh                   # General-purpose hardware inventory (17 sections)
+│   ├── deep_harvest.sh              # Deep hardware discovery with module/firmware detection
+│   ├── machine-profile.sh           # Shared feature-flag library sourced by other tools
+│   ├── kconfig-lint.sh              # Static kernel config validator (5 checks, ~19K symbols)
+│   ├── kernel-config-template.sh    # Auto-generate kernel_config.sh from harvest data
+│   ├── generate-config.sh           # Assisted config generation (.config, make.conf, HARDWARE.md)
+│   ├── generate-install.sh          # Generate 3-phase install scripts from harvest + profile
+│   ├── test-generate-install.sh     # Regression harness for generate-install.sh
+│   ├── test-fixtures/               # Synthetic harvests exercising feature gates
+│   ├── update-system.sh             # Prompted system update workflow with resume
+│   ├── build-kernel-remote.sh       # Cross-compile and deploy kernels over SSH
+│   └── verify-install.sh            # Post-reboot deep verification (auto-detects machine)
 ├── shared/
 │   ├── world              # Common installed package list
 │   ├── package.use        # Per-package USE flags
@@ -118,6 +113,33 @@ Analyzes harvest data against a base config and generates `.config`, `make.conf`
 
 ```bash
 tools/generate-config.sh <new-machine> <base-machine> <harvest-dir>
+```
+
+### generate-install.sh — 3-Phase Install Script Generator
+Produces a starting-point skeleton of the three install scripts (`gentoo_install_part1.sh`, `part2.sh`, `part3_chroot.sh`) for a new machine. Parses harvest section 8 for block devices (authoritative — avoids the live-USB false positive that pure driver detection hits) and consults `machine-profile.sh` feature flags to gate platform-specific blocks (NVIDIA modprobe, Apple mbpfan, Surface HiDPI, Dell EFI fallback, laptop TLP, desktop always-on elogind drop-in, firmware verification keyed to WiFi/BT driver).
+
+```bash
+tools/generate-install.sh <new-machine> <base-machine> <harvest-dir>
+```
+
+A companion harness (`tools/test-generate-install.sh`) runs the generator against three synthetic fixtures under `tools/test-fixtures/` and asserts that each feature gate fires correctly — 42 checks across `intel-sata-desktop`, `amd-nvme-nvidia-desktop`, and `apple-broadwell-laptop` profiles.
+
+### machine-profile.sh — Feature Flag Library
+Shared hardware-detection helper that parses `harvest.sh` output into 30+ feature flags (CPU, GPU generation, WiFi/BT driver, audio type, storage, Ethernet, platform vendor, boot type, suspend caps, chassis, Thunderbolt, ISH, SAM, EDAC, NUMA). Sourced by other tools rather than executed directly.
+
+```bash
+HARVEST=/path/to/hardware_inventory.log source tools/machine-profile.sh
+# now use $HAS_NVIDIA_GPU, $WIFI_DRIVER, $IS_LAPTOP, etc.
+
+# Or print a summary:
+HARVEST=... MP_SUMMARY=1 bash tools/machine-profile.sh
+```
+
+### verify-install.sh — Post-Reboot Verification
+Deep verification across 8 sections: kernel/boot, GPU (detects i915/nvidia-smi/nouveau clashes), networking (WiFi driver + firmware + NM state), audio (ALSA + PipeWire), storage (zram + swap), services (machine-conditional), user/permissions, and machine-specific checks. Auto-detects machine from DMI. Exit code equals failure count.
+
+```bash
+sudo tools/verify-install.sh
 ```
 
 ### update-system.sh — System Update Tool
@@ -203,13 +225,13 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 
 ### Per-Machine Differences
 
-| Setting | XPS 9510 | Surface Pro 6 | T5810 | B550 | NUC11 | XPS 9315 |
-|---------|----------|---------------|-------|------|-------|----------|
-| `-march=` | `tigerlake` | `skylake` | `broadwell` | `znver3` | `tigerlake` | `alderlake` |
-| `VIDEO_CARDS` | `intel iris nvidia` | `intel` | `nvidia` | `nvidia` | `intel iris` | `intel iris` |
-| AVX-512 | Yes | No | No | No | Yes | No |
-| Hybrid cores | No | No | No | No | No | Yes |
-| CPU vendor | Intel | Intel | Intel | AMD | Intel | Intel |
+| Setting | XPS 9510 | B550 | T5810 | SP6 | Beelink | NUC11 | XPS 9315 |
+|---------|----------|------|-------|-----|---------|-------|----------|
+| `-march=` | `tigerlake` | `znver3` | `broadwell` | `skylake` | `tremont` | `tigerlake` | `alderlake` |
+| `VIDEO_CARDS` | `intel iris nvidia` | `nvidia` | `nvidia` | `intel` | `intel` | `intel iris` | `intel iris` |
+| AVX-512 | Yes | No | No | No | No | Yes | No |
+| Hybrid cores | No | No | No | No | No | No | Yes |
+| CPU vendor | Intel | AMD | Intel | Intel | Intel | Intel | Intel |
 
 ## Machine Notes
 
@@ -222,14 +244,17 @@ Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO
 ### Production: Surface Pro 6
 Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense display with 150% HiDPI scaling. WiFi power save workarounds for suspend reliability. Full 3-phase automated install with HiDPI configuration throughout (LightDM, XFCE, GTK greeter).
 
-### Production (config maintained): MacBook Pro 12,1 (2015)
-Returned to macOS 12 as kids' machine. Kernel config and install scripts maintained in the repo. Full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
+### Retired (config maintained): MacBook Pro 12,1 (2015)
+Returned to macOS 12 as a kids' machine. Kernel config and install scripts are maintained in the repo for reference. Full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
 
 ### Production: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
 Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, `kernel-open`), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
+### Production: Beelink MINI S (Always-On Mini PC)
+Celeron N5095A (4C/4T, Jasper Lake/Tremont — no HT, no AVX/AVX2), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel Wireless-AC 3165, Realtek RTL8168 GbE, 256GB M.2 SATA SSD (no NVMe on this board). Always-on via elogind drop-in that disables all sleep/suspend. 4GB portage tmpfs with disk fallback for large packages (binary-only browsers).
+
 ### Reference Only: Precision 7960 (Multi-GPU Xeon W)
-Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
+Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433 (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, 4x Samsung PM9C1a 1.8TB RAID10 via VMD. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
 
 ### Kernel Strategy
 
