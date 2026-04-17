@@ -259,3 +259,23 @@ Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433 (Sapphire Rap
 ### Kernel Strategy
 
 All production machines use `gentoo-sources` with manual configuration via per-machine `kernel_config.sh` scripts — not distribution kernels (`gentoo-kernel`/`gentoo-kernel-bin`). No initramfs or dracut — root-path drivers (NVMe, AHCI, ext4) are built-in (=y). `installkernel` with the `grub` USE flag auto-updates GRUB on `make install`. Old kernels are cleaned with `eclean-kernel -n 3` (keep current + 2 rollback). See `tools/update-system.sh` for the complete guided workflow.
+
+## Contributing
+
+Scope is **x86/x64 Intel and AMD**. The best way to contribute is to add a new machine — harvest your hardware, run the generators, and submit the resulting configs so the next person with similar hardware gets a working starting point automatically.
+
+**AI-assisted contributions are welcome.** Every commit in this repo is `Co-Authored-By: Claude` — that's how it gets built. The filter isn't on whether you used an LLM; it's on whether the machine actually boots and passes verification. Those requirements apply equally to human and AI-assisted work.
+
+**Quality bar for new-machine PRs:** see `machines/asrock-b550/` as a reference — kernel config, make.conf, full 3-phase install scripts, HARDWARE.md, and a STATUS.md marking the install date.
+
+**New-machine PR checklist:**
+
+1. Harvest on the target: `sudo tools/harvest.sh && sudo -E tools/deep_harvest.sh`
+2. Run the three generators (`kernel-config-template.sh`, `generate-config.sh`, `generate-install.sh`) — see [INSTALL.md § Adding a New Machine](INSTALL.md#adding-a-new-machine)
+3. Install on the actual hardware and boot it — we don't merge machines that haven't been proven to boot
+4. Paste the output of `sudo tools/verify-install.sh` into the PR description (failure count must be zero)
+5. Include the harvest logs under `machines/<your-machine>/harvest/` (or reference them in the PR) so the nearest-base suggester has something to score against later
+
+**For changes that aren't a new machine** (tool fixes, generator improvements, gap-closing on items from [`backlog.md`](backlog.md)): please open an issue first describing the problem and the proposed approach. One paragraph is plenty — it just keeps us aligned before you spend time.
+
+**What we're not looking for:** cosmetic rewrites, speculative refactors, or contributions outside the x86 Intel/AMD scope.
