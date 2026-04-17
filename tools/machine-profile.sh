@@ -76,7 +76,7 @@ fi
 
 if grep -qiE 'nvidia|nouveau' "$HARVEST"; then
     HAS_NVIDIA_GPU=1
-    NVIDIA_GPU_COUNT=$(grep -c 'VGA compatible controller.*NVIDIA\|3D controller.*NVIDIA' "$HARVEST" 2>/dev/null || echo "1")
+    NVIDIA_GPU_COUNT=$(grep -cE 'VGA compatible controller.*NVIDIA|3D controller.*NVIDIA' "$HARVEST" 2>/dev/null) || NVIDIA_GPU_COUNT=0
     [ "$NVIDIA_GPU_COUNT" -eq 0 ] && NVIDIA_GPU_COUNT=1
 fi
 

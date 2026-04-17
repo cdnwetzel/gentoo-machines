@@ -1,0 +1,48 @@
+=== Synthetic harvest: Intel mini-PC / SATA SSD / iGPU-only (beelink-minis shape) ===
+
+[1. PCI DEVICES - CORE HARDWARE]
+00:02.0 VGA compatible controller: Intel Corporation JasperLake [UHD Graphics]
+	Kernel driver in use: i915
+00:14.3 Network controller: Intel Corporation Wireless-AC 9461/9462
+	Kernel driver in use: iwlwifi
+
+[2. CPU DETAILS]
+Vendor ID:                          GenuineIntel
+Model name:                         Intel(R) Celeron(R) N5095A @ 2.00GHz
+CPU threads (nproc):                4
+
+[3. MOTHERBOARD/DMI - CHIPSET]
+  sys_vendor: AZW
+  chassis_type: 3
+
+[6. CURRENTLY LOADED MODULES]
+i915
+iwlwifi
+r8169
+snd_hda_intel
+btusb
+btintel
+ahci
+
+[8. STORAGE - DRIVE CONTROLLER]
+NAME        FSTYPE MOUNTPOINT SIZE
+sda                          238.5G
+|-sda1      vfat              600M
+|-sda2      ext4              2G
+`-sda3      ext4              235G
+
+[10. AUDIO SUBSYSTEM]
+  Type: HDA
+  Codec: Realtek ALC269
+
+[11. PLATFORM VENDOR]
+  Platform: GENERIC (AZW)
+
+[12. BOOT TYPE]
+  Boot: EFI
+
+[13. SUSPEND CAPABILITIES]
+  S3 deep: supported
+
+[15. GCC -march SUGGESTION]
+  Suggested: CFLAGS="-march=tremont -O2 -pipe"
