@@ -16,7 +16,7 @@
 
 ## Medium Priority — New Tool Candidates
 
-- [ ] **Unified install script generator**: `tools/generate-install.sh <machine> <base-machine>` — create all 3 part scripts from harvest data + feature detection [repo]
+- [x] **Unified install script generator**: `tools/generate-install.sh <machine> <base> <harvest-dir>` — generates all 3 part scripts from harvest section 8 + machine-profile.sh feature gates (2026-04-16) [repo]
 - [x] **Machine feature profile**: tools/machine-profile.sh — shared library, 30+ variables, sourced by kernel-config-template.sh [repo]
 
 ## Parked
