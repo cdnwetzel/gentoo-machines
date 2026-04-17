@@ -17,6 +17,32 @@
 ## Medium Priority — New Tool Candidates
 
 - [ ] **Nearest-base suggester for config generation**: extend `generate-config.sh` / `generate-install.sh` (or add a `tools/suggest-base.sh` helper) that scores every existing machine in the library against a new machine's harvest using `machine-profile.sh` features (CPU vendor/march, GPU topology, WiFi driver, platform vendor, chassis type, storage mix) and prints a ranked list of the closest 3 matches. Goal: make onboarding accessible — the user no longer has to know which machine is "closest" before running the generators. Stretch: auto-feed the top match as the default `<base-machine>` arg. [repo]
+
+- [ ] **Identify deficiencies in hardware coverage** (scope: x86/x64 Intel + AMD only — no ARM, Apple Silicon, or non-x86 mobile). Inventory what's blocking the repo from supporting nearly any mainstream Intel/AMD machine and keep the list current as hardware lands. Current fleet covers Intel (Broadwell through Sapphire Rapids, Jasper Lake/Tremont) + AMD Zen 3, Intel iGPU + NVIDIA (Pascal through Ampere), iwlwifi/brcmfmac/mwifiex, EFI boot, Dell/Apple/Surface/generic platforms. Known gaps, ranked by real-world prevalence on x86:
+
+  **Tier 1 — highest impact (most real-world machines blocked today):**
+  - **AMD GPU** (Radeon iGPU on Ryzen APUs + discrete Radeon). `machine-profile.sh` detects `HAS_AMD_GPU` but no reference machine exists; no `VIDEO_CARDS="amdgpu radeonsi"` pattern, no `amdgpu` firmware wiring in any `kernel_config.sh`. Blocks every Ryzen APU laptop (7040/8040 series) and AMD gaming desktop without NVIDIA.
+  - **Lenovo / HP / ASUS platform drivers**. Profile has `PLATFORM=lenovo|hp|asus` hooks but no machine exercises them. No `THINKPAD_ACPI` / `HP_WMI` / `ASUS_WMI` enabled in any kernel config, no per-vendor ACPI workarounds, no TrackPoint/fingerprint/charge-threshold patterns. ThinkPads are arguably the most common Linux laptop.
+  - **Realtek PCIe WiFi** (`rtw88`, `rtw89`). Common in budget and newer Lenovo/ASUS/Acer laptops. Profile detects the driver but kernel-config template and install scripts have no firmware verification block for it.
+
+  **Tier 2 — moderate:**
+  - **MediaTek WiFi** (`mt76`). Framework laptop 16, some AMD boards.
+  - **Qualcomm Atheros** (`ath11k`, `ath12k`). Premium laptops (Samsung Galaxy Book), newer Dells.
+  - **eMMC storage** (`MMC_SDHCI` driver path, distinct from NVMe). Low-end laptops, chromebooks.
+  - **AMD-specific extras**: `amd-pstate-epp`, GPU reset handling for APUs, hybrid `amdgpu` + discrete NVIDIA on Ryzen laptops.
+
+  **Tier 3 — niche but rising:**
+  - **Steam Deck / handheld form factor** (AMD APU + gamepad HID + TDP control).
+  - **Intel Arc discrete GPU** (`VIDEO_CARDS="intel iris xe"` for DG2).
+  - **Intel VMD / RAID storage** (7960 has it but its install is reference-only — pattern unproven).
+  - **Legacy BIOS boot**. All current `part1`/`part3` scripts hardcode EFI.
+  - **Secure Boot enrollment** (MOK). Currently assumed disabled.
+
+  **Realistic path to close Tier 1** (no AMD GPU or AMD laptop hardware currently accessible): two tracks in parallel.
+  1. **Generator-side coverage** (doable today, no new hardware): extend `kernel-config-template.sh` and `generate-install.sh` to emit correct AMD-GPU / Lenovo-platform / Realtek-WiFi blocks from harvest data alone. `machine-profile.sh` already sets the flags; the templates need feature gates for `amdgpu`/`radeonsi` in `VIDEO_CARDS`, `THINKPAD_ACPI`/`HP_WMI`/`ASUS_WMI` in kernel config, and `rtw88`/`rtw89` firmware verification in part3. Someone with the hardware could run the generators and get a working install without us touching their config.
+  2. **Community-contributed harvests**: document the contribution flow clearly (run `harvest.sh` + `deep_harvest.sh`, open a PR with the two logs and the generated configs under `machines/<new-name>/`). Each landed contribution becomes a reference for nearest-base suggester scoring.
+
+  Aspirational: if AMD Ryzen laptop access becomes available later (ideally a Ryzen ThinkPad — covers AMD CPU + AMD GPU + Lenovo platform in one machine), first-party reference configs would also slot in via the existing onboarding flow. [repo, hardware]
 - [x] **Unified install script generator**: `tools/generate-install.sh <machine> <base> <harvest-dir>` — generates all 3 part scripts from harvest section 8 + machine-profile.sh feature gates (2026-04-16) [repo]
 - [x] **Machine feature profile**: tools/machine-profile.sh — shared library, 30+ variables, sourced by kernel-config-template.sh [repo]
 
