@@ -343,6 +343,7 @@ echo "[8.1] Enabling services..."
 rc-update add dbus default
 rc-update add elogind boot
 rc-update add acpid default
+rc-update add cronie default
 rc-update add display-manager default
 rc-update add sshd default
 rc-update add metalog default

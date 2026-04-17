@@ -306,6 +306,7 @@ echo "=========================================="
 echo "[8.1] Enabling default runlevel services..."
 rc-update add dbus default
 rc-update add acpid default
+rc-update add cronie default
 rc-update add bluetooth default
 rc-update add mbpfan default
 rc-update add display-manager default

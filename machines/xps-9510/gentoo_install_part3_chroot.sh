@@ -284,6 +284,7 @@ echo "[8.1] Enabling services..."
 rc-update add dbus default
 rc-update add elogind boot
 rc-update add acpid default
+rc-update add cronie default
 rc-update add bluetooth default
 rc-update add thermald default
 rc-update add tlp default

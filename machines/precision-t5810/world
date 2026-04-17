@@ -5,6 +5,7 @@
 app-admin/eclean-kernel
 app-admin/metalog
 app-admin/sudo
+sys-process/cronie
 app-portage/cpuid2cpuflags
 app-portage/gentoolkit
 sys-apps/dmidecode
