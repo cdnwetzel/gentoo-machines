@@ -240,21 +240,22 @@ $SC --module SND_SEQ
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
-# SOF (Sound Open Firmware) driver stack
-$SC --enable SND_SOC_SOF_TOPLEVEL
-$SC --module SND_SOC_SOF_PCI_INTEL_TGL
+# SOF (Sound Open Firmware) driver stack — Comet Lake (i5-10505)
+# SND_SOC_SOF_COMETLAKE auto-selects SND_SOC_SOF_INTEL_CNL + _COMMON + SND_SOC_SOF
 $SC --module SND_SOC
-$SC --module SND_SOC_SOF
-$SC --module SND_SOC_SOF_INTEL_TOPLEVEL
-$SC --module SND_SOC_SOF_INTEL_PCI
+$SC --enable SND_SOC_SOF_TOPLEVEL
+$SC --enable SND_SOC_SOF_INTEL_TOPLEVEL
+$SC --module SND_SOC_SOF_PCI
+$SC --module SND_SOC_SOF_COMETLAKE
 
 # SoundWire (if present)
 $SC --enable SOUNDWIRE 2>/dev/null || true
 $SC --module SOUNDWIRE_INTEL 2>/dev/null || true
 
-# HDA link (SOF still needs HDA for HDMI)
+# HDA link (SOF still needs HDA for HDMI; Realtek codec for ALC3246 line-out/headphone)
 $SC --module SND_HDA_INTEL
 $SC --module SND_HDA_CODEC_HDMI
+$SC --module SND_HDA_CODEC_REALTEK
 
 echo "  [OK] Audio"
 

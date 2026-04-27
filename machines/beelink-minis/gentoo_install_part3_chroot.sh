@@ -21,7 +21,8 @@ MACHINE="beelink-minis-n5095"
 HOSTNAME_SHORT="beelink-minis"
 CONFIGS="/root/${MACHINE}-configs"
 TIMEZONE="America/New_York"
-USERNAME="chris"
+read -rp "Username for desktop user [chris]: " USERNAME
+USERNAME="${USERNAME:-chris}"
 
 echo "============================================================"
 echo "=== Beelink MINI S (N5095A) One-Shot Chroot Install ==="

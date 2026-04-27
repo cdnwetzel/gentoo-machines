@@ -516,21 +516,31 @@ EOF
 if [ "$AUDIO_TYPE" = "sof" ]; then
     cat >> "$OUTPUT" << 'EOF'
 # SOF (Sound Open Firmware) driver stack
-$SC --enable SND_SOC_SOF_TOPLEVEL
-$SC --module SND_SOC_SOF_PCI_INTEL_TGL
-$SC --module SND_SOC
-$SC --module SND_SOC_SOF
-$SC --module SND_SOC_SOF_INTEL_TOPLEVEL
-$SC --module SND_SOC_SOF_INTEL_PCI
+$SC --module SND_SOC                       # ALSA SoC core
+$SC --enable SND_SOC_SOF_TOPLEVEL          # bool — parent menuconfig (children gated by `if`)
+$SC --enable SND_SOC_SOF_INTEL_TOPLEVEL    # bool — Intel subgroup gate
+$SC --module SND_SOC_SOF_PCI               # PCI enumeration
+EOF
+    if [ -n "$SOF_CHIP" ]; then
+        echo "\$SC --module $SOF_CHIP    # auto-selects SOF_INTEL_<family> + COMMON + SOF" >> "$OUTPUT"
+    else
+        echo "# TODO: no SOF chip mapped for GCC_MARCH=$GCC_MARCH — check sound/soc/sof/intel/Kconfig" >> "$OUTPUT"
+    fi
+    cat >> "$OUTPUT" << 'EOF'
 
 # SoundWire (if present)
 $SC --enable SOUNDWIRE 2>/dev/null || true
 $SC --module SOUNDWIRE_INTEL 2>/dev/null || true
 
-# HDA link (SOF still needs HDA for HDMI)
+# HDA link (SOF still needs HDA for HDMI + analog codec)
 $SC --module SND_HDA_INTEL
 $SC --module SND_HDA_CODEC_HDMI
 EOF
+    if [ "$AUDIO_CODEC" = "realtek" ]; then
+        echo '$SC --module SND_HDA_CODEC_REALTEK    # ALC* codec for analog out' >> "$OUTPUT"
+    elif [ "$AUDIO_CODEC" = "cirrus" ]; then
+        echo '$SC --module SND_HDA_CODEC_CS420X    # Cirrus codec for analog out' >> "$OUTPUT"
+    fi
 elif [ "$AUDIO_TYPE" = "hda" ]; then
     cat >> "$OUTPUT" << 'EOF'
 # HDA Intel driver — module
@@ -560,7 +570,7 @@ $SC --enable SND_HDA_PATCH_LOADER
 $SC --enable SND_HDA_POWER_SAVE
 $SC --set-val SND_HDA_POWER_SAVE_DEFAULT 1
 
-# Disable SOF (HDA works natively)
+# Disable SOF (HDA works natively) — disabling parent kills entire SOF subtree
 $SC --disable SND_SOC_SOF_TOPLEVEL
 EOF
 fi

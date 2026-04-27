@@ -58,6 +58,15 @@
 
 ## Completed
 
+### Session 2026-04-27 (mid-OptiPlex install)
+- [x] **Username prompt during install**: `tools/generate-install.sh:743` no longer hardcodes `USERNAME="chris"` — prompts with `chris` as default. Swept all 7 machine `gentoo_install_part3_chroot.sh` scripts: 4 had `chris` inlined directly into useradd/passwd/verify lines (mbp-2015, xps-9510, precision-t5810, surface-pro-6, asrock-b550); 2 already used `$USERNAME` constant (beelink-minis, optiplex-3090) — all now share the prompt pattern.
+- [x] **SOF kernel config: bug class eradicated across the repo**. Cause: `tools/kernel-config-template.sh` SOF block contained 3 invalid symbols (`SND_SOC_SOF_PCI_INTEL_TGL`, `SND_SOC_SOF_INTEL_PCI`, plus a bool-vs-tristate misuse on `SND_SOC_SOF_INTEL_TOPLEVEL`) that propagated to 6 machine `kernel_config.sh` files. Effect was masked because legacy `snd_hda_intel` HDA path silently carried audio. Fixes:
+  - Template now emits proper hierarchy: `SND_SOC_SOF_TOPLEVEL` (parent gate, bool) → `SND_SOC_SOF_INTEL_TOPLEVEL` (Intel subgroup, bool) → `SND_SOC_SOF_PCI` (PCI bus, tristate) → chip-specific `SND_SOC_SOF_<CHIPNAME>` (auto-selects family + COMMON + SOF).
+  - Chip selection driven by new `SOF_CHIP` variable in `tools/machine-profile.sh` mapped from `GCC_MARCH` (CometLake/AlderLake/TigerLake/JasperLake/etc.). Disambiguates `skylake` → KabyLake by CPU model number.
+  - Added `SND_HDA_CODEC_REALTEK` to template's SOF branch (analog out via HDA-Link).
+  - Per-machine sweep: optiplex-3090 + xps-9315 → proper enable hierarchy; xps-9510 + surface-pro-6 + asrock-b550 + beelink-minis + precision-t5810 → cleaner `--disable SND_SOC_SOF_TOPLEVEL` (kills entire subtree at parent).
+- [x] **kconfig-lint integrated into install flow**. `tools/generate-install.sh` part2 now stages `kconfig-lint.sh` into `${CONFIG_STAGE}/`; part3 phase 2 runs lint after `kernel_config.sh` and prompts to abort on FAIL. Updated `kconfig-lint.sh:192` `FW_DRIVERS` watchlist: removed stale `SND_SOC_SOF_PCI_INTEL_TGL/MTL` (no longer in mainline), added 13 chip-specific SOF symbols.
+
 ### Session 2026-03-19
 - [x] SP6: fix WiFi resume after s2idle — pre-suspend module unload + post-resume reload + NM cycling
 - [x] SP6: remove bogus mwifiex driver_mode=0x3, NM-only powersave

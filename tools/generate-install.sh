@@ -521,6 +521,13 @@ copy_if_exists "$CONFIGS/package.accept_keywords"   "$GENTOO/etc/portage/package
 # --- Kernel config + world + grub staged for chroot ---
 copy_if_exists "$CONFIGS/kernel_config.sh"          "$GENTOO$CONFIG_STAGE/kernel_config.sh"       "kernel_config.sh"
 [[ -f "$GENTOO$CONFIG_STAGE/kernel_config.sh" ]] && chmod +x "$GENTOO$CONFIG_STAGE/kernel_config.sh"
+
+# Stage kconfig-lint.sh so phase 2 can validate kernel_config.sh against the running kernel source
+if [[ -f "$REPO/tools/kconfig-lint.sh" ]]; then
+    cp "$REPO/tools/kconfig-lint.sh" "$GENTOO$CONFIG_STAGE/kconfig-lint.sh"
+    chmod +x "$GENTOO$CONFIG_STAGE/kconfig-lint.sh"
+    echo "  [OK] kconfig-lint.sh"
+fi
 copy_if_exists "$CONFIGS/world"                     "$GENTOO$CONFIG_STAGE/world"                  "world"
 copy_if_exists "$CONFIGS/grub"                      "$GENTOO$CONFIG_STAGE/grub"                   "grub"
 copy_if_exists "$CONFIGS/zram-init.conf"            "$GENTOO$CONFIG_STAGE/zram-init.conf"         "zram-init.conf"
@@ -740,7 +747,8 @@ MACHINE="${NEW_MACHINE}"
 HOSTNAME_SHORT="${NEW_MACHINE}"
 CONFIGS="/root/\${MACHINE}-configs"
 TIMEZONE="America/New_York"
-USERNAME="chris"
+read -rp "Username for desktop user [chris]: " USERNAME
+USERNAME="\${USERNAME:-chris}"
 NPROC=\$(nproc)
 
 echo "============================================================"
@@ -827,6 +835,18 @@ else
 fi
 
 bash "$CONFIGS/kernel_config.sh"
+
+if [[ -x "$CONFIGS/kconfig-lint.sh" ]]; then
+    echo ""
+    echo "[2.3.5] Linting kernel_config.sh against /usr/src/linux..."
+    if ! bash "$CONFIGS/kconfig-lint.sh" "$CONFIGS/kernel_config.sh" /usr/src/linux; then
+        echo ""
+        echo "  *** kconfig-lint reported FAIL severity issues above. ***"
+        echo "  *** Common causes: bool symbol set with --module, unknown symbols, missing parents. ***"
+        read -p "  Continue with kernel build anyway? (y/N): " lint_continue
+        [[ "$lint_continue" == "y" || "$lint_continue" == "Y" ]] || exit 1
+    fi
+fi
 
 echo "[2.4] Resolving kernel config dependencies..."
 make olddefconfig

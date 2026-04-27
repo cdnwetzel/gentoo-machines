@@ -27,6 +27,8 @@ MACHINE_LABEL="Dell Precision T5810"
 HOSTNAME_VALUE="precision-t5810"
 TIMEZONE="America/New_York"
 CONFIGS="/root/${MACHINE_NAME}-configs"
+read -rp "Username for desktop user [chris]: " USERNAME
+USERNAME="${USERNAME:-chris}"
 
 # CPU / Build
 KERNEL_JOBS="-j$(nproc)"       # 44 threads on 22C/44T Xeon
@@ -234,11 +236,11 @@ passwd
 
 groupadd -f plugdev
 
-echo "[4.5] Creating user 'chris'..."
-useradd -m -G wheel,audio,video,usb,input,plugdev -s /bin/bash chris
+echo "[4.5] Creating user '$USERNAME'..."
+useradd -m -G wheel,audio,video,usb,input,plugdev -s /bin/bash "$USERNAME"
 echo ""
-echo "Set password for user 'chris':"
-passwd chris
+echo "Set password for user '$USERNAME':"
+passwd "$USERNAME"
 
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
@@ -596,8 +598,8 @@ fi
 qlist -I media-video/pipewire &>/dev/null && echo "[OK] PipeWire" || { echo "[FAIL] PipeWire!"; FAIL=$((FAIL+1)); }
 
 # --- User ---
-id chris &>/dev/null && echo "[OK] User chris exists" || { echo "[FAIL] No user chris!"; FAIL=$((FAIL+1)); }
-groups chris 2>/dev/null | grep -q video && echo "[OK] chris in video group" || { echo "[FAIL] chris not in video group!"; FAIL=$((FAIL+1)); }
+id "$USERNAME" &>/dev/null && echo "[OK] User $USERNAME exists" || { echo "[FAIL] No user $USERNAME!"; FAIL=$((FAIL+1)); }
+groups "$USERNAME" 2>/dev/null | grep -q video && echo "[OK] $USERNAME in video group" || { echo "[FAIL] $USERNAME not in video group!"; FAIL=$((FAIL+1)); }
 
 # --- Sudo ---
 grep -q "^%wheel" /etc/sudoers 2>/dev/null && echo "[OK] sudo for wheel group" || { echo "[FAIL] sudo not configured!"; FAIL=$((FAIL+1)); }

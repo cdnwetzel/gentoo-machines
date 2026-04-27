@@ -355,11 +355,9 @@ $SC --module SND_SEQUENCER
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
-# Disable SOF entirely — legacy HDA path is simpler and sufficient here
+# Disable SOF entirely — legacy HDA path is simpler and sufficient here.
+# Disabling the parent menuconfig kills the entire SOF subtree.
 $SC --disable SND_SOC_SOF_TOPLEVEL
-$SC --disable SND_SOC_SOF_INTEL_TOPLEVEL
-$SC --disable SND_SOC_SOF_JASPERLAKE
-$SC --disable SND_SOC_SOF_HDA_COMMON
 
 echo "  [OK] Audio"
 

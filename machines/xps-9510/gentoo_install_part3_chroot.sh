@@ -25,6 +25,8 @@ set -euo pipefail
 
 CONFIGS="/root/xps-9510-configs"
 TIMEZONE="America/New_York"
+read -rp "Username for desktop user [chris]: " USERNAME
+USERNAME="${USERNAME:-chris}"
 
 echo "============================================================"
 echo "=== Dell XPS 15 9510 One-Shot Chroot Install ==="
@@ -185,11 +187,11 @@ passwd
 
 groupadd -f plugdev
 
-echo "[4.5] Creating user 'chris'..."
-useradd -m -G wheel,audio,video,usb,input,plugdev -s /bin/bash chris
+echo "[4.5] Creating user '$USERNAME'..."
+useradd -m -G wheel,audio,video,usb,input,plugdev -s /bin/bash "$USERNAME"
 echo ""
-echo "Set password for user 'chris':"
-passwd chris
+echo "Set password for user '$USERNAME':"
+passwd "$USERNAME"
 
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
@@ -513,8 +515,8 @@ rc-update show boot 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" 
 qlist -I media-video/pipewire &>/dev/null && echo "[OK] PipeWire" || { echo "[FAIL] PipeWire!"; FAIL=$((FAIL+1)); }
 
 # User
-id chris &>/dev/null && echo "[OK] User chris exists" || { echo "[FAIL] No user chris!"; FAIL=$((FAIL+1)); }
-groups chris 2>/dev/null | grep -q video && echo "[OK] chris in video group" || { echo "[FAIL] chris not in video group!"; FAIL=$((FAIL+1)); }
+id "$USERNAME" &>/dev/null && echo "[OK] User $USERNAME exists" || { echo "[FAIL] No user $USERNAME!"; FAIL=$((FAIL+1)); }
+groups "$USERNAME" 2>/dev/null | grep -q video && echo "[OK] $USERNAME in video group" || { echo "[FAIL] $USERNAME not in video group!"; FAIL=$((FAIL+1)); }
 
 # Sudo
 grep -q "^%wheel" /etc/sudoers 2>/dev/null && echo "[OK] sudo for wheel group" || { echo "[FAIL] sudo!"; FAIL=$((FAIL+1)); }

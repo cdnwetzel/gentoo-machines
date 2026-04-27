@@ -121,6 +121,28 @@ if grep -qi 'realtek\|ALC[0-9]' "$HARVEST"; then AUDIO_CODEC="realtek"
 elif grep -qi 'cs420[0-9]\|Cirrus' "$HARVEST"; then AUDIO_CODEC="cirrus"
 fi
 
+# Map GCC_MARCH to SOF chip-specific Kconfig symbol (Intel Skylake+ DSP).
+# SND_SOC_SOF_<CHIPNAME> auto-selects SND_SOC_SOF_INTEL_<family> + COMMON + SOF.
+# Empty SOF_CHIP means "no SOF for this CPU" (AMD, Broadwell-and-older Xeon, etc).
+SOF_CHIP=""
+case "$GCC_MARCH" in
+    alderlake|raptorlake)              SOF_CHIP="SND_SOC_SOF_ALDERLAKE" ;;
+    cometlake|cannonlake)              SOF_CHIP="SND_SOC_SOF_COMETLAKE" ;;
+    tigerlake|rocketlake)              SOF_CHIP="SND_SOC_SOF_TIGERLAKE" ;;
+    icelake-client|icelake-server)     SOF_CHIP="SND_SOC_SOF_ICELAKE" ;;
+    elkhartlake|jasperlake|tremont)    SOF_CHIP="SND_SOC_SOF_JASPERLAKE" ;;
+    meteorlake|arrowlake|lunarlake)    SOF_CHIP="SND_SOC_SOF_METEORLAKE" ;;
+    skylake)
+        # GCC has no -march=kabylake — disambiguate via CPU model number.
+        # KBL = 7xxx, KBL-R = 8xxx (U/Y series), AML/CML overlap handled separately.
+        if echo "$CPU_MODEL_NAME" | grep -qE 'i[3579]-(7|8)[0-9]{3}[UY]|m3-(7|8)[0-9]{3}'; then
+            SOF_CHIP="SND_SOC_SOF_KABYLAKE"
+        else
+            SOF_CHIP="SND_SOC_SOF_SKYLAKE"
+        fi
+        ;;
+esac
+
 # ============================================================================
 # Storage
 # ============================================================================

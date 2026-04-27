@@ -22,7 +22,8 @@ MACHINE="optiplex-3090"
 HOSTNAME_SHORT="optiplex-3090"
 CONFIGS="/root/${MACHINE}-configs"
 TIMEZONE="America/New_York"
-USERNAME="chris"
+read -rp "Username for desktop user [chris]: " USERNAME
+USERNAME="${USERNAME:-chris}"
 NPROC=$(nproc)
 
 echo "============================================================"

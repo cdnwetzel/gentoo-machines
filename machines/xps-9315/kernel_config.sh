@@ -225,21 +225,22 @@ $SC --module SND_SEQ
 $SC --module SND_TIMER
 $SC --module SND_HRTIMER
 
-# SOF driver stack
-$SC --enable SND_SOC_SOF_TOPLEVEL
-$SC --module SND_SOC_SOF_PCI_INTEL_TGL
+# SOF driver stack — Alder Lake (i5-1230U)
+# SND_SOC_SOF_ALDERLAKE auto-selects SOF_INTEL_<family> + COMMON + SOF
 $SC --module SND_SOC
-$SC --module SND_SOC_SOF
+$SC --enable SND_SOC_SOF_TOPLEVEL
 $SC --enable SND_SOC_SOF_INTEL_TOPLEVEL
-$SC --module SND_SOC_SOF_INTEL_PCI
+$SC --module SND_SOC_SOF_PCI
+$SC --module SND_SOC_SOF_ALDERLAKE
 
 # SoundWire (RT715 SDCA + RT1316 SDW codecs)
 $SC --enable SOUNDWIRE 2>/dev/null || true
 $SC --module SOUNDWIRE_INTEL 2>/dev/null || true
 
-# HDA link (SOF still needs HDA for HDMI)
+# HDA link (SOF still needs HDA for HDMI + analog codec fallback)
 $SC --module SND_HDA_INTEL
 $SC --module SND_HDA_CODEC_HDMI
+$SC --module SND_HDA_CODEC_REALTEK
 $SC --enable SND_HDA_I915
 
 echo "  [OK] Audio (SOF)"
