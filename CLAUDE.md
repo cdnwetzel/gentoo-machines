@@ -39,6 +39,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
 | 9 | Surface Pro 9 | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
 | 10 | Beelink MINI S | Celeron N5095A (Jasper Lake) | Intel UHD (Gen11 LP) | Production | Gentoo |
+| 11 | Dell OptiPlex 3090 SFF | i5-10505 (Comet Lake) | Intel UHD 630 + NVIDIA RTX A1000 8GB | Configs generated | Windows (being replaced) |
 
 NVIDIA machines will use **proprietary nvidia-drivers**. Surface Pro 6 runs stock gentoo-sources; Surface Pro 9 will need **linux-surface** kernel patches.
 
@@ -512,8 +513,45 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/beelink-minis/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/beelink-minis/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (WiFi + BT + always-on) |
 
+### Dell OptiPlex 3090 SFF (Configs Generated)
+
+- **Kernel**: Not yet built (Linux 6.18 LTS planned)
+- **Architecture**: x86_64, 6C/12T (Comet Lake / Skylake-derived, AVX2, no AVX-512)
+- **Compiler flags**: `-march=skylake -O2 -pipe`
+- **Key drivers**: i915 (UHD 630, Comet Lake-S GT2), nvidia (RTX A1000 GA107 Ampere, kernel-open), r8169 (Realtek RTL8168 GbE), nvme, ahci, snd_hda_intel + snd_sof_pci_intel_cnl (Realtek ALC3246 + NVIDIA HDMI), dell_smbios, dell_wmi
+- **Firmware**: Loaded from /lib/firmware/ (i915/kbl_dmc_*, nvidia/ga107/*, intel-ucode 0x000a0655)
+- **CRITICAL — BIOS RAID trap**: Q470 SATA controller defaults to Intel RST/RAID mode. Must switch to **AHCI** in BIOS before Linux can see the NVMe. Switching breaks any pre-existing Windows boot unless prepped (Safe Boot trick).
+- **Hybrid GPU**: Intel UHD 630 + NVIDIA A1000 — desktop, no Optimus power switching needed (nvidia-drivers as primary, intel iGPU available for DisplayPort outputs)
+- **NVIDIA**: GA107 Ampere → kernel-open modules eligible (Turing+), latest nvidia-drivers branch (no legacy pin)
+- **No WiFi/BT**: Dell SFF, wired only
+- **RAM**: 16GB DDR4-2666 single-channel (1 of 2 slots populated, M378A2G43BB3-CWE) — adding 2nd 16GB DIMM doubles memory bandwidth
+- **Storage**: 256GB M.2 2230 NVMe, no secondary SATA disk
+- **Build profile**: CONSTRAINED (16GB → 7GB tmpfs + disk fallback for chromium/llvm/rust/qtwebengine/gcc)
+- **Power/Thermal**: intel_pstate active, S3 deep + hibernate supported. SFF thermals tighter than tower — sustained turbo may downclock
+- **Hardware ref**: `machines/optiplex-3090/HARDWARE.md`
+
+### OptiPlex 3090 Machine-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `machines/optiplex-3090/kernel_config.sh` | Programmatic kernel config (auto-generated, Comet Lake + i915 + NVIDIA) |
+| `machines/optiplex-3090/make.conf` | Portage: `-march=skylake`, VIDEO_CARDS="intel iris nvidia", 7GB tmpfs |
+| `machines/optiplex-3090/HARDWARE.md` | Full hardware inventory + BIOS AHCI flip warning |
+| `machines/optiplex-3090/world` | Package set (NVIDIA, no WiFi/BT, no laptop power mgmt) |
+| `machines/optiplex-3090/package.accept_keywords` | ~amd64 keywords: gentoo-sources 6.18 LTS |
+| `machines/optiplex-3090/package.use` | USE: installkernel+grub, NVIDIA kernel-open, NM -wifi -bluetooth |
+| `machines/optiplex-3090/package.env` | Large package disk fallback (chromium/llvm/rust/qtwebengine/gcc/google-chrome) |
+| `machines/optiplex-3090/portage_env_notmpfs.conf` | Disk PORTAGE_TMPDIR for large builds |
+| `machines/optiplex-3090/sysctl-performance.conf` | VM/network tuning for 16GB RAM + NVMe |
+| `machines/optiplex-3090/zram-init.conf` | 8GB zstd compressed swap (50% of RAM, real working swap) |
+| `machines/optiplex-3090/99-module-rebuild.install` | Kernel postinst hook: auto `emerge @module-rebuild` for NVIDIA |
+| `machines/optiplex-3090/gentoo_install_part1.sh` | Partition 256GB NVMe (TARGET=/dev/nvme0n1, requires AHCI in BIOS) |
+| `machines/optiplex-3090/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
+| `machines/optiplex-3090/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA, no WiFi) |
+
 ## Future Machine Notes
 
+- **OptiPlex 3090 SFF**: Configs generated 2026-04-27. i5-10505 (Comet Lake, 6C/12T, no AVX-512), 16GB DDR4-2666 single-channel (1 of 2 slots populated), Intel UHD 630 + NVIDIA RTX A1000 8GB GDDR6 (GA107 Ampere, kernel-open), no WiFi/BT, Realtek RTL8168 GbE, 256GB M.2 2230 NVMe, `-march=skylake`, Q470 chipset. Base: precision-t5810. **CRITICAL**: BIOS ships with SATA in Intel RST/RAID mode — must switch to AHCI before Linux can see the NVMe. 7GB tmpfs + disk fallback (CONSTRAINED 16GB profile). S3 deep + hibernate supported.
 - **Beelink MINI S**: Production. Celeron N5095A (4C/4T, Jasper Lake/Tremont), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel 3165 WiFi/BT, Realtek GbE, 256GB M.2 SATA SSD, `-march=tremont`. Installed 2026-04-15. Always-on mini PC. 4GB tmpfs + disk fallback. S3 deep sleep supported but disabled (always-on).
 - **ASRock B550**: Production. First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, kernel-open), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Installed 2026-04-05. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
 - **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11. Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).

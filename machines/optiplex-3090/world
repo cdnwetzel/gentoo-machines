@@ -1,0 +1,93 @@
+# /var/lib/portage/world - Dell OptiPlex 3090 SFF
+# Desktop SFF: no WiFi, no Bluetooth, no laptop power management
+
+# System Administration
+app-admin/eclean-kernel
+app-admin/metalog
+app-admin/sudo
+sys-process/cronie
+app-portage/cpuid2cpuflags
+app-portage/gentoolkit
+sys-apps/dmidecode
+sys-apps/i2c-tools
+sys-apps/lm-sensors
+sys-apps/pciutils
+sys-apps/usbutils
+
+# Boot & Kernel
+sys-boot/grub
+sys-firmware/intel-microcode
+sys-kernel/gentoo-sources
+sys-kernel/installkernel
+sys-kernel/linux-firmware
+
+# Power & Zram (no thermald/tlp — desktop SFF)
+sys-block/zram-init
+sys-power/acpid
+
+# Session & Auth
+sys-auth/elogind
+sys-fs/udisks
+
+# Networking (wired only — Realtek RTL8111/8168 / r8169)
+gnome-extra/nm-applet
+net-misc/chrony
+net-misc/dhcpcd
+net-misc/networkmanager
+net-misc/openssh
+x11-apps/xhost
+
+# VPN
+net-vpn/networkmanager-sstp
+
+# Remote Desktop
+net-misc/remmina
+
+# Fonts
+media-fonts/noto-emoji
+
+# Graphics & Video
+x11-apps/xrandr
+x11-drivers/xf86-input-libinput
+
+# NVIDIA (RTX A1000 GA107 Ampere, kernel-open)
+x11-drivers/nvidia-drivers
+
+# Audio (PipeWire replaces PulseAudio)
+media-sound/alsa-utils
+media-sound/pavucontrol
+media-video/pipewire
+media-video/wireplumber
+xfce-extra/xfce4-pulseaudio-plugin
+
+# XFCE Desktop
+x11-misc/lightdm
+xfce-base/xfce4-meta
+xfce-extra/xfce4-screenshooter
+xfce-extra/xfce4-taskmanager
+
+# Web Browsers
+www-client/google-chrome
+www-client/microsoft-edge
+
+# CLI Tools
+app-arch/zip
+app-misc/jq
+app-misc/fastfetch
+app-misc/tmux
+app-text/tesseract
+app-text/tree
+net-fs/sshfs
+sys-process/btop
+sys-process/htop
+sys-process/nvtop
+x11-misc/xclip
+
+# Development
+app-editors/vscode
+dev-db/unixODBC
+dev-python/pip
+dev-util/geany
+dev-util/ccache
+dev-vcs/git
+net-libs/nodejs
