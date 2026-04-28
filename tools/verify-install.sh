@@ -67,6 +67,7 @@ case "$PRODUCT" in
     *"Precision T5810"*|*"Precision Tower 5810"*) MACHINE="precision-t5810"; HAS_NVIDIA=1 ;;
     *"Precision 7960"*) MACHINE="precision-7960"; HAS_NVIDIA=1 ;;
     *"MINI S"*)         MACHINE="beelink-minis"; HAS_INTEL_GPU=1; HAS_WIFI=1; HAS_BLUETOOTH=1; WIFI_DRIVER="iwlwifi" ;;
+    *"OptiPlex 3090"*)  MACHINE="optiplex-3090"; HAS_NVIDIA=1; HAS_INTEL_GPU=1 ;;
 esac
 
 # MacBook detection via Apple vendor
@@ -270,6 +271,7 @@ case "$MACHINE" in
     precision-t5810) check_service sshd ;;
     asrock-b550) check_service sshd ;;
     beelink-minis) check_service sshd; check_service thermald ;;
+    optiplex-3090) check_service sshd ;;
 esac
 
 echo ""
@@ -385,6 +387,31 @@ case "$MACHINE" in
         # AMD pinctrl
         check_module pinctrl_amd
         # zram
+        if [ -b /dev/zram0 ] && [ "$(cat /sys/block/zram0/disksize 2>/dev/null)" -gt 0 ]; then
+            ZRAM_SIZE=$(($(cat /sys/block/zram0/disksize) / 1024 / 1024 / 1024))
+            pass "zram0: ${ZRAM_SIZE}GB"
+        else
+            warn "zram0 not active — check zram-init config"
+        fi
+        ;;
+    optiplex-3090)
+        # Hybrid Intel UHD 630 + NVIDIA RTX A1000 (desktop, no Optimus)
+        if [ $HAS_NVIDIA -eq 1 ] && [ $HAS_INTEL_GPU -eq 1 ]; then
+            pass "Hybrid GPU: Intel UHD 630 + NVIDIA A1000"
+        fi
+        # NVIDIA Ampere (kernel-open eligible)
+        if lsmod | grep -q '^nvidia'; then
+            NV_VER=$(cat /sys/module/nvidia/version 2>/dev/null)
+            [ -n "$NV_VER" ] && pass "nvidia driver: $NV_VER" || warn "nvidia module loaded but version unknown"
+        fi
+        # Realtek wired Ethernet
+        check_module r8169
+        ETH_LINK=$(ip -o link show 2>/dev/null | grep -oE 'e[nt][a-z0-9]+' | head -1)
+        if [ -n "$ETH_LINK" ]; then
+            CARRIER=$(cat /sys/class/net/"$ETH_LINK"/carrier 2>/dev/null)
+            [ "$CARRIER" = "1" ] && pass "Ethernet $ETH_LINK: link up" || warn "Ethernet $ETH_LINK: no carrier"
+        fi
+        # zram (constrained 16GB build)
         if [ -b /dev/zram0 ] && [ "$(cat /sys/block/zram0/disksize 2>/dev/null)" -gt 0 ]; then
             ZRAM_SIZE=$(($(cat /sys/block/zram0/disksize) / 1024 / 1024 / 1024))
             pass "zram0: ${ZRAM_SIZE}GB"

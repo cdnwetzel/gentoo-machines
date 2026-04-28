@@ -1,7 +1,10 @@
 # Dell OptiPlex 3090 SFF - Hardware Reference
 
-**Current OS**: Windows (factory) → being replaced by Gentoo
-**Harvested**: 2026-04-27 (Fedora 43 live USB via Ventoy)
+**Current OS**: Gentoo Linux (production)
+**Installed**: 2026-04-28 (first boot straight to desktop)
+**Kernel**: Linux 6.18.24-gentoo
+**NVIDIA driver**: 595.58.03 (kernel-open, GA107 Ampere)
+**Harvested**: 2026-04-27 (Fedora 43 live USB via Ventoy, pre-install)
 
 ## System Overview
 
@@ -46,7 +49,7 @@ Notable: **No AVX-512** (Comet Lake, Skylake-derived). Full VT-x/VT-d. Hyperthre
 | 00:1f.3 | Comet Lake PCH cAVS (audio) | `[8086:06c8]` | snd_hda_intel |
 | 00:1f.4 | PCH SMBus Controller | `[8086:06a3]` | i801_smbus |
 | 00:1f.5 | PCH SPI Controller | `[8086:06a4]` | intel-spi |
-| 01:00.0 | **NVIDIA RTX A1000 (GA107GL)** | `[10de:25b0]` | nouveau→nvidia |
+| 01:00.0 | **NVIDIA RTX A1000 (GA107GL)** | `[10de:25b0]` | `nvidia` (kernel-open). nouveau not loaded — verified via `lsmod` and `verify-install.sh`. |
 | 01:00.1 | GA107 HDMI Audio | `[10de:2291]` | snd_hda_intel |
 | 02:00.0 | Realtek RTL8111/8168/8211/8411 GbE | `[10ec:8168]` | r8169 |
 
@@ -57,9 +60,9 @@ Notable: **No AVX-512** (Comet Lake, Skylake-derived). Full VT-x/VT-d. Hyperthre
 | 1 | Intel UHD Graphics 630 | `[8086:9bc8]` | i915 | iGPU, KBL DMC firmware family |
 | 2 | NVIDIA RTX A1000 | `[10de:25b0]` | nvidia (proprietary, kernel-open) | GA107 Ampere, 8GB GDDR6 |
 
-**Driver**: `nvidia-drivers` (proprietary). Nouveau blacklisted at runtime.
-**HDMI Audio**: GA107 HD Audio `[10de:2291]` via snd_hda_intel
-**kernel-open**: GA107 is Ampere — supports kernel-open modules (Turing+).
+**Driver (in use)**: `x11-drivers/nvidia-drivers` 595.58.03, kernel-open variant — `modinfo nvidia` reports license `Dual MIT/GPL` (proprietary build would report `NVIDIA`). Nouveau is not loaded (`lsmod` clean, `verify-install.sh` confirms).
+**HDMI Audio**: GA107 HD Audio `[10de:2291]` via `snd_hda_intel` + `snd_hda_codec_nvhdmi`.
+**Why kernel-open here**: GA107 is Ampere; Turing and newer support the open-source kernel module flavor. The Gentoo ebuild for `>= nvidia-drivers-555` selects it automatically for these GPUs.
 
 ### NVIDIA A1000 Capabilities
 
@@ -91,8 +94,8 @@ Switching to AHCI will break any existing Windows boot on this disk unless prepp
 | **Chipset** | Comet Lake PCH cAVS `[8086:06c8]` |
 | **Codec** | Realtek ALC3246 (Address 0) — analog out + headset jack |
 | **NVIDIA HDMI** | GA107 HD Audio `[10de:2291]` (Address 0) |
-| **Type** | SOF (Sound Open Firmware) + legacy HDA |
-| **Driver** | snd_hda_intel + snd_sof_pci_intel_cnl + snd_soc_avs |
+| **Type (as-built)** | Legacy HDA only. `kernel_config.sh` requests SOF (`SND_SOC_SOF_INTEL_TOPLEVEL=m`, `SND_SOC_SOF_COMETLAKE=m`), but `olddefconfig` drops the Intel SOF toplevel — likely an unmet dep in the SOF/ASoC chain. PipeWire on plain HDA covers analog out and HDMI; no functional loss. See INSTALL_GOTCHAS.md §3. |
+| **Modules loaded** | `snd_hda_intel`, `snd_hda_codec`, `snd_hda_codec_hdmi`, `snd_hda_codec_intelhdmi`, `snd_hda_codec_nvhdmi` |
 
 PipeWire + WirePlumber recommended (replaces PulseAudio).
 
@@ -167,11 +170,12 @@ Not supported — non-ECC consumer DDR4. (OptiPlex 3000-series is consumer tier;
 
 ## Firmware Requirements
 
-| Firmware | Package | Notes |
-|----------|---------|-------|
-| i915/kbl_dmc_*.bin | sys-kernel/linux-firmware | Comet Lake i915 DMC (KBL family) |
-| nvidia/ga107/* | sys-kernel/linux-firmware | RTX A1000 GA107 firmware |
-| intel-microcode | sys-firmware/intel-microcode | Comet Lake-S microcode (sig 0x000a0655) |
+| Firmware (as-loaded) | Source | Notes |
+|----------------------|--------|-------|
+| `i915/kbl_dmc_ver1_04.bin` (v1.4) | sys-kernel/linux-firmware | Comet Lake i915 DMC (KBL family) |
+| `nvidia/595.58.03/gsp_ga10x.bin` | x11-drivers/nvidia-drivers — **kernel-open** flavor (`modinfo nvidia` license = `Dual MIT/GPL`) | GA107 GSP-RM firmware (Ampere). The Gentoo ebuild auto-selects the open module for Turing+ regardless of the legacy `kernel-open` USE-flag entry in package.use. |
+| `rtl_nic/rtl8168h-2.fw` | sys-kernel/linux-firmware | Realtek RTL8168h Ethernet |
+| CPU microcode rev `0x00000100` | Dell BIOS 2.28.0 (11/2025), early-loaded by firmware | CPU sig `0x000a0655` (Comet Lake-S, family 6 model 165 stepping 5). `sys-firmware/intel-microcode-20260227` **is installed** (`/lib/firmware/intel-ucode/06-a5-05` present, `CONFIG_MICROCODE=y` set), but no initramfs is in use and no late-load hook (`/sys/devices/system/cpu/microcode/reload`) is wired, so the package microcode is not applied at runtime. dmesg shows `Current revision: 0x00000100` at t≈0.56 s with no `microcode: updated` line. Functionally fine here: BIOS rev `0x100` is one ahead of `0xfc`, the value typically shipped in the package bundle for this signature. |
 
 **No WiFi firmware needed** — wired only.
 
