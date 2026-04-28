@@ -94,6 +94,7 @@ declare -A MACHINES=(
     [precision-t5810]="hostname=precision-t5810|dmi=Precision Tower 5810|gpu=nvidia|patches="
     [asrock-b550]="hostname=asrock-b550|dmi=Asrock B550|gpu=nvidia|patches="
     [beelink-minis]="hostname=beelink-minis|dmi=MINI S|gpu=intel|patches="
+    [optiplex-3090]="hostname=optiplex-3090|dmi=OptiPlex 3090|gpu=nvidia|patches="
 )
 
 # ============================================================================
@@ -343,8 +344,9 @@ check_portage_workarounds() {
 detect_machine() {
     # 1. Command-line override
     if [[ -n "$MACHINE_OVERRIDE" ]]; then
-        if [[ -z "${MACHINES[$MACHINE_OVERRIDE]+x}" ]]; then
-            error "Unknown machine '${MACHINE_OVERRIDE}'. Valid: ${!MACHINES[*]}"
+        # 'generic' is always allowed — backfilled into MACHINES after detect_machine returns
+        if [[ "$MACHINE_OVERRIDE" != "generic" && -z "${MACHINES[$MACHINE_OVERRIDE]+x}" ]]; then
+            error "Unknown machine '${MACHINE_OVERRIDE}'. Valid: ${!MACHINES[*]} (or 'generic' for an unsupported host)"
         fi
         echo "$MACHINE_OVERRIDE"
         return
@@ -376,7 +378,37 @@ detect_machine() {
         done
     fi
 
-    error "Cannot detect machine. Hostname='${hostname}'. Use --machine <name> to override.\nValid machines: ${!MACHINES[*]}"
+    # 4. No match — offer a generic fallback (interactive only).
+    #    Read/write /dev/tty so this works inside $(detect_machine).
+    local dmi_str=""
+    [[ -r /sys/class/dmi/id/product_name ]] && dmi_str=$(cat /sys/class/dmi/id/product_name)
+    if [[ -t 0 || -e /dev/tty ]]; then
+        {
+            echo
+            echo "Cannot detect machine."
+            echo "  Hostname:  ${hostname}"
+            echo "  DMI:       ${dmi_str:-<unreadable>}"
+            echo "  Inventory: ${!MACHINES[*]}"
+            echo
+            echo "Run with a 'generic' profile? This skips machine-specific tuning:"
+            echo "  - no kernel_config.sh    → defconfig + olddefconfig only"
+            echo "  - no patches"
+            echo "  - GPU type auto-detected at runtime (lsmod)"
+            echo "  - no machine-specific dmesg filters / WiFi check / platform header"
+            echo
+            echo "All other phases (emerge sync, @world, depclean, kernel build/install,"
+            echo "verify, clean) run normally."
+        } >/dev/tty
+        local reply=""
+        read -r -p "Continue with generic profile [y/N]? " reply </dev/tty || reply=""
+        case "$reply" in
+            [yY]|[yY][eE][sS])
+                echo "generic"
+                return
+                ;;
+        esac
+    fi
+    error "Cannot detect machine. Hostname='${hostname}'. Use --machine <name> to override or add a row to the MACHINES registry.\nValid machines: ${!MACHINES[*]}"
 }
 
 # ============================================================================
@@ -525,6 +557,15 @@ do_check() {
     # NVIDIA check
     local gpu_type
     gpu_type=$(get_machine_field "$machine" gpu)
+    # Generic profile: probe at runtime instead of relying on registry.
+    if [[ "$gpu_type" == "auto" ]]; then
+        if lsmod 2>/dev/null | grep -q '^nvidia '; then
+            gpu_type=nvidia
+        else
+            gpu_type=other  # i915, amdgpu, nouveau, etc. — no @module-rebuild needed
+        fi
+        info "GPU autodetect → ${gpu_type}"
+    fi
     if [[ "$gpu_type" == "nvidia" ]]; then
         header "NVIDIA"
         if command -v nvidia-smi &>/dev/null; then
@@ -617,17 +658,30 @@ do_check() {
 # check_rebuild_needed — Detect whether a rebuild would actually change anything
 # ============================================================================
 # Sets the global REBUILD_NEEDED:
-#   0 = no rebuild needed (running == target AND a fresh prepare would
-#       produce a .config identical to the installed one)
-#   1 = rebuild needed (any precondition fails, drift detected, or
+#   0 = no meaningful rebuild needed (running == target AND a fresh prepare
+#       would produce a .config equivalent to the installed one, ignoring
+#       toolchain-probe artifacts — see DRIFT_FILTER_REGEX below)
+#   1 = rebuild needed (any precondition fails, real drift detected, or
 #       check could not be completed — fail safe)
 #
 # Approach: simulate a same-series prepare in a tempdir.
 #   1. Seed sandbox with /boot/config-<target>
 #   2. Stage scripts/config locally so kernel_config.sh's `./scripts/config` works
 #   3. Run kernel_config.sh in the sandbox (idempotent transform)
-#   4. `make O=$tmpdir olddefconfig` to resolve dependencies
-#   5. Hash semantic config lines and compare against the installed config
+#   4. scripts/kconfig/conf --olddefconfig to resolve dependencies
+#   5. Filter toolchain-probe symbols on both sides (false-drift, see below)
+#   6. Hash + diff the remaining lines vs the installed config
+#
+# Limitation: `scripts/kconfig/conf --olddefconfig` is NOT equivalent to
+# `make olddefconfig`. The latter runs shell probes (`$(success,...)` and
+# `$(cc-option,...)` calls in Kconfig) to detect compiler/linker capabilities,
+# which set CC_HAS_*, RUSTC_*, X86_KERNEL_IBT, MITIGATION_{RETHUNK,SRSO,...},
+# CALL_PADDING, INIT_STACK_*, STACKPROTECTOR, etc. The sandbox can't run those
+# probes, so those symbols appear as drift even though a real rebuild
+# regenerates them identically. We strip them via DRIFT_FILTER_REGEX before
+# comparison so the reported drift count reflects only meaningful changes.
+# The filter is x86-focused (where we run); aarch64 hosts may see residual
+# false-drift from arch-specific probes not yet enumerated.
 #
 # Cost: ~10-15s on slow machines (kernel_config.sh dominates), <5s on fast.
 # ============================================================================
@@ -714,29 +768,60 @@ check_rebuild_needed() {
         return 0
     fi
 
-    # Compare semantic config lines (ignore comments, sort for order-independence)
+    # Symbols whose value comes from `make olddefconfig`'s compiler/linker
+    # shell probes — the sandbox can't reproduce them, so we strip them on
+    # both sides before comparing. Categories (all toolchain-derived):
+    #   - Direct probes: CC_HAS_*, RUSTC_*, CC_VERSION_TEXT, CC_CAN_LINK*,
+    #     CC_IMPLICIT_FALLTHROUGH, HAVE_KCSAN_COMPILER, TOOLS_SUPPORT_RELR
+    #   - x86 mitigations gated on probes: MITIGATION_{CALL_DEPTH_TRACKING,
+    #     ITS,RETHUNK,SLS,SRSO,UNRET_ENTRY}, CALL_{PADDING,THUNKS,THUNKS_DEBUG},
+    #     HAVE_CALL_THUNKS, PREFIX_SYMBOLS
+    #   - x86 hardening gated on probes: X86_{CET,KERNEL_IBT,NATIVE_CPU,X32_ABI},
+    #     X86_DISABLED_FEATURE_*, ZERO_CALL_USED_REGS, STACKPROTECTOR{,_STRONG}
+    #   - Sanitizer/init probes: KASAN, KCSAN, INIT_STACK_*
+    local DRIFT_FILTER_REGEX='^(# )?CONFIG_(CC_HAS_[A-Z0-9_]+|CC_VERSION_TEXT|CC_IMPLICIT_FALLTHROUGH|CC_CAN_LINK[A-Z0-9_]*|RUSTC_[A-Z0-9_]+|HAVE_KCSAN_COMPILER|MITIGATION_(CALL_DEPTH_TRACKING|ITS|RETHUNK|SLS|SRSO|UNRET_ENTRY)|CALL_(PADDING|THUNKS(_DEBUG)?)|HAVE_CALL_THUNKS|PREFIX_SYMBOLS|INIT_STACK_[A-Z0-9_]+|KASAN|KCSAN|STACKPROTECTOR(_STRONG)?|TOOLS_SUPPORT_RELR|X86_(CET|KERNEL_IBT|NATIVE_CPU|X32_ABI|DISABLED_FEATURE_[A-Z0-9_]+)|ZERO_CALL_USED_REGS)( |=)'
+
+    # Filtered (real-drift) line sets and unfiltered (raw) line sets
+    local installed_filt sandbox_filt installed_raw sandbox_raw
+    installed_raw=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "/boot/config-${target_release}" | sort)
+    sandbox_raw=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "$tmpdir/.config" | sort)
+    installed_filt=$(printf '%s\n' "$installed_raw" | grep -vE "$DRIFT_FILTER_REGEX" || true)
+    sandbox_filt=$(printf '%s\n' "$sandbox_raw"   | grep -vE "$DRIFT_FILTER_REGEX" || true)
+
     local sandbox_hash installed_hash
-    sandbox_hash=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "$tmpdir/.config" \
-        | sort | sha256sum | cut -d' ' -f1)
-    installed_hash=$(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "/boot/config-${target_release}" \
-        | sort | sha256sum | cut -d' ' -f1)
+    installed_hash=$(printf '%s\n' "$installed_filt" | sha256sum | cut -d' ' -f1)
+    sandbox_hash=$(printf '%s\n' "$sandbox_filt"   | sha256sum | cut -d' ' -f1)
+
+    # Diff line counts — raw includes toolchain noise, real strips it
+    local raw_drift real_drift false_drift
+    raw_drift=$(diff <(printf '%s\n' "$installed_raw")  <(printf '%s\n' "$sandbox_raw")  | grep -cE '^[<>]' || true)
+    real_drift=$(diff <(printf '%s\n' "$installed_filt") <(printf '%s\n' "$sandbox_filt") | grep -cE '^[<>]' || true)
+    false_drift=$(( raw_drift - real_drift ))
 
     if [[ "$sandbox_hash" == "$installed_hash" ]]; then
         rm -rf "$tmpdir"
-        info "${GREEN}No drift${RESET}: installed ${target_release} matches a fresh prepare"
+        if (( false_drift > 0 )); then
+            info "${GREEN}No real drift${RESET}: installed ${target_release} matches a fresh prepare (${false_drift} toolchain-probe line(s) filtered as sandbox artifact)"
+        else
+            info "${GREEN}No drift${RESET}: installed ${target_release} matches a fresh prepare"
+        fi
         REBUILD_NEEDED=0
         return 0
     fi
 
-    # Drift detected — count differing lines as a hint
-    local diff_lines
-    diff_lines=$(diff \
-        <(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "/boot/config-${target_release}" | sort) \
-        <(grep -E '^(CONFIG_|# CONFIG_.* is not set)' "$tmpdir/.config" | sort) \
-        | grep -cE '^[<>]' || true)
+    # Save the filtered (real-drift) diff for human inspection
+    local drift_file="/tmp/${machine}-drift.diff"
+    diff <(printf '%s\n' "$installed_filt") <(printf '%s\n' "$sandbox_filt") > "$drift_file" || true
+
     rm -rf "$tmpdir"
-    warn "Drift detected: ${diff_lines} config lines differ between installed and a fresh prepare"
-    info "Rebuild needed to converge installed kernel with kernel_config.sh"
+    warn "Drift detected: ${real_drift} meaningful config line(s) differ between installed and a fresh prepare"
+    if (( false_drift > 0 )); then
+        info "(${false_drift} additional toolchain-probe line(s) filtered — false drift from sandbox/make olddefconfig divergence)"
+    fi
+    info "Drift detail saved to: ${drift_file}"
+    info "Rebuild may converge the running kernel with kernel_config.sh — but note that"
+    info "a real \`make olddefconfig\` can still drop requested symbols whose deps are unmet."
+    info "Inspect with: less ${drift_file} and machines/${machine}/INSTALL_GOTCHAS.md if present."
     return 0
 }
 
@@ -1268,7 +1353,7 @@ verify_machine_specific() {
     # WiFi
     header "WiFi"
     case "$machine" in
-        precision-t5810)
+        precision-t5810|optiplex-3090)
             info "No WiFi (wired desktop)"
             ;;
         xps-9510|xps-9315|nuc11|beelink-minis)
@@ -1327,7 +1412,7 @@ verify_machine_specific() {
                 info "Battery: ${cap}%"
             fi
             ;;
-        xps-9510)
+        xps-9510|optiplex-3090)
             header "Dell Platform"
             if grep -q "^dell_smbios " /proc/modules 2>/dev/null; then
                 info "dell_smbios loaded"
@@ -1760,6 +1845,15 @@ shift
 # Detect machine
 MACHINE=$(detect_machine)
 
+# Backfill registry for the generic profile (chosen via prompt).
+# detect_machine ran in a subshell so it couldn't mutate MACHINES itself.
+if [[ "$MACHINE" == "generic" && -z "${MACHINES[generic]+x}" ]]; then
+    _gen_dmi=""
+    [[ -r /sys/class/dmi/id/product_name ]] && _gen_dmi=$(cat /sys/class/dmi/id/product_name)
+    MACHINES[generic]="hostname=$(hostname)|dmi=${_gen_dmi}|gpu=auto|patches="
+    info "Generic profile: gpu=auto (runtime-probed), no patches, no kernel_config.sh"
+fi
+
 if $DRY_RUN; then
     info "[dry-run mode]"
 fi
@@ -1767,20 +1861,37 @@ fi
 # --- Inhibit sleep/idle for the duration of long-running operations ---
 # Re-exec under elogind-inhibit/systemd-inhibit to prevent the machine from
 # suspending during builds (especially on laptops with idle-hibernate).
+#
+# Probe each candidate first with a no-op `true` invocation: polkit may deny
+# non-root callers, in which case the inhibitor exits non-zero. Only `exec`
+# once we've confirmed the inhibitor will actually take. Otherwise we'd
+# silently terminate (exec already replaced this shell) when the chosen
+# inhibitor refuses.
 if [[ -z "${_UPDATE_INHIBITED:-}" ]]; then
+    _inhibit_chosen=""
     for _inhibit_cmd in elogind-inhibit systemd-inhibit; do
-        if command -v "$_inhibit_cmd" &>/dev/null; then
-            export _UPDATE_INHIBITED=1
-            info "Inhibiting sleep for duration of update"
-            exec "$_inhibit_cmd" --what=sleep:idle \
-                --who="update-system.sh" \
-                --why="System update in progress" \
-                "$0" "${_ORIG_ARGS[@]}"
+        command -v "$_inhibit_cmd" &>/dev/null || continue
+        if "$_inhibit_cmd" --what=sleep:idle \
+                           --who="update-system.sh-probe" \
+                           --why="probe" true 2>/dev/null; then
+            _inhibit_chosen="$_inhibit_cmd"
+            break
         fi
     done
-    # No inhibitor available — continue without (warn on laptops)
-    if [[ -d /sys/class/power_supply/BAT0 || -d /sys/class/power_supply/BAT1 ]]; then
-        warn "No sleep inhibitor found — machine may suspend during long builds"
+    if [[ -n "$_inhibit_chosen" ]]; then
+        export _UPDATE_INHIBITED=1
+        info "Inhibiting sleep for duration of update (${_inhibit_chosen})"
+        exec "$_inhibit_chosen" --what=sleep:idle \
+            --who="update-system.sh" \
+            --why="System update in progress" \
+            "$0" "${_ORIG_ARGS[@]}"
+    else
+        # Either no inhibitor binary, or all of them denied (polkit). Press on.
+        if command -v elogind-inhibit &>/dev/null || command -v systemd-inhibit &>/dev/null; then
+            warn "Sleep inhibitor present but cannot inhibit (polkit denied?) — continuing without"
+        elif [[ -d /sys/class/power_supply/BAT0 || -d /sys/class/power_supply/BAT1 ]]; then
+            warn "No sleep inhibitor found — laptop may suspend during long builds"
+        fi
     fi
 fi
 

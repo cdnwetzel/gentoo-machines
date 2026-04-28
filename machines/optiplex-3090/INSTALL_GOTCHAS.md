@@ -131,7 +131,23 @@ edit `kernel_config.sh`, run `tools/kconfig-lint.sh
 machines/optiplex-3090/kernel_config.sh /usr/src/linux`, then rebuild and
 re-grep `/proc/config.gz` to confirm the symbols stuck.
 
-## 4. First-boot validation in 30 seconds
+## 4. First-boot dmesg has two harmless `sda` errors
+
+The first boot after install will show two lines like:
+
+```
+device offline error, dev sda, sector NNNNNNNNN op 0x1:(WRITE) ...
+Buffer I/O error on dev sda2, logical block NNN, lost async page write
+```
+
+These are leftovers from the Ventoy install USB (`/dev/sda`) being removed
+or unmounted while the kernel still had pending writes to its exfat ISO
+partition (`sda2`). They appear once at install-completion time, then
+disappear after the next reboot. **Do not** add an `sda offline` pattern
+to the benign-dmesg filter in `tools/update-system.sh` — that would
+silence real SATA disk failures later. Just reboot once and they're gone.
+
+## 5. First-boot validation in 30 seconds
 
 After install completes and you boot to desktop, the canonical sanity
 check is:

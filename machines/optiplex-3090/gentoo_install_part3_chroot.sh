@@ -211,8 +211,11 @@ echo "[OK] Phase 5 complete."
 echo ""
 echo "=== PHASE 6: All Packages ==="
 
-echo "[6.1] Installing world file..."
-cp "$CONFIGS/world" /var/lib/portage/world
+echo "[6.1] Installing world file (stripping repo comments + blank lines)..."
+# Portage tolerates comments in /var/lib/portage/world but it's non-standard.
+# The repo file uses comment headers for human readability; strip them here so
+# the live world is one-atom-per-line.
+grep -E '^[a-z]' "$CONFIGS/world" > /var/lib/portage/world
 
 echo "[6.2] Installing all packages (may take 1-4 hours)..."
 emerge --verbose --update --deep --newuse @world

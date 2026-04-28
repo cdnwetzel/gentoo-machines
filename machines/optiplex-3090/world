@@ -28,6 +28,7 @@ sys-power/acpid
 # Session & Auth
 sys-auth/elogind
 sys-fs/udisks
+gnome-extra/polkit-gnome
 
 # Networking (wired only — Realtek RTL8111/8168 / r8169)
 gnome-extra/nm-applet
@@ -52,6 +53,15 @@ x11-drivers/xf86-input-libinput
 
 # NVIDIA (RTX A1000 GA107 Ampere, kernel-open)
 x11-drivers/nvidia-drivers
+
+# Media Codecs (image + AV — anchored so depclean doesn't strip system libs
+# used by tesseract/Pillow and shell-invoked ffmpeg)
+media-libs/giflib
+media-libs/lcms
+media-libs/libaom
+media-libs/libavif
+media-libs/libwebp
+media-video/ffmpeg
 
 # Audio (PipeWire replaces PulseAudio)
 media-sound/alsa-utils
@@ -86,6 +96,7 @@ x11-misc/xclip
 # Development
 app-editors/vscode
 dev-db/unixODBC
+dev-python/pillow
 dev-python/pip
 dev-util/geany
 dev-util/ccache
