@@ -143,7 +143,7 @@ rc-update add acpid default
 rc-update add sshd default
 rc-update add display-manager default
 rc-update add metalog default
-rc-update add zram-init boot
+rc-update add zram-init default
 rc-update add alsasound boot
 
 # Thermal (all Intel laptops)
@@ -210,6 +210,15 @@ Every `econf` fails with "C compiler cannot create executables".
 **Problem**: zram-init service starts but creates no devices. Swap is missing.
 **Fix**: Must have `num_devices="1"` in `/etc/conf.d/zram-init`. Without it,
 the service silently does nothing.
+
+## 20a. zram-init Must Run in `default`, Not `boot` Runlevel
+**Problem**: With `rc-update add zram-init boot`, the service runs too early —
+something in early boot races and `zramctl` fails to initialize the device.
+The init script's `start()` ends with `:` so OpenRC always reports "started"
+even when the device is left at `disksize=0`. `swapon --show` shows no zram.
+**Symptom**: `cat /sys/block/zram0/disksize` returns `0`, manual restart fixes it.
+**Fix**: `rc-update del zram-init boot && rc-update add zram-init default`.
+Confirmed on SP6 2026-04-29 — moved to `default`, zram came up cleanly at boot.
 
 ## 21. Portage tmpfs Sizing by RAM
 | Machine | RAM | tmpfs | ccache | zram | Notes |

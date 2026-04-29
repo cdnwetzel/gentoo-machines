@@ -319,7 +319,7 @@ rc-update add netmount default
 
 echo "[8.2] Enabling boot runlevel services..."
 rc-update add elogind boot
-rc-update add zram-init boot
+rc-update add zram-init default
 rc-update add alsasound boot
 
 echo ""
@@ -547,7 +547,7 @@ for svc in dbus NetworkManager display-manager acpid bluetooth mbpfan sshd; do
     rc-update show default 2>/dev/null | grep -q "$svc" && echo "[OK] $svc enabled" || { echo "[FAIL] $svc NOT enabled!"; FAIL=$((FAIL+1)); }
 done
 rc-update show boot 2>/dev/null | grep -q elogind && echo "[OK] elogind enabled" || { echo "[FAIL] elogind NOT enabled!"; FAIL=$((FAIL+1)); }
-rc-update show boot 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
+rc-update show default 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
 
 # PipeWire
 qlist -I media-video/pipewire &>/dev/null && echo "[OK] PipeWire" || { echo "[FAIL] PipeWire!"; FAIL=$((FAIL+1)); }

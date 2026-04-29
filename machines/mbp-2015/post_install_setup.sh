@@ -87,7 +87,7 @@ echo "emerge sys-block/zram-init"
 echo "Edit /etc/conf.d/zram-init:"
 echo '  zram_size="8192"'
 echo '  zram_comp_algorithm="lz4"'
-echo "rc-update add zram-init boot"
+echo "rc-update add zram-init default"
 echo ""
 
 # --------------------------------------------------------------------------

@@ -15,6 +15,7 @@ rc-update add local default
 rc-update add metalog default
 rc-update add netmount default
 rc-update add sshd default
+rc-update add zram-init default          # compressed swap (all machines) — must be default, not boot (early-boot race fails silently)
 
 # Time synchronization — all machines (fixes clock drift after sleep/reboot)
 rc-update add chronyd default
@@ -40,7 +41,6 @@ rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface
 # BOOT RUNLEVEL
 # ============================================================================
 rc-update add elogind boot               # session management (all machines)
-rc-update add zram-init boot             # compressed swap (all machines)
 rc-update add alsasound boot             # ALSA state save/restore
 
 # Standard boot services (usually enabled by default in stage3)

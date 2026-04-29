@@ -318,7 +318,7 @@ do_phase8_services() {
     rc-update add metalog default
     rc-update add local default
     rc-update add netmount default
-    rc-update add zram-init boot
+    rc-update add zram-init default
     rc-update add alsasound boot
     rc-update add bluetooth default
     rc-update add chronyd default
@@ -462,7 +462,7 @@ do_phase13_verify() {
         rc-update show default 2>/dev/null | grep -q "$svc" && echo "[OK] $svc enabled" || { echo "[FAIL] $svc NOT enabled!"; FAIL=$((FAIL+1)); }
     done
     rc-update show boot 2>/dev/null | grep -q elogind && echo "[OK] elogind enabled" || { echo "[FAIL] elogind NOT enabled!"; FAIL=$((FAIL+1)); }
-    rc-update show boot 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
+    rc-update show default 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
     rc-update show boot 2>/dev/null | grep -q alsasound && echo "[OK] alsasound enabled" || { echo "[FAIL] alsasound NOT enabled!"; FAIL=$((FAIL+1)); }
 
     # Bluetooth

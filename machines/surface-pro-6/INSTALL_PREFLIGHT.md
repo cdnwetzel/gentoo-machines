@@ -197,7 +197,7 @@ rc-update add netmount default
 
 # Boot runlevel
 rc-update add alsasound boot
-rc-update add zram-init boot
+rc-update add zram-init default
 # Note: most boot-level services are already enabled by OpenRC default
 
 # Verify critical services

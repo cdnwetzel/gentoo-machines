@@ -112,7 +112,7 @@ rc-update add sshd default
 rc-update add metalog default
 rc-update add local default
 rc-update add netmount default
-rc-update add zram-init boot
+rc-update add zram-init default
 rc-update add alsasound boot
 rc-update add bluetooth default
 
@@ -287,7 +287,7 @@ for svc in $REQUIRED_SVCS; do
     rc-update show default 2>/dev/null | grep -q "$svc" && echo "[OK] $svc enabled" || { echo "[FAIL] $svc NOT enabled!"; FAIL=$((FAIL+1)); }
 done
 rc-update show boot 2>/dev/null | grep -q elogind && echo "[OK] elogind enabled" || { echo "[FAIL] elogind NOT enabled!"; FAIL=$((FAIL+1)); }
-rc-update show boot 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
+rc-update show default 2>/dev/null | grep -q zram && echo "[OK] zram-init enabled" || { echo "[FAIL] zram-init NOT enabled!"; FAIL=$((FAIL+1)); }
 rc-update show boot 2>/dev/null | grep -q alsasound && echo "[OK] alsasound enabled" || { echo "[FAIL] alsasound NOT enabled!"; FAIL=$((FAIL+1)); }
 rc-update show default 2>/dev/null | grep -q bluetooth && echo "[OK] bluetooth enabled" || { echo "[FAIL] bluetooth NOT enabled!"; FAIL=$((FAIL+1)); }
 
