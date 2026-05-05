@@ -50,7 +50,7 @@ media-fonts/noto-emoji
 x11-apps/xrandr
 x11-drivers/xf86-input-libinput
 
-# NVIDIA (2x GTX 1050 Ti GP107)
+# NVIDIA (2x RTX A4500 GA102GL Ampere, NVLink-bridged)
 x11-drivers/nvidia-drivers
 
 # Audio (PipeWire replaces PulseAudio)

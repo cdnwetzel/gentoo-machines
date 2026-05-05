@@ -6,9 +6,8 @@
 
 ## Medium Priority — Hardware Tasks (require physical access)
 
-- [ ] **T5810 GPU upgrade**: Replace 2x GTX 1050 Ti with 1x RTX A1000 8GB (hand-me-down from 7960) [hardware]
-  - Remove Pascal cards, install A1000, migrate nvidia-drivers 580.xx → 595.x+, enable kernel-open
-  - Update: kernel_config.sh, package.accept_keywords, package.use, HARDWARE.md, make.conf
+- [x] ~~**T5810 GPU upgrade**: Replace 2x GTX 1050 Ti with 1x RTX A1000 8GB (hand-me-down from 7960)~~ — superseded and completed: installed **2x RTX A4500 (Ampere, 20GB ECC each) + 4-link NVLink bridge** for a 40GB tensor-parallel pool. Pin lifted from `=nvidia-drivers-580*` (Pascal legacy) to current branch; HARDWARE.md, CLAUDE.md, README.md, install script, world, package.use/accept_keywords, make.conf all updated. `kernel-open` USE flag still disabled (default closed-source modules; flip if desired). [hardware ✓]
+- [ ] **Re-harvest Precision 7960 after Blackwell GPU swap**: secondary slot `16:00.0` now holds RTX 5080 16GB GDDR7 (replaced the relocated A1000). Need PCI ID, subsystem ID, HDA controller ID, i2c adapter range, current nvidia driver/CUDA versions. Then strip the snapshot banner from `machines/precision-7960/HARDWARE.md` and refresh PCI table, audio table, i2c table, GPU Details section [hardware]
 - [ ] Install Gentoo on NUC11 — configs ready, follow INSTALL.md [hardware]
 - [ ] Unify git identity on NUC11 + Precision 7960 [hardware]
 - [ ] Test USB-C hub (Anker 7-in-1) on XPS 9510 — HDMI + USB 3.0 devices [hardware]

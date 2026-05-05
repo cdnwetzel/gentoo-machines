@@ -146,7 +146,7 @@ After @world, emerge warns about config files needing updates. Run `dispatch-con
 1. Change passwords: `passwd root`, `passwd chris` (both default "gentoo")
 2. `dispatch-conf` — merge `/etc/sudoers` and other config updates
 3. `eselect news read`
-4. `nvidia-smi` — verify both GTX 1050 Ti GPUs
+4. `nvidia-smi` — verify both RTX A4500 GPUs; `nvidia-smi topo -m` should show `NV4` between them (NVLink active)
 5. `ip addr` — verify Intel I217-LM Ethernet (e1000e)
 6. `xrandr` — verify display output
 7. `pactl info | grep "Server Name"` — verify PipeWire
@@ -170,17 +170,14 @@ Portage processes `/etc/portage/package.use/*` files in **alphabetical order**. 
 ### ccache Permissions
 `/var/cache/ccache/tmp/` was mode `2755` (not group-writable). Portage sandbox runs as `portage` user. Fix: `chmod 2775 /var/cache/ccache/tmp`.
 
-## GPU Upgrade Plan
-- **Current**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal GP107) — PCIe 3.0 x16
-- **Planned**: 1x RTX A1000 8GB (Ampere GA107, compute 8.6, ~70W) — hand-me-down from Precision 7960
-  - 7960 upgrade: RTX 5080 16GB (Blackwell) replaces the A1000 alongside RTX PRO 6000 96GB
-  - A1000 moves to T5810 as sole GPU for dev/test inference
-- **Power budget**: 825W PSU — Xeon ~145W + A1000 ~70W + system ~80W = ~295W (abundant headroom)
-- **Future options** (after A1000 proves out):
-  - 1-2 more RTX A1000 8GB for multi-GPU inference via PCIe
-  - Ideal: 2x RTX A4500 20GB (Ampere) with NVLink bridge — 40GB unified VRAM, ~400W total (fits 825W PSU)
-- **Driver migration**: 580.xx legacy (Pascal) → 595.x+ current branch (Ampere)
-  - Removes: `=x11-drivers/nvidia-drivers-580* ~amd64` keyword, `>=581` mask
-  - Adds: current nvidia-drivers (~amd64), `kernel-open` USE flag (Turing+ support)
-  - Cannot mix Pascal + Ampere — GTX 1050 Ti cards must be removed before driver upgrade
-- **Previous candidates** (superseded): RTX 3060 12GB, RTX 3060 Ti 8GB, RTX 4060 Ti 16GB, RTX 5060 Ti 16GB, RTX 5080 16GB
+## GPU Upgrade — Completed
+
+The Pascal pair was retired in favor of the "ideal" path that was originally listed only as a stretch goal.
+
+- **Current** (post-upgrade): **2x RTX A4500 (GA102GL Ampere, 20 GB GDDR6 ECC each, compute 8.6) with 4-link NVLink bridge** — `nvidia-smi topo -m` reports `NV4` (~56 GB/s per direction). PCIe 3.0 x16 to host (A4500 supports Gen4; T5810 board caps at Gen3).
+- **Previous**: 2x GTX 1050 Ti (4 GB each, compute 6.1, Pascal GP107) on the 580.xx legacy driver branch.
+- **Power**: 2 × 200W = 400W sustained GPU + ~145W CPU + system overhead. Verify PSU headroom before adding further discrete cards.
+- **Driver migration done**: `=x11-drivers/nvidia-drivers-580* ~amd64` keyword pin removed; tracking current `~amd64` nvidia-drivers (Ampere is fully supported by every modern branch). `kernel-open` USE flag is *available* on Ampere (Turing+) but currently disabled — closed-source modules in use. Flip with `x11-drivers/nvidia-drivers kernel-open` in `package.use` if desired.
+- **Why this combination**: 40 GB NVLink-pooled VRAM enables practical tensor parallelism for 13B-class models (vLLM `tensor_parallel_size=2`, BF16) and BF16 LoRA fine-tuning across both cards — workloads that PCIe-only pairs handle poorly.
+- **Considered and not chosen**: RTX A1000 8GB single (insufficient VRAM headroom), RTX 3060 12GB / 3060 Ti 8GB / 4060 Ti 16GB / 5060 Ti 16GB / 5080 16GB single (no NVLink at this tier; lower aggregate VRAM).
+- **Note for repo readers**: this section documents the *result*, not the plan. The pre-upgrade planning notes (driver migration steps, mixed-Pascal-Ampere caveat) lived here before the swap and have been superseded by the actual change.

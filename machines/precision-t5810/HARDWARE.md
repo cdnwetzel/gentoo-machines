@@ -49,24 +49,30 @@ Notable: **No AVX-512** (Broadwell-EP, pre-Skylake). Full VT-x/VT-d. ECC support
 | 00:1f.0 | C610/X99 LPC Controller | `[8086:8d44]` | lpc_ich |
 | 00:1f.3 | C610/X99 SMBus Controller | `[8086:8d22]` | i801_smbus |
 | 01:00.0 | Samsung 990 PRO 2TB NVMe | `[144d:a80c]` | nvme |
-| 03:00.0 | **GeForce GTX 1050 Ti (ZOTAC)** | `[10de:1c82]` | nouveau→nvidia |
-| 03:00.1 | GP107 HDMI Audio (ZOTAC) | `[10de:0fb9]` | snd_hda_intel |
-| 04:00.0 | **GeForce GTX 1050 Ti (EVGA)** | `[10de:1c82]` | nouveau→nvidia |
-| 04:00.1 | GP107 HDMI Audio (EVGA) | `[10de:0fb9]` | snd_hda_intel |
+| 03:00.0 | **NVIDIA RTX A4500 (GA102GL)** | `[10de:2232]` | nouveau→nvidia |
+| 03:00.1 | GA102 HD Audio | `[10de:1aef]` | snd_hda_intel |
+| 04:00.0 | **NVIDIA RTX A4500 (GA102GL)** | `[10de:2232]` | nouveau→nvidia |
+| 04:00.1 | GA102 HD Audio | `[10de:1aef]` | snd_hda_intel |
 | 06:00.0 | TI XIO2001 PCIe-to-PCI Bridge | `[104c:8240]` | - |
 
 Plus ~50 Xeon uncore system peripherals at `ff:xx.x` (memory controllers, caching agents, QPI links, power control units).
 
 ## GPU Details
 
-| # | GPU | PCI ID | Subsystem | PCI Slot |
-|---|-----|--------|-----------|----------|
-| 1 | GeForce GTX 1050 Ti (GP107) | `[10de:1c82]` | ZOTAC `[19da:a454]` | 03:00.0 |
-| 2 | GeForce GTX 1050 Ti (GP107) | `[10de:1c82]` | EVGA `[3842:6251]` | 04:00.0 |
+| # | GPU | PCI ID | Subsystem | PCI Slot | VRAM | TDP |
+|---|-----|--------|-----------|----------|------|-----|
+| 1 | NVIDIA RTX A4500 (GA102GL, Ampere) | `[10de:2232]` | NVIDIA `[10de:163c]` | 03:00.0 | 20 GB GDDR6 ECC | 200W |
+| 2 | NVIDIA RTX A4500 (GA102GL, Ampere) | `[10de:2232]` | NVIDIA `[10de:163c]` | 04:00.0 | 20 GB GDDR6 ECC | 200W |
 
-**Driver**: nvidia-drivers (proprietary). Nouveau blacklisted.
-**HDMI Audio**: 2x GP107GL HD Audio `[10de:0fb9]` via snd_hda_intel
+**Driver**: nvidia-drivers 580.142 (proprietary, current branch — Ampere supports `kernel-open` modules if desired). Nouveau blacklisted.
+**HDMI/DP Audio**: 2x GA102 HD Audio `[10de:1aef]` via snd_hda_intel
+**ECC**: Enabled on both cards (workstation-grade GDDR6 ECC)
+**PCIe link**: Gen3 x16 each (board cap; A4500 supports Gen4)
+**NVLink**: 4-link bridge installed and active between GPU0↔GPU1 (~56 GB/s per direction, 112 GB/s aggregate). Topology: `NV4`.
+**Compute capability**: 8.6 (Ampere — supports BF16, TF32, structured sparsity, 3rd-gen Tensor Cores)
 **No Intel iGPU** — Xeon E5 has no integrated graphics.
+
+*Previous configuration: 2x GTX 1050 Ti (GP107 Pascal, 4GB each) — replaced with dual A4500 + NVLink for AI/ML workloads.*
 
 ## Storage
 
@@ -87,8 +93,8 @@ Plus ~50 Xeon uncore system peripherals at `ff:xx.x` (memory controllers, cachin
 |-----------|---------|
 | **Chipset** | C610/X99 HD Audio Controller `[8086:8d20]` |
 | **Codec** | Realtek ALC3220 (Address 0) |
-| **NVIDIA 1** | GP107 HDMI/DP `[10de:0fb9]` (ZOTAC, Address 0) |
-| **NVIDIA 2** | GP107 HDMI/DP `[10de:0fb9]` (EVGA, Address 0) |
+| **NVIDIA 1** | GA102 HDMI/DP `[10de:1aef]` (RTX A4500, Address 0) |
+| **NVIDIA 2** | GA102 HDMI/DP `[10de:1aef]` (RTX A4500, Address 0) |
 | **Type** | HDA (legacy HD Audio, no SOF) |
 | **Driver** | snd_hda_intel (all 3 controllers) |
 
@@ -159,60 +165,83 @@ Connected: Logitech wireless receiver (USB HID), hub.
 
 | Firmware | Package | Notes |
 |----------|---------|-------|
-| nvidia/gp107/* | sys-kernel/linux-firmware | GTX 1050 Ti GPU firmware |
+| nvidia/ga102/* | sys-kernel/linux-firmware | RTX A4500 GPU firmware (GSP) |
 | intel-microcode | sys-firmware/intel-microcode | Broadwell-EP Xeon microcode |
 
 **Note**: No i915 firmware needed (no Intel iGPU). No WiFi firmware needed.
 dmesg firmware loading was not captured (live USB rotated buffer). Firmware paths confirmed from `/lib/firmware/` on Fedora.
 
-## GPU AI/ML Reference (Dual GTX 1050 Ti)
+## GPU AI/ML Reference (Dual RTX A4500 + NVLink)
 
-**Driver**: nvidia 580.126.18 (legacy branch, last for Pascal). Security patches until Oct 2028.
-**CUDA**: 13.0, Compute Capability 6.1
-**VRAM**: 4 GB per GPU, 8 GB total
+**Driver**: nvidia 580.142 (current branch — full Ampere support; `kernel-open` modules supported on Turing+ if preferred).
+**CUDA**: 13.0, Compute Capability 8.6
+**VRAM**: 20 GB GDDR6 ECC per GPU, **40 GB total** (NVLink-pooled for tensor parallelism)
+**Tensor Cores**: 3rd-gen — FP16, BF16, TF32, INT8, structured 2:4 sparsity
 
-### Constraints
+### Interconnect
 
-| Constraint | Detail |
-|-----------|--------|
-| 4 GB hard wall per GPU | Single tensors/layers can't span cards |
-| PCIe bandwidth | ~16 GB/s vs NVLink's 600 GB/s — inter-GPU transfers are the bottleneck |
-| No tensor parallelism | Splitting individual layers isn't practical at this bandwidth |
-| CUDA compute 6.1 | Supported by PyTorch but won't get future support forever |
+| Link | Bandwidth (per direction) | Notes |
+|------|---------------------------|-------|
+| NVLink (4-link bridge) | ~56 GB/s GPU0↔GPU1 | Active. Verify via `nvidia-smi topo -m` → `NV4` |
+| PCIe Gen3 x16 (per card) | ~16 GB/s GPU↔CPU | Board cap; A4500 itself supports Gen4 |
+| ECC | Enabled both cards | ~6% VRAM overhead, integrity for long runs |
 
-### Best Use Cases (Most to Least Effective)
+NVLink eliminates the PCIe bottleneck for inter-GPU transfers, making **tensor parallelism practical** — single layers can be sharded across both cards with low overhead.
 
-**1. Pipeline Parallelism** — split one model across both GPUs
-Best for inference on models that just barely don't fit in 4 GB (~7-7.5 GB effective).
+### Capability Envelope
+
+| Workload | Fits? |
+|----------|-------|
+| 7B model FP16 inference | Single card (~14 GB) |
+| 13B model FP16 inference | Won't fit on one card (~26 GB); tensor-parallel across both via NVLink works |
+| 30B model 4-bit quantized | ~16 GB, single card; FP16 (~60 GB) exceeds 40 GB pool |
+| LoRA fine-tune 7B | Single card; full FT viable across both |
+| LoRA fine-tune 13B (BF16) | Tensor-parallel across both cards |
+| BF16/TF32 mixed precision | Full hardware acceleration (Ampere TC) |
+
+### Recommended Strategies
+
+**1. Tensor parallelism (NVLink-enabled — the differentiator over PCIe-only setups)**
+Shard layers across both GPUs; NVLink bandwidth is high enough that crossing the bridge isn't the bottleneck.
 ```python
+# vLLM
+from vllm import LLM
+llm = LLM(model="meta-llama/Llama-2-13b-hf", tensor_parallel_size=2, dtype="bfloat16")
+
+# HuggingFace accelerate (auto device map honors NVLink topology)
 from accelerate import dispatch_model, infer_auto_device_map
-from transformers import AutoModelForCausalLM
-
-model = AutoModelForCausalLM.from_pretrained("model-name")
-device_map = infer_auto_device_map(model, max_memory={0: "3.5GiB", 1: "3.5GiB"})
-model = dispatch_model(model, device_map=device_map)
-```
-HuggingFace `accelerate` handles layer-splitting automatically. Some speed loss to PCIe transfers between layers.
-
-**2. Data Parallelism** — same model, split batches
-Best for training where the model fits in 4 GB. Roughly ~1.6-1.8x throughput (not 2x due to sync overhead).
-```python
-import torch.nn as nn
-model = nn.DataParallel(model, device_ids=[0, 1])
-model = model.cuda()
+device_map = infer_auto_device_map(model, max_memory={0: "19GiB", 1: "19GiB"})
 ```
 
-**3. Independent Workloads** — separate jobs on each GPU
-Most reliable option. Useful for hyperparameter searches, parallel experiments.
+**2. Pipeline parallelism** — for models that fit but want better throughput
+Layer-stage split via `accelerate` or DeepSpeed. Less interconnect-sensitive than TP.
+
+**3. Data parallelism** — when the model fits in 20 GB
+Prefer DDP over `DataParallel`. NVLink accelerates the gradient all-reduce.
 ```python
-# Process 1: CUDA_VISIBLE_DEVICES=0
-# Process 2: CUDA_VISIBLE_DEVICES=1
+import torch.nn.parallel as tp
+model = tp.DistributedDataParallel(model.cuda(), device_ids=[local_rank])
+```
+
+**4. Independent workloads** — separate jobs per GPU
+Hyperparameter sweeps, or one card training while the other serves.
+```bash
+CUDA_VISIBLE_DEVICES=0 python train.py
+CUDA_VISIBLE_DEVICES=1 python serve.py
 ```
 
 ### Recommendation by Goal
 
 | Goal | Approach |
 |------|----------|
-| Running an LLM | `accelerate` with `device_map="auto"` — splits across both GPUs up to ~7.5 GB |
-| Training a custom model | DataParallel if model fits in 4 GB |
-| Multiple experiments | Independent processes, one GPU each |
+| Serve a 7B–13B LLM | vLLM, `tensor_parallel_size=2`, BF16 |
+| Fine-tune a 7B model | LoRA on 1 GPU; full BF16 FT across both |
+| Train a custom model | DDP across both with NVLink-accelerated all-reduce |
+| Mixed experiments | `CUDA_VISIBLE_DEVICES` per process |
+| Quantized inference (30B+) | bitsandbytes/AWQ 4-bit on a single card |
+
+### Power & Thermal Envelope
+
+- 2 × 200W = **400W sustained GPU draw under load** (plus 145W TDP CPU + system)
+- Verify PSU headroom before adding further discrete cards (T5810 ships with 685W-class PSU)
+- Monitor live: `nvidia-smi dmon -s pucvmet`

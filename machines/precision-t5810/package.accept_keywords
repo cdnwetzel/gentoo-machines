@@ -9,6 +9,7 @@ www-client/chromium-bin ~amd64
 net-vpn/networkmanager-sstp ~amd64
 net-misc/sstp-client ~amd64
 
-# NVIDIA 580.xx legacy branch for Pascal GP107 (GTX 1050 Ti)
-# 590+ dropped Pascal support entirely. 580.xx gets security patches until Oct 2028.
-=x11-drivers/nvidia-drivers-580* ~amd64
+# NVIDIA driver — Ampere (RTX A4500 GA102GL) supports the current branch.
+# Pin removed when GPUs were upgraded from 2x GTX 1050 Ti (Pascal, required 580.xx legacy branch)
+# to 2x RTX A4500 + NVLink. Track current ~amd64 nvidia-drivers.
+x11-drivers/nvidia-drivers ~amd64

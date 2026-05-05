@@ -3,8 +3,9 @@
 # Auto grub-mkconfig on make install (kernel updates)
 sys-kernel/installkernel grub
 
-# NVIDIA proprietary driver (2x GTX 1050 Ti GP107)
-# Pascal (GP107) does NOT support kernel-open (Turing+ only) — must use closed-source modules
+# NVIDIA proprietary driver (2x RTX A4500 GA102GL Ampere)
+# Ampere supports kernel-open (Turing+); leaving disabled here to keep the closed-source
+# module stack in use. Flip to `kernel-open` if/when desired.
 x11-drivers/nvidia-drivers -kernel-open modules tools
 media-libs/mesa -video_cards_nouveau
 

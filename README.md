@@ -8,14 +8,15 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 |---------|-----|-----|--------|------------|
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
 | [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 3060 Ti (GA104) | **Production** | Gentoo |
-| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 (22C/44T) | 2x NVIDIA GTX 1050 Ti | **Production** | Gentoo |
+| [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 (22C/44T) | 2x NVIDIA RTX A4500 (Ampere, 20GB ECC, NVLink) | **Production** | Gentoo |
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Beelink MINI S](machines/beelink-minis/) | Celeron N5095A (Jasper Lake) | Intel UHD Gen11 LP | **Production** | Gentoo |
+| [Dell OptiPlex 3090 SFF](machines/optiplex-3090/) | i5-10505 (Comet Lake, 6C/12T) | Intel UHD 630 + NVIDIA RTX A1000 8GB | **Production** | Gentoo |
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Config maintained | Windows (returned) |
 | [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired (config maintained) | macOS 12 (kids' machine) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
-| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 (Sapphire Rapids) | RTX Pro 6000 96GB + RTX A1000 8GB | Reference only | RHEL 10.1 |
+| [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 (Sapphire Rapids) | RTX Pro 6000 Blackwell 96GB (600W) + RTX 5080 16GB Blackwell | Reference only | RHEL 10.1 |
 
 NVIDIA machines use **proprietary nvidia-drivers** (`kernel-open` on Turing+). The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
 
@@ -225,13 +226,13 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 
 ### Per-Machine Differences
 
-| Setting | XPS 9510 | B550 | T5810 | SP6 | Beelink | NUC11 | XPS 9315 |
-|---------|----------|------|-------|-----|---------|-------|----------|
-| `-march=` | `tigerlake` | `znver3` | `broadwell` | `skylake` | `tremont` | `tigerlake` | `alderlake` |
-| `VIDEO_CARDS` | `intel iris nvidia` | `nvidia` | `nvidia` | `intel` | `intel` | `intel iris` | `intel iris` |
-| AVX-512 | Yes | No | No | No | No | Yes | No |
-| Hybrid cores | No | No | No | No | No | No | Yes |
-| CPU vendor | Intel | AMD | Intel | Intel | Intel | Intel | Intel |
+| Setting | XPS 9510 | B550 | T5810 | SP6 | Beelink | OptiPlex 3090 | NUC11 | XPS 9315 |
+|---------|----------|------|-------|-----|---------|---------------|-------|----------|
+| `-march=` | `tigerlake` | `znver3` | `broadwell` | `skylake` | `tremont` | `skylake` | `tigerlake` | `alderlake` |
+| `VIDEO_CARDS` | `intel iris nvidia` | `nvidia` | `nvidia` | `intel` | `intel` | `intel iris nvidia` | `intel iris` | `intel iris` |
+| AVX-512 | Yes | No | No | No | No | No | Yes | No |
+| Hybrid cores | No | No | No | No | No | No | No | Yes |
+| CPU vendor | Intel | AMD | Intel | Intel | Intel | Intel | Intel | Intel |
 
 ## Machine Notes
 
@@ -239,7 +240,7 @@ Shared portage files in `shared/` work across all machines. Machine-specific set
 Intel iGPU + NVIDIA RTX 3050 Ti with PRIME/Optimus, proprietary nvidia-drivers. PipeWire audio, SSTP VPN, thermald + tlp power management. Dual NVMe, 32GB RAM, zram 8GB zstd swap. Full 3-phase automated install.
 
 ### Production: Precision T5810 (Xeon Broadwell-EP)
-Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, 2x NVIDIA GTX 1050 Ti, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test for AI inference: 7B models on CPU, 1.5B on GPU. Mirrors production 7960.
+Xeon E5-2699v4 (22C/44T), 256GB DDR4 ECC, **2x NVIDIA RTX A4500 (GA102GL Ampere, 20GB GDDR6 ECC each, NVLink-bridged → 40GB tensor-parallel pool, compute 8.6)**, Samsung 990 PRO 2TB NVMe. C610/X99 chipset, `-march=broadwell`, performance-first (no power savings). Dev/test bench for AI inference and LoRA fine-tuning (7B–13B models). Originally shipped with 2x GTX 1050 Ti (Pascal) — upgraded to A4500 + NVLink for tensor-parallel workloads.
 
 ### Production: Surface Pro 6
 Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense display with 150% HiDPI scaling. WiFi power save workarounds for suspend reliability. Full 3-phase automated install with HiDPI configuration throughout (LightDM, XFCE, GTK greeter).
@@ -253,8 +254,11 @@ Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere
 ### Production: Beelink MINI S (Always-On Mini PC)
 Celeron N5095A (4C/4T, Jasper Lake/Tremont — no HT, no AVX/AVX2), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel Wireless-AC 3165, Realtek RTL8168 GbE, 256GB M.2 SATA SSD (no NVMe on this board). Always-on via elogind drop-in that disables all sleep/suspend. 4GB portage tmpfs with disk fallback for large packages (binary-only browsers).
 
+### Production: OptiPlex 3090 SFF (Hybrid GPU Desktop)
+i5-10505 (Comet Lake, 6C/12T, no AVX-512), 16GB DDR4-2666 single-channel, Intel UHD 630 + NVIDIA RTX A1000 8GB GDDR6 (GA107 Ampere, `kernel-open`), no WiFi/BT, Realtek RTL8168 GbE, 256GB M.2 2230 NVMe. Q470 chipset. **BIOS gotcha**: ships with SATA in Intel RST/RAID mode — must switch to AHCI before Linux can see the NVMe. 7GB portage tmpfs with disk fallback (CONSTRAINED 16GB profile). The A1000 is the hand-me-down from the Precision 7960's secondary slot.
+
 ### Reference Only: Precision 7960 (Multi-GPU Xeon W)
-Dual NVIDIA GPUs (RTX Pro 6000 96GB + RTX A1000 8GB), Xeon W5-3433 (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, 4x Samsung PM9C1a 1.8TB RAID10 via VMD. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only.
+Dual NVIDIA Blackwell GPUs (**RTX Pro 6000 Blackwell 96GB GDDR7, 600W** + **RTX 5080 16GB GDDR7**), Xeon W5-3433 (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, 4x Samsung PM9C1a 1.8TB RAID10 via VMD. Stays on RHEL 10.1 for production AI/ML workloads. Hardware harvested for reference only. The original secondary RTX A1000 was relocated to the OptiPlex 3090 and replaced by the 5080.
 
 ### Kernel Strategy
 

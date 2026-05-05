@@ -41,10 +41,10 @@ HAS_BLUETOOTH=0  # No BT hardware detected
 # Laptop features (0 = desktop/tower)
 IS_LAPTOP=0
 
-# GPU: 2x NVIDIA GTX 1050 Ti (GP107) — proprietary nvidia-drivers
+# GPU: 2x NVIDIA RTX A4500 (GA102GL Ampere) + NVLink bridge — proprietary nvidia-drivers
 HAS_NVIDIA=1
 HAS_INTEL_GPU=0   # Xeon E5 has no iGPU
-NVIDIA_DESC="2x GeForce GTX 1050 Ti (GP107)"
+NVIDIA_DESC="2x RTX A4500 (GA102GL Ampere, 20GB ECC, NVLink)"
 
 # Services profile: workstation (no thermald/tlp/bluetooth)
 # thermald is for laptops; T5810 has BIOS-level fan control via dell_smm_hwmon
@@ -420,7 +420,7 @@ qlist -I media-video/wireplumber && echo "  [OK] WirePlumber installed" || echo 
 
 echo "[10.2] PipeWire autostart configured via gentoo-pipewire-launcher"
 echo "  Will be set up by restore-desktop.sh after first login"
-echo "  Audio: C610/X99 HDA (Realtek ALC3220) + 2x NVIDIA GP107 HDMI"
+echo "  Audio: C610/X99 HDA (Realtek ALC3220) + 2x NVIDIA GA102 HD Audio"
 
 echo ""
 echo "[OK] Phase 10 complete."
@@ -447,7 +447,7 @@ if [[ $HAS_NVIDIA -eq 1 ]]; then
 
     # NVIDIA modprobe config — desktop workstation (no Optimus/PRIME)
     cat > /etc/modprobe.d/nvidia.conf << 'EOF'
-# NVIDIA dual GTX 1050 Ti (GP107) — desktop workstation
+# NVIDIA dual RTX A4500 (GA102GL Ampere) + NVLink — desktop workstation
 # Enable DRM KMS for NVIDIA (needed for compositing, Wayland compatibility)
 options nvidia-drm modeset=1
 # Blacklist nouveau (proprietary nvidia-drivers used)
@@ -489,8 +489,8 @@ fi
 
 # --- 11.4: Verify Firmware ---
 echo "[11.4] Verifying firmware files..."
-# NVIDIA GP107 firmware (both GPUs use the same firmware)
-ls /lib/firmware/nvidia/gp107/ 2>/dev/null && echo "  [OK] NVIDIA GP107 firmware directory" || echo "  [FAIL] NVIDIA GP107 firmware!"
+# NVIDIA GA102 firmware (both A4500s use the same GSP firmware)
+ls /lib/firmware/nvidia/ga102/ 2>/dev/null && echo "  [OK] NVIDIA GA102 firmware directory" || echo "  [FAIL] NVIDIA GA102 firmware!"
 # Intel microcode (Broadwell-EP)
 ls /lib/firmware/intel-ucode/ 2>/dev/null && echo "  [OK] Intel microcode directory" || echo "  [WARN] Intel microcode dir"
 # No i915 firmware needed (no iGPU)
@@ -609,7 +609,7 @@ grep -q 'DISPLAYMANAGER="lightdm"' /etc/conf.d/display-manager 2>/dev/null && ec
 
 # --- Firmware ---
 if [[ $HAS_NVIDIA -eq 1 ]]; then
-    ls /lib/firmware/nvidia/gp107/ &>/dev/null && echo "[OK] NVIDIA GP107 firmware" || { echo "[FAIL] NVIDIA firmware!"; FAIL=$((FAIL+1)); }
+    ls /lib/firmware/nvidia/ga102/ &>/dev/null && echo "[OK] NVIDIA GA102 firmware" || { echo "[FAIL] NVIDIA firmware!"; FAIL=$((FAIL+1)); }
 fi
 
 # --- ccache ---
@@ -635,7 +635,7 @@ if [[ $FAIL -eq 0 ]]; then
     echo ""
     echo "Post-boot:"
     echo "  1. Verify Ethernet: ip addr (should show Intel I217-LM)"
-    echo "  2. nvidia-smi (verify both GTX 1050 Ti GPUs)"
+    echo "  2. nvidia-smi (verify both RTX A4500 GPUs); nvidia-smi topo -m should show NV4 (NVLink active)"
     echo "  3. xrandr (verify display)"
     echo "  4. pactl info | grep 'Server Name' (PipeWire)"
     echo "  5. swapon --show (verify 16GB zram)"

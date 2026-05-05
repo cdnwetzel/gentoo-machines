@@ -4,6 +4,8 @@
 
 **Status**: Reference only. This machine stays on RHEL for production workloads. Hardware inventory collected for fleet documentation.
 
+> ⚠ **GPU configuration changed after this harvest.** The original secondary **RTX A1000 8GB** (slot `16:00.0`) was relocated to the OptiPlex 3090 and replaced by an **RTX 5080 16GB Blackwell** (GB203). The PCI table, audio device IDs, i2c topology, and per-GPU details below still reflect the **2026-03-19 snapshot** with the A1000 in slot 2 — re-harvest required for the 5080's PCI/subsystem IDs, HDA controller ID, and i2c adapter range. The Pro 6000 Blackwell entry (slot `ac:00.0`) is unchanged.
+
 ## System Overview
 
 | Field | Value |
@@ -245,8 +247,8 @@ VMD-managed NVMe at domains 10000, 10001, 10002:
 | **CPU** | Xeon W5-3433 (SPR) | Xeon E5-2699v4 (BDW-EP) | i7-11800H (TGL-H) | i7-5557U (BDW) | i5-8250U (KBL-R) |
 | **Threads** | 32 | 44 | 16 | 4 | 8 |
 | **RAM** | 128GB DDR5 ECC | 256GB DDR4 ECC | 32GB DDR4 | 8GB DDR3 | 8GB LPDDR3 |
-| **GPU** | RTX PRO 6000 96GB + RTX A1000 8GB | 2x GTX 1050 Ti 4GB | RTX 3050 Ti + Intel UHD | Intel Iris 6100 | Intel UHD 620 |
-| **GPU VRAM** | 104 GB total | 8 GB total | 4 GB (dGPU) | shared | shared |
+| **GPU** | RTX PRO 6000 Blackwell 96GB + RTX 5080 16GB | 2x RTX A4500 20GB (NVLink) | RTX 3050 Ti + Intel UHD | Intel Iris 6100 | Intel UHD 620 |
+| **GPU VRAM** | 112 GB total | 40 GB total (NVLink-pooled) | 4 GB (dGPU) | shared | shared |
 | **Storage** | 477GB NVMe + 4x1.8TB RAID10 + 1.8TB HDD | 2TB NVMe | 2x NVMe | 256GB SSD | 238GB NVMe |
 | **Network** | 1GbE + 10GbE | 1GbE | WiFi + USB Ethernet | WiFi | WiFi |
 | **AVX-512** | Yes + AMX | No | Yes | No | No |
