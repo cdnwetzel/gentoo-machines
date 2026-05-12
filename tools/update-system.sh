@@ -1212,6 +1212,7 @@ do_verify() {
         xps-9510)
             benign_dmesg+='|pci 0000:01:00\.0: ROM .* failed to assign'  # NVIDIA RTX 3050 Ti option ROM — BIOS doesn't allocate the BAR, kernel proxies via vBIOS shadow; nvidia-drivers loads fine
             benign_dmesg+='|_TZ\.ETMD'                                    # Dell BIOS bug: ACPI thermal zone references undefined symbol; thermald handles thermal mgmt regardless
+            benign_dmesg+='|Aborting method \\_SB\.IETM\._OSC'             # Intel DPTF _OSC probe — Dell doesn't expose Dynamic Tuning firmware path to Linux; thermald handles thermal mgmt regardless
             benign_dmesg+='|NVRM: nvAssertFailedNoLog.*kernel_gsp\.c:1446' # GSP-RM firmware cosmetic assertion (nvidia-drivers 595.58.03 + kernel 6.18); no functional impact, awaiting driver fix
             ;;
     esac
