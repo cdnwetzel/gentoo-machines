@@ -9,8 +9,8 @@
 #
 # Subcommands:
 #   full          - Prompted end-to-end workflow with resume (default when no args)
-#                   fetch → world → config-update → check → prepare → build →
-#                   install → reboot → verify → clean
+#                   fetch → check → prepare → build → install → world →
+#                   config-update → reboot → verify → clean
 #                   Prompts Y/n/skip before each phase. State saved to
 #                   /var/lib/kernel-update/ so the workflow survives interruption
 #                   and reboot.
@@ -1696,21 +1696,21 @@ do_full() {
         esac
     fi
 
-    info "Full workflow: fetch → world → config-update → check → prepare → build → install → reboot → verify → clean"
+    info "Full workflow: fetch → check → prepare → build → install → world → config-update → reboot → verify → clean"
 
     # --- Pre-reboot phases ---
+    # Kernel build (prepare/build/install) MUST precede world. `fetch` repoints
+    # /usr/src/linux at a fresh source tree with no .config; if @world rebuilds
+    # an out-of-tree module (nvidia-drivers, etc.) before prepare/build stages
+    # and compiles the new tree, its pkg_setup dies in require_configured_kernel.
     run_full_phase fetch          "Sync portage + install gentoo-sources + eselect kernel + news" \
         do_fetch
-    run_full_phase world          "Update @world + preserved-rebuild + depclean" \
-        do_world
-    run_full_phase config-update  "Merge updated config files (auto-accept new versions)" \
-        do_config_update
     run_full_phase check          "Pre-flight report (versions, disk, patches)" \
         do_check "$machine"
 
     # If do_check determined no rebuild is needed, auto-mark prepare/build/install
-    # as done so the workflow drops straight to verify/clean. Also clear any stale
-    # pending-verify state so the post-install reboot prompt doesn't fire.
+    # as done so the workflow drops straight to world → verify/clean. Also clear
+    # any stale pending-verify state so the post-install reboot prompt doesn't fire.
     if (( REBUILD_NEEDED == 0 )) && ! $DRY_RUN; then
         echo ""
         info "${GREEN}Skipping prepare/build/install — installed kernel matches a fresh prepare.${RESET}"
@@ -1726,6 +1726,10 @@ do_full() {
         do_build
     run_full_phase install "Install modules + kernel + NVIDIA rebuild + GRUB" \
         do_install "$machine"
+    run_full_phase world          "Update @world + preserved-rebuild + depclean" \
+        do_world
+    run_full_phase config-update  "Merge updated config files (auto-accept new versions)" \
+        do_config_update
 
     # --- Reboot boundary ---
     if ! phase_done verify; then
@@ -1769,8 +1773,8 @@ System update tool for production Gentoo machines.
 
 Commands:
   full           Prompted end-to-end workflow with resume support (default)
-                   fetch → world → config-update → check → prepare → build →
-                   install → reboot → verify → clean
+                   fetch → check → prepare → build → install → world →
+                   config-update → reboot → verify → clean
                    Prompts Y/n/skip before each phase. Saves progress — re-run to resume.
   fetch          Sync portage, install latest gentoo-sources, select kernel, show news (requires root)
   world          Update @world + preserved-rebuild + depclean (requires root)
