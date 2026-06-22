@@ -60,6 +60,9 @@ fi
 # Ollama ships as .tar.zst and no longer publishes a /latest/ URL alias —
 # we must use a versioned URL. Query the GitHub API for the current tag,
 # fall back to a known-good pin if the API is rate-limited/unreachable.
+# Note: deliberately do NOT call `ollama --version` here — it always probes
+# the daemon and emits a warning when none is running. We already know the
+# tag from the GitHub API, and tarball provenance is the authoritative source.
 OLLAMA_PIN_FALLBACK="v0.30.10"
 if [ ! -x /usr/local/bin/ollama ]; then
     command -v zstd &>/dev/null || die "zstd not installed (emerge app-arch/zstd)"
@@ -81,9 +84,12 @@ if [ ! -x /usr/local/bin/ollama ]; then
     log "[2/8] extracting to /usr/local"
     tar -C /usr/local --zstd -xf "$TMPZST" || die "tar extract failed"
     [ -x /usr/local/bin/ollama ] || die "/usr/local/bin/ollama still missing after extract"
-    log "[2/8] installed: $(/usr/local/bin/ollama --version 2>/dev/null | head -1)"
+    # Record the version we installed for future runs
+    echo "$TAG" > /usr/local/share/ollama-version 2>/dev/null || true
+    log "[2/8] installed ollama $TAG to /usr/local/bin/ollama"
 else
-    log "[2/8] ollama already present: $(/usr/local/bin/ollama --version 2>/dev/null | head -1)"
+    PREV_TAG=$(cat /usr/local/share/ollama-version 2>/dev/null || echo "(unknown)")
+    log "[2/8] ollama binary already present (installed: $PREV_TAG)"
 fi
 
 # --- 3. ollama user -------------------------------------------------------

@@ -500,6 +500,38 @@ $SC --module NFT_CT
 $SC --module NFT_FIB
 $SC --module NFT_REJECT
 
+# nftables family support — required for `table inet/ip/ip6` rule sets.
+# Originally missing; uncovered when verifier firewall ruleset failed with
+# EOPNOTSUPP on `table inet ollama_fw`. Add the full netfilter chunk so future
+# tooling (containers, libvirt, fail2ban) doesn't require another rebuild.
+#
+# Family-dispatch symbols are bool (built-in), expression modules are tristate.
+$SC --enable NF_TABLES_INET      # `table inet ...` (bool)
+$SC --enable NF_TABLES_IPV4      # `table ip ...`   (bool)
+$SC --enable NF_TABLES_IPV6      # `table ip6 ...`  (bool)
+$SC --module NFT_REJECT_INET     # `reject with tcp reset` in inet family
+$SC --module NFT_LIMIT           # rate-limiting expressions
+$SC --module NFT_LOG             # log expressions
+$SC --module NFT_NAT             # SNAT/DNAT
+$SC --module NFT_MASQ            # masquerade
+$SC --module NFT_REDIR           # port redirect
+
+# Xtables core — required by NFT_COMPAT and iptables-legacy
+$SC --module NETFILTER_XTABLES
+$SC --enable NETFILTER_XTABLES_LEGACY    # parent for *_NF_IPTABLES_LEGACY (bool)
+$SC --module NFT_COMPAT                  # iptables-nft compat layer
+
+# iptables-legacy parents + filter tables — needed for any tool that still
+# speaks raw iptables (fail2ban, docker-iptables, older firewall scripts).
+$SC --enable IP_NF_IPTABLES
+$SC --enable IP_NF_IPTABLES_LEGACY
+$SC --enable IP6_NF_IPTABLES
+$SC --enable IP6_NF_IPTABLES_LEGACY
+$SC --module IP_NF_FILTER
+$SC --module IP_NF_TARGET_REJECT
+$SC --module IP6_NF_FILTER
+$SC --module IP6_NF_TARGET_REJECT
+
 $SC --module TUN
 $SC --module BRIDGE
 

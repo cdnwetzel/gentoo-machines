@@ -51,8 +51,8 @@ apply() {
         || die "failed to write PL1 — try: chmod 644 $RAPL_PKG/constraint_0_power_limit_uw"
     echo "$PL2_UW" > "$RAPL_PKG/constraint_1_power_limit_uw" \
         || die "failed to write PL2"
-    # Enable both constraints (kernel sometimes disables PL2 on AC switch)
-    echo 1 > "$RAPL_PKG/constraint_0_power_limit_uw" 2>/dev/null || true
+    # Re-enable the package-level powercap (kernel can disable on AC transition).
+    # RAPL has no per-constraint enable file — only this package-level toggle.
     echo 1 > "$RAPL_PKG/enabled" 2>/dev/null || true
     echo "powercap-profile: AFTER"; show
     logger -t powercap-profile "applied PL1=${PL1_UW}µW PL2=${PL2_UW}µW"
