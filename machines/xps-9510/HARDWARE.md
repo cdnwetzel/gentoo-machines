@@ -208,9 +208,9 @@ reachable around the clock.
 | Verifier client | `tools/verify-llm.sh` (callable from any peer) |
 | Baseline numbers | `INFERENCE_BASELINE.md` |
 
-Quick health check from any peer:
+Quick health check from any peer (after adding `10.0.1.51 xps9510` to `/etc/hosts`):
 ```bash
-curl -s http://xps-9510.lan:11434/api/tags | jq '.models[].name'
+curl -s http://xps9510:11434/api/tags | jq '.models[].name'
 ```
 
 Quick verifier round-trip:

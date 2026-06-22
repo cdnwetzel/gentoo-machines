@@ -35,7 +35,11 @@ need curl
 need jq
 
 MODEL="${VERIFY_LLM_MODEL:-qwen2.5:3b-instruct-q4_K_M}"
-HOST_DEFAULT="${OLLAMA_HOST:-http://xps-9510.lan:11434}"
+# Default host matches the actual hostname (xps9510, no dash) and the LAN IP
+# the XPS 9510 currently advertises (10.0.1.51). Add to /etc/hosts on caller
+# machines (T5810, asrock-b550) so the name resolves:
+#   10.0.1.51  xps9510
+HOST_DEFAULT="${OLLAMA_HOST:-http://xps9510:11434}"
 case "$HOST_DEFAULT" in
     http*) HOST="$HOST_DEFAULT" ;;
     *)     HOST="http://$HOST_DEFAULT" ;;
