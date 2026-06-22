@@ -31,6 +31,9 @@ rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface
 # rc-update add nftables-ollama default   # XPS 9510 only — firewall (must start before ollama)
 # rc-update add ollama default            # XPS 9510 only — verifier on :11434 (firewall-restricted)
 
+# [T5810] AI compression layer — Headroom proxy in front of vLLM for cwdotcom (+ future iChris/psaios)
+# rc-update add headroom-proxy default    # T5810 only — :8787 loopback, forwards /v1/chat/completions → vLLM :8004
+
 # [LAPTOPS] Low-battery hibernate — cron or local.d background loop
 # Installed by shared/hibernate-setup.sh:
 #   With cron:    */2 * * * * /usr/local/bin/low-battery-hibernate.sh

@@ -1,0 +1,70 @@
+#!/sbin/openrc-run
+# headroom-proxy — OpenRC service for the Headroom LLM-input compression proxy
+#
+# Sits between client apps (cwdotcom api-proxy, future iChris/psaios) and the
+# real LLM backends (vLLM on 127.0.0.1:8004, etc.) and compresses inputs.
+# Bound to localhost only — no LAN exposure today.
+#
+# Install:
+#   cp headroom-proxy.initd /etc/init.d/headroom-proxy
+#   cp headroom-proxy.confd /etc/conf.d/headroom-proxy
+#   chmod +x /etc/init.d/headroom-proxy
+#   mkdir -p /var/log && touch /var/log/headroom-proxy.log /var/log/headroom-proxy.jsonl
+#   chown chris:chris /var/log/headroom-proxy.log /var/log/headroom-proxy.jsonl
+#   rc-update add headroom-proxy default
+#   rc-service headroom-proxy start
+#
+# Verify: curl http://127.0.0.1:8787/readyz
+
+description="Headroom LLM-input compression proxy (cwdotcom + future consumers)"
+
+: "${HEADROOM_VENV:=/home/chris/.local/headroom-venv}"
+: "${HEADROOM_HOST:=127.0.0.1}"
+: "${HEADROOM_PORT:=8787}"
+
+command="${HEADROOM_VENV}/bin/headroom"
+command_args="proxy"
+command_user="chris:chris"
+command_background="yes"
+pidfile="/run/headroom-proxy.pid"
+output_log="/var/log/headroom-proxy.log"
+error_log="/var/log/headroom-proxy.log"
+
+# Headroom flags are exposed via env vars (see headroom proxy --help).
+# Anything the confd sets must be exported here so the supervised process inherits.
+export HEADROOM_VENV
+export HEADROOM_HOST
+export HEADROOM_PORT
+export OPENAI_TARGET_API_URL           # upstream for /v1/chat/completions (vLLM)
+export HEADROOM_NO_CCR_INJECT_TOOL     # don't inject retrieve tool — vLLM/qwen aren't MCP
+export HEADROOM_NO_CCR_MARKER          # don't add CCR markers — would break streaming
+export HEADROOM_TELEMETRY              # opt out
+export HEADROOM_LOG_FILE               # structured JSONL log path
+export HEADROOM_MODE                   # token vs cache mode
+
+depend() {
+    need net
+    after vllm                          # optional but reasonable — upstream first
+}
+
+start_pre() {
+    [ -x "$command" ] || eerror "Missing $command — is the venv installed?"
+    checkpath --file --owner chris:chris --mode 0644 "$output_log"
+    [ -n "$HEADROOM_LOG_FILE" ] && checkpath --file --owner chris:chris --mode 0644 "$HEADROOM_LOG_FILE"
+}
+
+start_post() {
+    # Headroom has ~10-15s cold-start (torch import + ONNX model load).
+    # Block here until /livez responds so consumers don't race against startup.
+    ebegin "Waiting for Headroom /livez on ${HEADROOM_HOST}:${HEADROOM_PORT}"
+    local i
+    for i in $(seq 1 60); do
+        if curl --max-time 1 -fsS "http://${HEADROOM_HOST}:${HEADROOM_PORT}/livez" >/dev/null 2>&1; then
+            eend 0
+            return 0
+        fi
+        sleep 1
+    done
+    eend 1 "headroom-proxy did not become live within 60s — check $output_log"
+    return 1
+}

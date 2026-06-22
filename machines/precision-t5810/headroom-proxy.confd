@@ -1,0 +1,39 @@
+# /etc/conf.d/headroom-proxy — Headroom proxy daemon environment
+#
+# All settings here become env vars seen by the proxy. The initd exports
+# each one explicitly. To see all options:
+#   ~/.local/headroom-venv/bin/headroom proxy --help
+
+# --- bind address ---
+# Loopback only. Consumers (cwdotcom api-proxy) live on the same host.
+# If a remote consumer is ever added, expose via LAN-only firewall + reverse
+# proxy (don't bind 0.0.0.0 directly — telemetry/state endpoints leak otherwise).
+HEADROOM_HOST="127.0.0.1"
+HEADROOM_PORT="8787"
+
+# --- upstream routing ---
+# Path /v1/chat/completions → this URL (where vLLM is listening on T5810).
+# /v1/models passthrough has known issues; cwdotcom doesn't call it.
+OPENAI_TARGET_API_URL="http://127.0.0.1:8004"
+
+# --- compatibility: keep vLLM/qwen happy ---
+# Don't inject the headroom_retrieve synthetic tool into requests — vLLM/qwen
+# aren't MCP-aware and the streaming response would break trying to carry it.
+HEADROOM_NO_CCR_INJECT_TOOL="1"
+# Don't add CCR retrieval markers to compressed content (same reason — streaming).
+HEADROOM_NO_CCR_MARKER="1"
+
+# --- compression mode ---
+# token — prioritize compression; prior turns may be rewritten (default)
+# cache — freeze prior turns to maximise provider prefix-cache hit rate
+# cwdotcom is single-turn RAG so token mode is correct.
+HEADROOM_MODE="token"
+
+# --- logging ---
+# JSONL request/response log; line per request with tokens_before, tokens_after,
+# latency_ms, etc. Feed to `headroom perf` for summary stats.
+HEADROOM_LOG_FILE="/var/log/headroom-proxy.jsonl"
+
+# --- telemetry ---
+# Anonymous aggregate stats to upstream. Opt out — we don't need to send anything.
+HEADROOM_TELEMETRY="off"

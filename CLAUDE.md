@@ -386,6 +386,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **ECC**: 256GB DDR4 ECC (8x32GB Hynix), sb_edac EDAC driver
 - **Performance**: C-states disabled in BIOS, GOV_PERFORMANCE, always-on workstation
 - **Chipset**: C610/X99 (no LPSS/Pinctrl, I2C via i801 SMBus only)
+- **AI compression layer**: Headroom proxy on `127.0.0.1:8787` (OpenRC service `headroom-proxy`) compresses LLM inputs before they reach vLLM. Validated at ~30% real prompt-token savings on cwdotcom-shaped RAG payloads with semantic preservation across factual recall, multi-fact, synthesis, and refusal-case queries. Venv at `~/.local/headroom-venv` (5.3 GB, slim `[proxy,ml,code]` extras). Local-only — no LAN exposure today.
 - **Hardware ref**: `machines/precision-t5810/HARDWARE.md`
 
 ### Precision T5810 Machine-Specific Files
@@ -405,6 +406,8 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/precision-t5810/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/precision-t5810/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA, no WiFi) |
 | `machines/precision-t5810/ONE_OFF_TOOLS.md` | Manual commands, tooling improvements, generalization learnings |
+| `machines/precision-t5810/headroom-proxy.initd` | OpenRC service: Headroom LLM-input compression proxy on :8787 |
+| `machines/precision-t5810/headroom-proxy.confd` | Env config: bind, upstream URL (vLLM :8004), CCR off, log file |
 | ~~`machines/precision-t5810/harvest/`~~ | Harvest logs not committed (generated at `/tmp/t5810-harvest/` during build) |
 
 ### Surface Pro 6 (Production)

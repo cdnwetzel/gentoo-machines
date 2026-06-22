@@ -245,3 +245,40 @@ CUDA_VISIBLE_DEVICES=1 python serve.py
 - 2 × 200W = **400W sustained GPU draw under load** (plus 145W TDP CPU + system)
 - Verify PSU headroom before adding further discrete cards (T5810 ships with 685W-class PSU)
 - Monitor live: `nvidia-smi dmon -s pucvmet`
+
+## AI Compression Layer (Headroom)
+
+Sits between cwdotcom's `api-proxy.py` (and future iChris/psaios consumers) and the local vLLM endpoint. Compresses inputs to vLLM via the `kompress-v2-base` ONNX model so retrieved RAG context can be ~30% smaller without losing answer fidelity.
+
+| Component | Value |
+|-----------|-------|
+| Venv | `~/.local/headroom-venv` (~5.3 GB, `[proxy,ml,code]` extras) |
+| Service | `headroom-proxy` (OpenRC, `command_user=chris`) |
+| Listen | `127.0.0.1:8787` (loopback only) |
+| Upstream | `OPENAI_TARGET_API_URL=http://127.0.0.1:8004` → vLLM |
+| Logs | `/var/log/headroom-proxy.log` (stdout/stderr), `/var/log/headroom-proxy.jsonl` (per-request structured) |
+| Compression model | `chopratejas/kompress-v2-base` (int8 ONNX, cached in `~/.cache/huggingface`) |
+| Validated on | Synthetic cwdotcom-shaped RAG (8 chunks × ~3KB each, 5-query battery) |
+
+Baseline numbers (from 5-query factual / multi-fact / synthesis / refusal battery, 2026-06-21):
+
+| Metric | Result |
+|--------|--------|
+| Mean prompt-token savings | **30.2%** (24884 → 17369 across 5 queries) |
+| Semantic preservation | 5/5 answers correct |
+| Refusal-case correctness | Passed (compressed prompt still refused to invent facts) |
+| Cold-start latency | ~25s (ONNX model load) |
+| Warm compression latency | 50–80 ms/request |
+| Net vLLM latency | Slightly faster through compression (smaller prefill) |
+
+Quick sanity from any node that can reach T5810 loopback (or via the service itself locally):
+```bash
+curl http://127.0.0.1:8787/livez                                # process alive
+curl http://127.0.0.1:8787/readyz | jq '.status'                # ready
+curl http://127.0.0.1:8787/stats | jq '.summary.compression'    # aggregate savings
+```
+
+Followups (not blocking the current deploy):
+- Run a real-world A/B against cwdotcom dev for 1 week before flipping prod
+- Reinstall with CPU-only torch to shrink venv from 5.3 GB → ~2 GB (`pip install --extra-index-url https://download.pytorch.org/whl/cpu torch`)
+- Evaluate `--memory` mode using the existing Qdrant instance for cross-agent memory
