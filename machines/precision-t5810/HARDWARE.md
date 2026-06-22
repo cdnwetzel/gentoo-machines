@@ -248,48 +248,47 @@ CUDA_VISIBLE_DEVICES=1 python serve.py
 
 ## AI Compression Layer (Headroom)
 
-Sits between cwdotcom's `api-proxy.py` (and future iChris/psaios consumers) and the local vLLM endpoint. Compresses inputs to vLLM via the `kompress-v2-base` ONNX model so retrieved RAG context can be ~30% smaller without losing answer fidelity.
+Sits between cwdotcom's `api-proxy.py` (over the existing SSH tunnel from the VPS) and the local vLLM endpoint. Compresses the system prompt (RAG context) so vLLM sees ~half the tokens with no answer-quality regression.
 
 Two services share one venv:
 
 | Service | Port | Mode | Used by |
 |---------|------|------|---------|
-| `headroom-proxy` (OpenRC) | `127.0.0.1:8787` | Full proxy (content router, CCR, prefix-freeze, savings profile) | Future iChris (multi-turn — proxy mode is correct there) |
-| `headroom-lib` (OpenRC) | `127.0.0.1:8788` | Tiny FastAPI wrapper around `headroom.compress()` library | cwdotcom (single-turn RAG — library mode bypasses proxy's prefix-freeze, which would otherwise zero out savings) |
+| `headroom-proxy` (OpenRC) | `127.0.0.1:8787` | Full proxy (content router, CCR, prefix-freeze, savings profile) | Future iChris (multi-turn — proxy's prefix-freeze policy is correct there) |
+| `headroom-lib` (OpenRC) | `127.0.0.1:8788` | Tiny FastAPI wrapper around `headroom.compress()` library | cwdotcom (single-turn RAG — library bypasses the proxy's prefix-freeze, which would otherwise zero out savings) |
 
 | Component | Value |
 |-----------|-------|
 | Venv | `~/.local/headroom-venv` (~5.3 GB, `[proxy,ml,code]` extras) |
 | Compression model | `chopratejas/kompress-v2-base` (int8 ONNX, cached in `~/.cache/huggingface`) |
-| Proxy upstream | `OPENAI_TARGET_API_URL=http://127.0.0.1:8004` → vLLM |
-| Proxy savings profile | `HEADROOM_SAVINGS_PROFILE=agent-90` (verified loaded; doesn't help cwdotcom — see below) |
-| Proxy logs | `/var/log/headroom-proxy.log` + `/var/log/headroom-proxy.jsonl` |
+| Lib server kompress | **OFF** (`HEADROOM_DISABLE_KOMPRESS=1` — structural compression only) |
 | Lib server logs | `/var/log/headroom-lib.log` (stdout — calls + savings per request) |
-| Validated on | (a) synthetic 5-query battery via library; (b) `tools/ab-test-headroom.py` 3-query smoke through proxy |
 
-**Why two services**: The proxy's `compute_frozen_count()` (Headroom's `cache/compression_cache.py:224`) freezes every "plain" message except the trailing one. For a 2-message single-turn cwdotcom request (`[system, user]`), the system message becomes a frozen prefix and the user message is excluded as trailing — nothing is eligible for compression, transforms come back as `router:noop`. The library applies a different policy and produces 23-30% real savings on the same input. The lib server is a 130-line FastAPI app that just wraps `compress()`; the cwdotcom VPS reaches it via the existing `portfolio-ai-tunnel.service` ssh `-L` forward (`8788:127.0.0.1:8788`).
+**Why two services + why kompress-off for cwdotcom**:
 
-Baseline numbers (from 5-query factual / multi-fact / synthesis / refusal battery, 2026-06-21):
+1. *Proxy → lib pivot*: Headroom's proxy `compute_frozen_count()` (`cache/compression_cache.py:224`) freezes every "plain" message except the trailing one. For cwdotcom's 2-message `[system, user]` request, the system message becomes a frozen prefix and the user message is trailing-excluded — nothing reaches the compressor (`router:noop`, 0% savings). The library API applies a different policy and DOES compress.
+2. *kompress-off for cwdotcom*: With kompress enabled, the ML text model produces ~8% output ratio (84%+ savings) regardless of the `target_ratio` hint, which over-compresses for narrow-fact queries — "What GPUs does Chris run" regressed to 41 chars ("Chris runs A4500 GPUs.") because the model count, NVLink, and VRAM specs got squeezed out. Structural-only (kompress off) preserves all detail and still nets ~47% savings via dedup / JSON crushing / etc.
+
+Baseline (2026-06-22, structural-only on real cwdotcom RAG payloads):
 
 | Metric | Result |
 |--------|--------|
-| Mean prompt-token savings | **30.2%** (24884 → 17369 across 5 queries) |
-| Semantic preservation | 5/5 answers correct |
-| Refusal-case correctness | Passed (compressed prompt still refused to invent facts) |
-| Cold-start latency | ~25s (ONNX model load) |
-| Warm compression latency | 50–80 ms/request |
-| Net vLLM latency | Slightly faster through compression (smaller prefill) |
+| Mean prompt-token savings | **47%** (3 queries: 3923→1987, 3313→1750, 3477→1893) |
+| Selftest pass rate | 4/4 (grounded + no_pii) |
+| GPU query answer length | 268 chars with model count, VRAM specs, NVLink, location |
+| Compression latency | ~4 s per request (structural pipeline, hidden inside vLLM's 5-90 s generation) |
+| Cold-start | minimal (no ONNX warm-up when kompress off) |
 
-Quick sanity (either service):
+Quick sanity:
 ```bash
-curl http://127.0.0.1:8787/livez                                # proxy alive
 curl http://127.0.0.1:8788/livez                                # lib alive
-curl http://127.0.0.1:8788/readyz | jq '.status'                # lib warm-up done
-curl http://127.0.0.1:8788/stats  | jq '.mean_savings_pct'      # aggregate from cwdotcom calls
+curl http://127.0.0.1:8788/readyz                               # ready
+curl http://127.0.0.1:8788/stats   | python3 -m json.tool       # aggregate calls
+ssh root@cwetzel.com 'journalctl -u api-proxy -n 20 | grep Headroom'   # per-request from cwdotcom
 ```
 
-Followups (not blocking the current deploy):
-- Run a real-world A/B against cwdotcom dev for 1 week before flipping prod
+Followups (not blocking):
+- Watch cwdotcom for 1 week before declaring Phase 3 done; goal is zero `Headroom compress failed` warnings + the savings-per-call lines logging consistently.
 - Reinstall with CPU-only torch to shrink venv from 5.3 GB → ~2 GB (`pip install --extra-index-url https://download.pytorch.org/whl/cpu torch`)
-- Evaluate `--memory` mode using the existing Qdrant instance for cross-agent memory
-- If iChris stays deferred indefinitely, consider stop+disabling `headroom-proxy` and reclaiming RAM
+- If a future consumer (iChris) wants the aggressive kompress mode: spin up a SECOND `headroom-lib` service on a different port (e.g. :8789) with `HEADROOM_DISABLE_KOMPRESS=""`. Service-level toggle because the library API has no per-call disable.
+- If iChris stays deferred indefinitely, consider stop+disabling `headroom-proxy` (the :8787 service is unused by cwdotcom).
