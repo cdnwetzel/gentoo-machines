@@ -20,7 +20,12 @@ table inet ollama_fw {
     set OLLAMA_PEERS {
         type ipv4_addr
         elements = {
-            10.0.1.125,                     # T5810 (LAN, primary consumer)
+            10.0.1.125,                     # T5810 primary (enp0s25)
+            10.0.1.40,                      # T5810 secondary on same NIC
+                                            #   (kernel picks .40 as src for outbound
+                                            #    to xps9510 — must allow both, since
+                                            #    Linux source-addr selection on a
+                                            #    multi-IP NIC isn't deterministic)
             10.0.1.115,                     # asrock-b550 (LAN, occasional)
             # TODO_FILL_IN_7960_VPN_IP,     # 7960 (VPN-only — fill in when VPN is up)
             127.0.0.1,
