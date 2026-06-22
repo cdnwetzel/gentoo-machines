@@ -183,7 +183,7 @@ Connection profiles (server, credentials, DNS) are stored in NetworkManager and 
 
 | Component | Version |
 |-----------|---------|
-| nvidia-drivers | 595.58.03 |
+| nvidia-drivers | 595.71.05 |
 | CUDA Version | 13.1 |
 | GPU | RTX 3050 Ti Mobile (GA107M, 4GB GDDR6) |
 
