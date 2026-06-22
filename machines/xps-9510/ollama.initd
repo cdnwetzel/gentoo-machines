@@ -40,6 +40,7 @@ export CUDA_VISIBLE_DEVICES
 
 depend() {
     need net
+    need nftables-ollama          # firewall MUST be up before we bind :11434
     after powercap-profile
     use nvidia-persistenced
 }

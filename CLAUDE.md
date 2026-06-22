@@ -344,7 +344,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/ollama.confd` | Ollama daemon env: LAN bind, /data model storage, flash attention |
 | `machines/xps-9510/ollama.initd` | OpenRC service for upstream Ollama binary |
 | `machines/xps-9510/nftables-ollama.nft` | Firewall: restrict :11434 to T5810/asrock/7960 peers |
-| `machines/xps-9510/nftables-ollama.start` | /etc/local.d boot hook that applies the ruleset |
+| `machines/xps-9510/nftables-ollama.initd` | OpenRC service: loads ruleset with `before ollama` ordering (no startup race) |
 | `machines/xps-9510/INFERENCE_BASELINE.md` | Tokens/sec + thermal baseline template for the verifier model |
 
 ### MBP 2015 Machine-Specific Files

@@ -116,21 +116,23 @@ log "[4/8] model dir: $(ls -ld "$MODEL_DIR" | awk '{print $1, $3, $4, $9}')"
 log "[5/8] installing config files"
 install -m 0755 "$XPS_DIR/powercap-profile.sh"    /usr/local/sbin/powercap-profile
 install -m 0755 "$XPS_DIR/powercap-profile.initd" /etc/init.d/powercap-profile
+install -m 0755 "$XPS_DIR/nftables-ollama.initd"  /etc/init.d/nftables-ollama
 install -m 0755 "$XPS_DIR/ollama.initd"           /etc/init.d/ollama
 install -m 0644 "$XPS_DIR/ollama.confd"           /etc/conf.d/ollama
 mkdir -p /etc/nftables
 install -m 0644 "$XPS_DIR/nftables-ollama.nft"    /etc/nftables/ollama.nft
-install -m 0755 "$XPS_DIR/nftables-ollama.start"  /etc/local.d/nftables-ollama.start
+# Remove any prior /etc/local.d hook from earlier installs (now superseded
+# by the proper init.d service with `before ollama` ordering)
+rm -f /etc/local.d/nftables-ollama.start
 
 # --- 6. enable + start services ------------------------------------------
 log "[6/8] enabling + starting services"
-rc-update add powercap-profile default 2>/dev/null || true
-rc-update add ollama default            2>/dev/null || true
-rc-update add local default             2>/dev/null || true
-rc-service powercap-profile start || die "powercap-profile failed to start"
-rc-service ollama          restart || die "ollama failed to start"
-# Apply firewall now (local.d only runs on next boot)
-/etc/local.d/nftables-ollama.start || die "nftables ruleset failed to apply"
+rc-update add powercap-profile  default 2>/dev/null || true
+rc-update add nftables-ollama   default 2>/dev/null || true
+rc-update add ollama            default 2>/dev/null || true
+rc-service powercap-profile start  || die "powercap-profile failed to start"
+rc-service nftables-ollama  start  || die "nftables-ollama failed to start (kernel inet family present?)"
+rc-service ollama           restart || die "ollama failed to start"
 
 # Wait for ollama API to come up
 log "[6/8] waiting for ollama API on :11434"

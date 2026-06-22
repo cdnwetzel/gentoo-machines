@@ -1,0 +1,55 @@
+#!/sbin/openrc-run
+# nftables-ollama — apply the verifier firewall ruleset before ollama starts
+#
+# Loaded synchronously *before* ollama so the port is never reachable from
+# unauthorized peers, not even for the millisecond between bind() and the
+# firewall coming up. Replaces the earlier /etc/local.d hook approach.
+#
+# Install:
+#   cp nftables-ollama.initd /etc/init.d/nftables-ollama
+#   cp nftables-ollama.nft   /etc/nftables/ollama.nft
+#   chmod +x /etc/init.d/nftables-ollama
+#   rc-update add nftables-ollama default
+
+description="Apply Ollama-restricted nftables ruleset (verifier firewall)"
+
+RULESET=/etc/nftables/ollama.nft
+TABLE_FAMILY=inet
+TABLE_NAME=ollama_fw
+
+depend() {
+    need net
+    before ollama
+}
+
+start() {
+    ebegin "Applying $RULESET (table $TABLE_FAMILY $TABLE_NAME)"
+    [ -r "$RULESET" ] || { eend 1 "missing $RULESET"; return 1; }
+    # Idempotent: drop our table first if it already exists
+    nft list table "$TABLE_FAMILY" "$TABLE_NAME" &>/dev/null && \
+        nft delete table "$TABLE_FAMILY" "$TABLE_NAME"
+    nft -f "$RULESET"
+    eend $? "nft -f $RULESET failed"
+}
+
+stop() {
+    ebegin "Removing table $TABLE_FAMILY $TABLE_NAME"
+    if nft list table "$TABLE_FAMILY" "$TABLE_NAME" &>/dev/null; then
+        nft delete table "$TABLE_FAMILY" "$TABLE_NAME"
+        eend $?
+    else
+        einfo "table not loaded; nothing to remove"
+        eend 0
+    fi
+}
+
+status() {
+    if nft list table "$TABLE_FAMILY" "$TABLE_NAME" &>/dev/null; then
+        einfo "table $TABLE_FAMILY $TABLE_NAME is loaded:"
+        nft list table "$TABLE_FAMILY" "$TABLE_NAME"
+        return 0
+    else
+        einfo "table $TABLE_FAMILY $TABLE_NAME is NOT loaded"
+        return 3
+    fi
+}

@@ -388,7 +388,12 @@ case "$MACHINE" in
         else
             warn "Service ollama not running (verifier role inactive)"
         fi
-        # Firewall ruleset for the verifier port
+        # Firewall service + ruleset for the verifier port
+        if rc-service nftables-ollama status &>/dev/null; then
+            pass "Service: nftables-ollama"
+        else
+            fail "Service nftables-ollama not running (verifier port unprotected)"
+        fi
         if nft list table inet ollama_fw &>/dev/null; then
             PEERS=$(nft list set inet ollama_fw OLLAMA_PEERS 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | grep -v '^127\.' | wc -l)
             if [ "$PEERS" -gt 0 ]; then
@@ -397,7 +402,7 @@ case "$MACHINE" in
                 warn "Ollama firewall loaded but no non-localhost peers set"
             fi
         else
-            warn "Ollama firewall table not loaded (verifier exposed to all LAN)"
+            fail "Ollama firewall table not loaded (verifier port wide open)"
         fi
         ;;
     precision-t5810)
