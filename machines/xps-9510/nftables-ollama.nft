@@ -1,0 +1,44 @@
+# nftables-ollama.nft — restrict Ollama API (:11434) to known AI peers
+#
+# Loaded by /etc/local.d/nftables-ollama.start at boot.
+# Designed to coexist with any existing ruleset: adds a dedicated table
+# 'inet ollama_fw' hooked into input priority -10 (runs before the default
+# accept/drop). No effect on outbound, no effect on already-established.
+#
+# Edit OLLAMA_PEERS below to match the actual IPs of the AI cluster:
+#   - precision-t5810  (LAN, always-on, PRIMARY consumer)
+#   - asrock-b550      (LAN, always-on, occasional)
+#   - precision-7960   (VPN-only — IP is the VPN-side address; rule dormant
+#                       when VPN is down. Optional consumer.)
+#
+# Grab LAN IPs with `ip -4 addr show` on each peer, or use DHCP reservations.
+# The 7960's address is whatever the VPN issues; check with the user when
+# bringing it up.
+
+table inet ollama_fw {
+    # ----- EDIT THIS SET -----
+    set OLLAMA_PEERS {
+        type ipv4_addr
+        elements = {
+            # TODO_FILL_IN_T5810_LAN_IP,    # LAN, primary consumer
+            # TODO_FILL_IN_ASROCK_LAN_IP,   # LAN, occasional
+            # TODO_FILL_IN_7960_VPN_IP,     # VPN-only (rule dormant when VPN down)
+            127.0.0.1,
+        }
+    }
+    # -------------------------
+
+    chain input {
+        type filter hook input priority -10; policy accept;
+
+        # Allow loopback (covers localhost testing on the XPS itself)
+        iif "lo" accept
+
+        # Allow established/related — return traffic to clients
+        ct state established,related accept
+
+        # Allow port 11434 only from the peer set; reject the rest with TCP RST
+        tcp dport 11434 ip saddr @OLLAMA_PEERS accept
+        tcp dport 11434 reject with tcp reset
+    }
+}

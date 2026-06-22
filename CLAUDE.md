@@ -182,6 +182,16 @@ HARVEST="/path/to/hardware_inventory.log" MP_SUMMARY=1 bash tools/machine-profil
 ```
 Sets 30+ variables: CPU (vendor, model, threads, march, flags), GPU (Intel gen, NVIDIA count, AMD), WiFi/BT drivers, audio type/codec, storage (NVMe/SATA/boot drive), Ethernet drivers, platform vendor, boot type, suspend, chassis/form factor, and hardware features (Thunderbolt, ISH, SAM, EDAC, NUMA).
 
+### verify-llm.sh
+Thin HTTP wrapper around the XPS-9510 Ollama verifier. Callable from any AI peer (T5810, asrock-b550, 7960):
+```bash
+echo "1+1 = 3" | tools/verify-llm.sh --task fact-check
+tools/verify-llm.sh --task judge --criterion "answer is grounded in sources" --payload answer.txt
+tools/verify-llm.sh --task json-schema --schema schema.json --payload doc.json
+tools/verify-llm.sh --task code-review --payload diff.patch
+```
+Returns single-line JSON `{verdict, reasoning, model, ms}`. Exit 0=pass, 1=fail, 2=error. Default endpoint `xps-9510.lan:11434`, override via `OLLAMA_HOST` env. Tasks: `yes-no`, `fact-check`, `json-schema`, `judge`, `code-review`.
+
 ### verify-install.sh
 Post-reboot deep verification — auto-detects machine from DMI:
 ```bash
@@ -280,6 +290,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell XPS 15 9510 (Production)
 
+- **AI verifier role**: Always-on Ollama HTTP service on `:11434` serving `qwen2.5:3b-instruct-q4_K_M` from `/data/ml-models/ollama/`. Firewall-restricted to local AI peers (T5810 primary, asrock-b550, 7960 VPN-only). RAPL PL1=35W/PL2=60W cap via `powercap-profile.sh` keeps thermals stable during sustained calls. Bigger nodes invoke via `tools/verify-llm.sh` for LLM-as-judge / schema / fact-check verification.
 - **Kernel**: Linux 6.18.18-gentoo
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
@@ -328,6 +339,13 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/xps-9510/KERNEL_CONFIG_CROSSREF.md` | Kernel config decisions (NVIDIA dep chain, built-in vs module) |
 | `machines/xps-9510/INSTALL_GOTCHAS.md` | 10 XPS 9510-specific install lessons |
 | `machines/xps-9510/INSTALL_PREFLIGHT.md` | 13-phase install checklist with NVIDIA verification |
+| `machines/xps-9510/powercap-profile.sh` | RAPL PL1/PL2 setter (35W/60W) — thermal envelope for sustained inference |
+| `machines/xps-9510/powercap-profile.initd` | OpenRC service: apply RAPL caps at boot |
+| `machines/xps-9510/ollama.confd` | Ollama daemon env: LAN bind, /data model storage, flash attention |
+| `machines/xps-9510/ollama.initd` | OpenRC service for upstream Ollama binary |
+| `machines/xps-9510/nftables-ollama.nft` | Firewall: restrict :11434 to T5810/asrock/7960 peers |
+| `machines/xps-9510/nftables-ollama.start` | /etc/local.d boot hook that applies the ruleset |
+| `machines/xps-9510/INFERENCE_BASELINE.md` | Tokens/sec + thermal baseline template for the verifier model |
 
 ### MBP 2015 Machine-Specific Files
 

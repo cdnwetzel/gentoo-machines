@@ -187,6 +187,38 @@ Connection profiles (server, credentials, DNS) are stored in NetworkManager and 
 | CUDA Version | 13.1 |
 | GPU | RTX 3050 Ti Mobile (GA107M, 4GB GDDR6) |
 
+### AI/ML Verifier Role
+
+The XPS 9510 runs an always-on Ollama HTTP service serving a small verifier
+model (`qwen2.5:3b-instruct-q4_K_M`, ~2.2 GB). The bigger AI nodes call into
+it for cheap, independent second-opinion checks (LLM-as-judge, schema
+validation, fact-check). Docked clamshell, lid-close-docked=ignore keeps it
+reachable around the clock.
+
+| Component | Value |
+|-----------|-------|
+| Runtime | Ollama (upstream binary at `/usr/local/bin/ollama`) |
+| Default model | `qwen2.5:3b-instruct-q4_K_M` |
+| Model storage | `/data/ml-models/ollama/` (second 990 PRO NVMe) |
+| Listen address | `0.0.0.0:11434` (firewall-gated) |
+| Allowed peers | precision-t5810 (LAN, primary), asrock-b550 (LAN), precision-7960 (VPN-only) |
+| Service config | `ollama.confd` + `ollama.initd` (OpenRC) |
+| Firewall | `nftables-ollama.nft` → `/etc/nftables/ollama.nft` |
+| Power envelope | RAPL PL1=35W / PL2=60W (`powercap-profile.sh`) |
+| Verifier client | `tools/verify-llm.sh` (callable from any peer) |
+| Baseline numbers | `INFERENCE_BASELINE.md` |
+
+Quick health check from any peer:
+```bash
+curl -s http://xps-9510.lan:11434/api/tags | jq '.models[].name'
+```
+
+Quick verifier round-trip:
+```bash
+echo "1+1 = 3" | tools/verify-llm.sh --task fact-check
+# expect: exit 1, verdict "fail"
+```
+
 ## Performance Tuning
 
 ### Kernel Optimizations

@@ -1,0 +1,50 @@
+#!/sbin/openrc-run
+# ollama — OpenRC service for upstream ollama binary
+#
+# Install:
+#   curl -fsSL https://ollama.com/install.sh | sh   # creates user 'ollama'
+#   cp ollama.initd /etc/init.d/ollama
+#   cp ollama.confd /etc/conf.d/ollama
+#   chmod +x /etc/init.d/ollama
+#   mkdir -p /data/ml-models/ollama && chown -R ollama:ollama /data/ml-models/ollama
+#   rc-update add ollama default
+#   rc-service ollama start
+#
+# Then pull the verifier model:
+#   sudo -u ollama OLLAMA_MODELS=/data/ml-models/ollama \
+#     ollama pull qwen2.5:3b-instruct-q4_K_M
+
+description="Ollama LLM inference server (verifier role)"
+description_reload="Reload running model"
+
+: "${OLLAMA_HOST:=127.0.0.1:11434}"
+: "${OLLAMA_MODELS:=/usr/share/ollama/.ollama/models}"
+
+command="/usr/local/bin/ollama"
+command_args="serve"
+command_user="ollama:ollama"
+command_background="yes"
+pidfile="/run/ollama.pid"
+output_log="/var/log/ollama.log"
+error_log="/var/log/ollama.log"
+
+# Export everything the daemon needs (confd may not be auto-exported)
+export OLLAMA_HOST
+export OLLAMA_MODELS
+export OLLAMA_KEEP_ALIVE
+export OLLAMA_NUM_PARALLEL
+export OLLAMA_MAX_LOADED_MODELS
+export OLLAMA_FLASH_ATTENTION
+export OLLAMA_DEBUG
+export CUDA_VISIBLE_DEVICES
+
+depend() {
+    need net
+    after powercap-profile
+    use nvidia-persistenced
+}
+
+start_pre() {
+    checkpath --directory --owner ollama:ollama --mode 0755 "$OLLAMA_MODELS"
+    checkpath --file --owner ollama:ollama --mode 0644 "$output_log"
+}

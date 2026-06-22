@@ -26,6 +26,10 @@ rc-update add thermald default           # MBP 2015, XPS 9315, XPS 9510, Surface
 # [LAPTOPS] Power management — laptops with battery
 rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
 
+# [XPS 9510] AI verifier role — RAPL power cap + Ollama HTTP server
+# rc-update add powercap-profile default  # XPS 9510 only — caps PL1=35W/PL2=60W
+# rc-update add ollama default            # XPS 9510 only — verifier on :11434 (LAN-firewalled)
+
 # [LAPTOPS] Low-battery hibernate — cron or local.d background loop
 # Installed by shared/hibernate-setup.sh:
 #   With cron:    */2 * * * * /usr/local/bin/low-battery-hibernate.sh

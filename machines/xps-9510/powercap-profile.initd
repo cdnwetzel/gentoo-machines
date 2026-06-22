@@ -1,0 +1,34 @@
+#!/sbin/openrc-run
+# powercap-profile — apply RAPL PL1/PL2 caps at boot
+#
+# Install:
+#   cp powercap-profile.sh   /usr/local/sbin/powercap-profile
+#   cp powercap-profile.initd /etc/init.d/powercap-profile
+#   chmod +x /usr/local/sbin/powercap-profile /etc/init.d/powercap-profile
+#   rc-update add powercap-profile default
+#
+# Optional overrides:
+#   /etc/conf.d/powercap-profile  (PL1_UW=..., PL2_UW=...)
+
+description="Apply Intel RAPL power limits (PL1/PL2) for thermal stability"
+
+depend() {
+    after sysfs
+    before ollama
+}
+
+start() {
+    ebegin "Applying RAPL power limits"
+    /usr/local/sbin/powercap-profile apply
+    eend $?
+}
+
+stop() {
+    ebegin "Restoring RAPL kernel defaults"
+    /usr/local/sbin/powercap-profile reset
+    eend $?
+}
+
+status() {
+    /usr/local/sbin/powercap-profile show
+}

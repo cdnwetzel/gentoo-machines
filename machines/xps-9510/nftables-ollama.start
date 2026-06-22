@@ -1,0 +1,22 @@
+#!/bin/bash
+# /etc/local.d/nftables-ollama.start
+# Apply the Ollama firewall ruleset at boot.
+# (Pair with /etc/nftables/ollama.nft, which holds the table definition.)
+
+RULESET=/etc/nftables/ollama.nft
+LOG=/var/log/nftables-ollama.log
+
+if [ ! -r "$RULESET" ]; then
+    echo "$(date): missing $RULESET — skipping" >> "$LOG"
+    exit 0
+fi
+
+# Flush our own table only (don't touch ruleset from other services)
+nft list table inet ollama_fw &>/dev/null && nft delete table inet ollama_fw
+
+if nft -f "$RULESET" 2>>"$LOG"; then
+    echo "$(date): applied $RULESET" >> "$LOG"
+else
+    echo "$(date): nft -f $RULESET FAILED" >> "$LOG"
+    exit 1
+fi

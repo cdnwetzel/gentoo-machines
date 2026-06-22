@@ -364,6 +364,41 @@ case "$MACHINE" in
         else
             warn "TLP not found"
         fi
+        # --- AI verifier role ---
+        # RAPL power cap (powercap-profile)
+        RAPL_PL1=$(cat /sys/class/powercap/intel-rapl:0/constraint_0_power_limit_uw 2>/dev/null)
+        if [ -n "$RAPL_PL1" ]; then
+            if [ "$RAPL_PL1" -le 40000000 ] 2>/dev/null; then
+                pass "RAPL PL1 capped: $((RAPL_PL1 / 1000000))W (powercap-profile active)"
+            else
+                warn "RAPL PL1 uncapped at $((RAPL_PL1 / 1000000))W — powercap-profile may not be running"
+            fi
+        else
+            warn "RAPL PL1 sysfs unreadable — INTEL_RAPL module?"
+        fi
+        # Ollama service + model
+        if rc-service ollama status &>/dev/null; then
+            pass "Service: ollama (verifier)"
+            if curl -fsS --max-time 3 http://localhost:11434/api/tags 2>/dev/null \
+                | grep -q 'qwen2.5:3b'; then
+                pass "Verifier model qwen2.5:3b available"
+            else
+                warn "Ollama up but verifier model not loaded (pull qwen2.5:3b-instruct-q4_K_M)"
+            fi
+        else
+            warn "Service ollama not running (verifier role inactive)"
+        fi
+        # Firewall ruleset for the verifier port
+        if nft list table inet ollama_fw &>/dev/null; then
+            PEERS=$(nft list set inet ollama_fw OLLAMA_PEERS 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | grep -v '^127\.' | wc -l)
+            if [ "$PEERS" -gt 0 ]; then
+                pass "Ollama firewall: $PEERS peer(s) allowed"
+            else
+                warn "Ollama firewall loaded but no non-localhost peers set"
+            fi
+        else
+            warn "Ollama firewall table not loaded (verifier exposed to all LAN)"
+        fi
         ;;
     precision-t5810)
         # ECC memory
