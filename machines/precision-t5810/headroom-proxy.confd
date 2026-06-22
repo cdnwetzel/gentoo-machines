@@ -29,22 +29,24 @@ HEADROOM_NO_CCR_MARKER="1"
 # cwdotcom is single-turn RAG so token mode is correct.
 HEADROOM_MODE="token"
 
-# --- what to compress (proxy defaults are conservative — opt in for RAG) ---
-# Note: these env vars exist but are NOT in `headroom proxy --help`. Discovered
-# by grepping the source. The proxy defaults BOTH to off, even though the
-# library API defaults compress_system_messages=True. For cwdotcom the entire
-# RAG context lives in the system message, so compressing it is the whole point.
-# Keep user-message compression OFF — the user query is short and critical;
-# distorting it would harm answer quality more than it would save tokens.
-HEADROOM_COMPRESS_SYSTEM_MESSAGES="1"
+# --- savings profile ---
+# Headroom ships two named profiles (see ~/.local/.../headroom/agent_savings.py):
+#   - "balanced" (default if profile unset): conservative — compress_system_messages=False,
+#                force_kompress=False, min_tokens_to_compress=250, target=0.70
+#   - "agent-90":                            aggressive  — compress_system_messages=True,
+#                compress_user_messages=True, force_kompress=True,
+#                min_tokens_to_compress=120, target=0.90, protect_recent=2,
+#                accuracy_guard=strict
+#
+# The default "balanced" left ALL cwdotcom requests at 0% savings (the router
+# protected every message). agent-90 unlocks system-message compression and
+# drops the size threshold to something our ~3K-token RAG payloads clear easily.
+#
+# We override compress_user_messages back to 0 below: the user QUERY is short
+# (typically <120 tokens, would no-op anyway) but it's the most critical signal
+# in the request — keep it bit-identical.
+HEADROOM_SAVINGS_PROFILE="agent-90"
 HEADROOM_COMPRESS_USER_MESSAGES="0"
-
-# Force the kompress ML compressor to attempt every routable payload instead
-# of falling through to noop when content classification is ambiguous. Real
-# cwdotcom RAG payloads (~3K tokens of curated KB text) are exactly the
-# workload kompress-v2-base was trained on; the conservative router was
-# rejecting them as "user_message" without trying.
-HEADROOM_FORCE_KOMPRESS="1"
 
 # --- logging ---
 # JSONL request/response log; line per request with tokens_before, tokens_after,
