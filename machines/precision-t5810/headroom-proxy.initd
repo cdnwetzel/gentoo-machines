@@ -41,6 +41,9 @@ export HEADROOM_NO_CCR_MARKER          # don't add CCR markers — would break s
 export HEADROOM_TELEMETRY              # opt out
 export HEADROOM_LOG_FILE               # structured JSONL log path
 export HEADROOM_MODE                   # token vs cache mode
+export HEADROOM_COMPRESS_SYSTEM_MESSAGES  # opt-in: compress system prompt (RAG)
+export HEADROOM_COMPRESS_USER_MESSAGES    # opt-out: keep user query intact
+export HEADROOM_FORCE_KOMPRESS         # don't noop on router-ambiguous content
 
 depend() {
     need net
