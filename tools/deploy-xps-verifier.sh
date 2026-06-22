@@ -126,13 +126,17 @@ install -m 0644 "$XPS_DIR/nftables-ollama.nft"    /etc/nftables/ollama.nft
 rm -f /etc/local.d/nftables-ollama.start
 
 # --- 6. enable + start services ------------------------------------------
+# All three use `restart` (not `start`) so re-deploys reliably apply any
+# updated config — `start` is a silent no-op if already running, which leaves
+# stale RAPL limits / stale firewall rules / stale ollama env. Restart is
+# idempotent: starts if down, reloads if up.
 log "[6/8] enabling + starting services"
 rc-update add powercap-profile  default 2>/dev/null || true
 rc-update add nftables-ollama   default 2>/dev/null || true
 rc-update add ollama            default 2>/dev/null || true
-rc-service powercap-profile start  || die "powercap-profile failed to start"
-rc-service nftables-ollama  start  || die "nftables-ollama failed to start (kernel inet family present?)"
-rc-service ollama           restart || die "ollama failed to start"
+rc-service powercap-profile restart || die "powercap-profile failed to (re)start"
+rc-service nftables-ollama  restart || die "nftables-ollama failed to (re)start (kernel inet family present?)"
+rc-service ollama           restart || die "ollama failed to (re)start"
 
 # Wait for ollama API to come up
 log "[6/8] waiting for ollama API on :11434"

@@ -36,25 +36,42 @@ done | awk '{sum+=$NF; n++} END {print "mean", sum/n, "tok/s over", n, "runs"}'
 watch -n2 'sensors | grep -E "Package id|GPU"; nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv,noheader'
 ```
 
-## Numbers — fill in after first run
+## Numbers — initial baseline (2026-06-21)
 
-| Metric                          | With PL1=35/PL2=60 | Uncapped (reference) |
-|---------------------------------|--------------------|----------------------|
-| Cold model load                 |                    |                      |
-| Warm prefill (512 tok)          |                    |                      |
-| Sustained generation (mean)     |                    |                      |
-| Sustained generation (p95)      |                    |                      |
-| Package temp (5-min mean)       |                    |                      |
-| GPU temp (5-min mean)           |                    |                      |
-| Throttle events (dmesg)         |                    |                      |
+Captured immediately after first deploy. **NOTE**: RAPL was still in the
+broken-from-boot state (PL1=200W, PL2=60W) when these numbers were taken,
+not the intended 35W/60W. Re-bench after `rc-service powercap-profile restart`
+to get the production envelope.
 
-Target (sanity): warm sustained ≥ 30 tok/s on the 3050 Ti. Anything noticeably
-under that and either the model didn't fit VRAM (check `nvidia-smi`), the
-runtime dropped to CPU, or thermals are crushing the GPU.
+| Metric                          | 2026-06-21 (PL1=200, PL2=60) | Target / Uncapped reference |
+|---------------------------------|------------------------------|------------------------------|
+| Kernel                          | 6.18.29-gentoo               | -                            |
+| nvidia-drivers                  | 595.71.05                    | -                            |
+| Ollama                          | v0.30.10                     | -                            |
+| Warm gen tok/s (200 tok)        | **62 tok/s**                 | ≥ 30 tok/s (sanity floor)    |
+| Prompt eval (45 tok prefill)    | 0.06 s (~750 tok/s prefill)  | -                            |
+| GPU mem in use                  | 2.4 GB / 4.0 GB              | < 4.0 GB (fit)               |
+| GPU temp at idle (post-call)    | 60 °C                        | < 85 °C sustained            |
+| Verifier round-trip (fact-check)| 3.8 s                        | < 10 s                       |
+| Verifier round-trip (judge)     | 4.2 s                        | < 10 s                       |
 
-## Observations
+Quick verifier sanity (LLM-as-judge correctly distinguishes):
+- "The capital of France is London" → verdict=fail, reasoning cites Paris ✓
+- "L1/L2/L3 cache explanation" judged against "mentions L1, L2, and L3" → verdict=pass ✓
 
-(blank — fill in once bench has run)
+## Observations (first deploy)
+
+- **62 tok/s warm gen blows past the 30 tok/s target** — verifier latency is bounded by
+  model loading (cold start, ~36 s) far more than generation. Once warm, calls return in
+  3-5 s regardless of payload size (within reason).
+- **GPU idles at 14.8 W, 60 °C between calls** — well within the thermal envelope.
+  Power-cap impact on sustained tok/s should be minimal since the GPU never approached
+  thermal throttle even uncapped.
+- **Cold start is 30+ s** because Ollama loads the GGUF into VRAM. `OLLAMA_KEEP_ALIVE=24h`
+  in ollama.confd keeps it resident — first call after boot pays cold cost, all subsequent
+  calls within 24h are warm.
+
+## Re-bench triggers
 
 ## Re-bench triggers
 
