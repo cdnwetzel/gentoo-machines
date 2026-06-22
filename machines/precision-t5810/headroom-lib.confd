@@ -17,3 +17,13 @@ HEADROOM_VENV="/home/chris/.local/headroom-venv"
 
 # --- telemetry ---
 HEADROOM_TELEMETRY="off"
+
+# --- kompress (ML text compressor) toggle ---
+# Set "1" to disable the kompress ONNX model and rely on structural compression
+# only (JSON crusher, dedup, etc.). Trade-off:
+#   - kompress on  (default): 80%+ compression on prose, but can produce terse
+#     answers because so much detail is squeezed out (cwdotcom GPU query went
+#     from rich multi-sentence to "Chris runs A4500 GPUs.")
+#   - kompress off: minimal savings on RAG prose (no structural redundancy to
+#     squeeze), but full answer detail preserved.
+HEADROOM_DISABLE_KOMPRESS=""

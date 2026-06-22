@@ -34,6 +34,7 @@ export HEADROOM_VENV
 export HEADROOM_LIB_HOST
 export HEADROOM_LIB_PORT
 export HEADROOM_TELEMETRY              # opt out; inherited from confd
+export HEADROOM_DISABLE_KOMPRESS       # "" = ML compression on (default); "1" = structural-only
 
 depend() {
     need net
