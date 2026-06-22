@@ -51,3 +51,8 @@ authorized_keys
 *.swo
 *~
 \#*\#
+
+# Python bytecode caches (e.g. tools/ab-test-headroom.py drops these)
+__pycache__/
+*.pyc
+*.pyo
