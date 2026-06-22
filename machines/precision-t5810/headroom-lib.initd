@@ -1,0 +1,64 @@
+#!/sbin/openrc-run
+# headroom-lib — OpenRC service for the Headroom library wrapper
+# (cwdotcom-friendly compression service, bypasses the proxy's prefix-freeze)
+#
+# Companion to /etc/init.d/headroom-proxy on this same machine. The proxy
+# (:8787) is kept for future iChris multi-turn use; this service (:8788)
+# is the right shape for cwdotcom's single-turn RAG.
+#
+# Install:
+#   cp headroom-lib.initd /etc/init.d/headroom-lib
+#   cp headroom-lib.confd /etc/conf.d/headroom-lib
+#   chmod +x /etc/init.d/headroom-lib
+#   touch /var/log/headroom-lib.log && chown chris:chris /var/log/headroom-lib.log
+#   rc-update add headroom-lib default
+#   rc-service headroom-lib start    # blocks up to 60s for /livez
+#
+# Verify: curl http://127.0.0.1:8788/readyz | jq .status
+
+description="Headroom library wrapper for cwdotcom compression (loopback :8788)"
+
+: "${HEADROOM_VENV:=/home/chris/.local/headroom-venv}"
+: "${HEADROOM_LIB_HOST:=127.0.0.1}"
+: "${HEADROOM_LIB_PORT:=8788}"
+
+command="${HEADROOM_VENV}/bin/python"
+command_args="/home/chris/ai/gentoo-machines/machines/precision-t5810/headroom-lib-server.py"
+command_user="chris:chris"
+command_background="yes"
+pidfile="/run/headroom-lib.pid"
+output_log="/var/log/headroom-lib.log"
+error_log="/var/log/headroom-lib.log"
+
+export HEADROOM_VENV
+export HEADROOM_LIB_HOST
+export HEADROOM_LIB_PORT
+export HEADROOM_TELEMETRY              # opt out; inherited from confd
+
+depend() {
+    need net
+}
+
+start_pre() {
+    [ -x "$command" ] || eerror "Missing $command — is the headroom venv installed?"
+    [ -r "$command_args" ] || eerror "Missing $command_args — pull the gentoo-machines repo?"
+    checkpath --file --owner chris:chris --mode 0644 "$output_log"
+}
+
+start_post() {
+    # /livez responds before warm-up finishes; /readyz waits for kompress
+    # ONNX + tokenizer to actually load. Block on the latter so consumers
+    # never race against startup (~25s cold-load on first ever start,
+    # near-instant on subsequent restarts due to HF cache).
+    ebegin "Waiting for Headroom kompress warm-up (/readyz) on ${HEADROOM_LIB_HOST}:${HEADROOM_LIB_PORT}"
+    local i
+    for i in $(seq 1 60); do
+        if curl --max-time 1 -fsS "http://${HEADROOM_LIB_HOST}:${HEADROOM_LIB_PORT}/readyz" >/dev/null 2>&1; then
+            eend 0
+            return 0
+        fi
+        sleep 1
+    done
+    eend 1 "headroom-lib did not become ready within 60s — check $output_log"
+    return 1
+}

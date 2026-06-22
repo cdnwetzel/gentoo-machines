@@ -406,8 +406,11 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 | `machines/precision-t5810/gentoo_install_part2.sh` | Stage3 + config staging + chroot prep |
 | `machines/precision-t5810/gentoo_install_part3_chroot.sh` | 13-phase one-shot chroot install (NVIDIA, no WiFi) |
 | `machines/precision-t5810/ONE_OFF_TOOLS.md` | Manual commands, tooling improvements, generalization learnings |
-| `machines/precision-t5810/headroom-proxy.initd` | OpenRC service: Headroom LLM-input compression proxy on :8787 |
-| `machines/precision-t5810/headroom-proxy.confd` | Env config: bind, upstream URL (vLLM :8004), CCR off, log file |
+| `machines/precision-t5810/headroom-proxy.initd` | OpenRC service: Headroom proxy on :8787 (multi-turn agents; not used by cwdotcom — prefix-freeze mismatch) |
+| `machines/precision-t5810/headroom-proxy.confd` | Env config for the proxy: bind, upstream URL (vLLM :8004), CCR off, log file |
+| `machines/precision-t5810/headroom-lib-server.py` | FastAPI wrapper: exposes `headroom.compress()` library directly, bypasses proxy prefix-freeze (cwdotcom's fit) |
+| `machines/precision-t5810/headroom-lib.initd` | OpenRC service: headroom-lib-server on :8788 (cwdotcom compression endpoint) |
+| `machines/precision-t5810/headroom-lib.confd` | Env config for the lib server: bind 127.0.0.1:8788, shares venv with headroom-proxy |
 | ~~`machines/precision-t5810/harvest/`~~ | Harvest logs not committed (generated at `/tmp/t5810-harvest/` during build) |
 
 ### Surface Pro 6 (Production)

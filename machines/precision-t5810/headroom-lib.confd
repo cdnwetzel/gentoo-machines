@@ -1,0 +1,19 @@
+# /etc/conf.d/headroom-lib — Headroom library wrapper env
+#
+# This wraps `from headroom import compress` — library mode, not the proxy.
+# Bypasses the proxy's prefix-freeze policy which doesn't fit single-turn
+# RAG. See /etc/init.d/headroom-lib + headroom-lib-server.py for the rest.
+
+# --- bind ---
+# Loopback only. The cwdotcom VPS reaches this via the existing
+# portfolio-ai-tunnel.service ssh -L 8788:127.0.0.1:8788 (cwdotcom repo,
+# cloud/systemd/portfolio-ai-tunnel.service).
+HEADROOM_LIB_HOST="127.0.0.1"
+HEADROOM_LIB_PORT="8788"
+
+# --- venv ---
+# Shared with the existing headroom-proxy service. No second install.
+HEADROOM_VENV="/home/chris/.local/headroom-venv"
+
+# --- telemetry ---
+HEADROOM_TELEMETRY="off"

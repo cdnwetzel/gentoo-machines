@@ -250,15 +250,24 @@ CUDA_VISIBLE_DEVICES=1 python serve.py
 
 Sits between cwdotcom's `api-proxy.py` (and future iChris/psaios consumers) and the local vLLM endpoint. Compresses inputs to vLLM via the `kompress-v2-base` ONNX model so retrieved RAG context can be ~30% smaller without losing answer fidelity.
 
+Two services share one venv:
+
+| Service | Port | Mode | Used by |
+|---------|------|------|---------|
+| `headroom-proxy` (OpenRC) | `127.0.0.1:8787` | Full proxy (content router, CCR, prefix-freeze, savings profile) | Future iChris (multi-turn — proxy mode is correct there) |
+| `headroom-lib` (OpenRC) | `127.0.0.1:8788` | Tiny FastAPI wrapper around `headroom.compress()` library | cwdotcom (single-turn RAG — library mode bypasses proxy's prefix-freeze, which would otherwise zero out savings) |
+
 | Component | Value |
 |-----------|-------|
 | Venv | `~/.local/headroom-venv` (~5.3 GB, `[proxy,ml,code]` extras) |
-| Service | `headroom-proxy` (OpenRC, `command_user=chris`) |
-| Listen | `127.0.0.1:8787` (loopback only) |
-| Upstream | `OPENAI_TARGET_API_URL=http://127.0.0.1:8004` → vLLM |
-| Logs | `/var/log/headroom-proxy.log` (stdout/stderr), `/var/log/headroom-proxy.jsonl` (per-request structured) |
 | Compression model | `chopratejas/kompress-v2-base` (int8 ONNX, cached in `~/.cache/huggingface`) |
-| Validated on | Synthetic cwdotcom-shaped RAG (8 chunks × ~3KB each, 5-query battery) |
+| Proxy upstream | `OPENAI_TARGET_API_URL=http://127.0.0.1:8004` → vLLM |
+| Proxy savings profile | `HEADROOM_SAVINGS_PROFILE=agent-90` (verified loaded; doesn't help cwdotcom — see below) |
+| Proxy logs | `/var/log/headroom-proxy.log` + `/var/log/headroom-proxy.jsonl` |
+| Lib server logs | `/var/log/headroom-lib.log` (stdout — calls + savings per request) |
+| Validated on | (a) synthetic 5-query battery via library; (b) `tools/ab-test-headroom.py` 3-query smoke through proxy |
+
+**Why two services**: The proxy's `compute_frozen_count()` (Headroom's `cache/compression_cache.py:224`) freezes every "plain" message except the trailing one. For a 2-message single-turn cwdotcom request (`[system, user]`), the system message becomes a frozen prefix and the user message is excluded as trailing — nothing is eligible for compression, transforms come back as `router:noop`. The library applies a different policy and produces 23-30% real savings on the same input. The lib server is a 130-line FastAPI app that just wraps `compress()`; the cwdotcom VPS reaches it via the existing `portfolio-ai-tunnel.service` ssh `-L` forward (`8788:127.0.0.1:8788`).
 
 Baseline numbers (from 5-query factual / multi-fact / synthesis / refusal battery, 2026-06-21):
 
@@ -271,14 +280,16 @@ Baseline numbers (from 5-query factual / multi-fact / synthesis / refusal batter
 | Warm compression latency | 50–80 ms/request |
 | Net vLLM latency | Slightly faster through compression (smaller prefill) |
 
-Quick sanity from any node that can reach T5810 loopback (or via the service itself locally):
+Quick sanity (either service):
 ```bash
-curl http://127.0.0.1:8787/livez                                # process alive
-curl http://127.0.0.1:8787/readyz | jq '.status'                # ready
-curl http://127.0.0.1:8787/stats | jq '.summary.compression'    # aggregate savings
+curl http://127.0.0.1:8787/livez                                # proxy alive
+curl http://127.0.0.1:8788/livez                                # lib alive
+curl http://127.0.0.1:8788/readyz | jq '.status'                # lib warm-up done
+curl http://127.0.0.1:8788/stats  | jq '.mean_savings_pct'      # aggregate from cwdotcom calls
 ```
 
 Followups (not blocking the current deploy):
 - Run a real-world A/B against cwdotcom dev for 1 week before flipping prod
 - Reinstall with CPU-only torch to shrink venv from 5.3 GB → ~2 GB (`pip install --extra-index-url https://download.pytorch.org/whl/cpu torch`)
 - Evaluate `--memory` mode using the existing Qdrant instance for cross-agent memory
+- If iChris stays deferred indefinitely, consider stop+disabling `headroom-proxy` and reclaiming RAM
