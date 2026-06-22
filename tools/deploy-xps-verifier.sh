@@ -57,14 +57,29 @@ else
 fi
 
 # --- 2. ollama binary -----------------------------------------------------
+# Ollama ships as .tar.zst and no longer publishes a /latest/ URL alias —
+# we must use a versioned URL. Query the GitHub API for the current tag,
+# fall back to a known-good pin if the API is rate-limited/unreachable.
+OLLAMA_PIN_FALLBACK="v0.30.10"
 if [ ! -x /usr/local/bin/ollama ]; then
-    log "[2/8] downloading ollama static binary"
-    TMPTGZ=$(mktemp --suffix=.tgz)
-    trap 'rm -f "$TMPTGZ"' EXIT
-    curl --fail --location --silent --show-error \
-        https://ollama.com/download/ollama-linux-amd64.tgz \
-        -o "$TMPTGZ" || die "ollama download failed"
-    tar -C /usr/local -xzf "$TMPTGZ" || die "tar extract failed"
+    command -v zstd &>/dev/null || die "zstd not installed (emerge app-arch/zstd)"
+    log "[2/8] resolving latest ollama release tag"
+    TAG=$(curl -fsS --max-time 8 https://api.github.com/repos/ollama/ollama/releases/latest \
+        2>/dev/null | grep -oE '"tag_name":\s*"[^"]+"' | sed -E 's/.*"([^"]+)"/\1/')
+    if [ -z "$TAG" ]; then
+        TAG="$OLLAMA_PIN_FALLBACK"
+        log "[2/8] GitHub API unreachable — using pinned fallback $TAG"
+    else
+        log "[2/8] latest is $TAG"
+    fi
+    URL="https://github.com/ollama/ollama/releases/download/${TAG}/ollama-linux-amd64.tar.zst"
+    TMPZST=$(mktemp --suffix=.tar.zst)
+    trap 'rm -f "$TMPZST"' EXIT
+    log "[2/8] downloading $URL"
+    curl --fail --location --progress-bar \
+        "$URL" -o "$TMPZST" || die "ollama download failed (URL: $URL)"
+    log "[2/8] extracting to /usr/local"
+    tar -C /usr/local --zstd -xf "$TMPZST" || die "tar extract failed"
     [ -x /usr/local/bin/ollama ] || die "/usr/local/bin/ollama still missing after extract"
     log "[2/8] installed: $(/usr/local/bin/ollama --version 2>/dev/null | head -1)"
 else
