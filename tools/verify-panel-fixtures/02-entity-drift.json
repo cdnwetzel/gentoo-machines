@@ -1,0 +1,11 @@
+{
+  "_comment": "Number/name drift: OUTPUT swaps docket number digit + wrong county + wrong rule. Expect entity_fidelity FAIL and claim_grounding FAIL (some claims will be partial/ungrounded).",
+  "context": "Smith Industries filed a motion to dismiss on March 14, 2026 in the matter of Smith v. Acme Corp., docket 2026-CV-00847, before Judge Ramirez in the Superior Court of Mercer County, NJ. The motion argues that the plaintiff failed to state a claim under Rule 12(b)(6). Lead counsel for Smith Industries is Maria Chen of Portnoy Schneck LLC. The court has set a hearing for April 22, 2026.",
+  "output": "On March 14, 2026, Smith Industries filed a motion to dismiss in Smith v. Acme Corp. (docket 2026-CV-00874) before Judge Ramirez in the Hunterdon County Superior Court. The motion is based on Rule 12(b)(7), arguing failure to join a necessary party. Maria Chen of Portnoy Schneck LLC is lead counsel. A hearing has been scheduled for April 22, 2026.",
+  "expected": {
+    "panel_verdict": "fail",
+    "entity_fidelity": "fail — docket 00847 → 00874 (partial), county Mercer → Hunterdon (ungrounded), Rule 12(b)(6) → 12(b)(7) (partial)",
+    "pii_leak":        "pass (no placeholders or PII)",
+    "claim_grounding": "fail — claims about the county, rule basis are wrong; verdict should reflect ≥1 partial/ungrounded"
+  }
+}
