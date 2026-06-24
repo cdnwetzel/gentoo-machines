@@ -58,19 +58,137 @@ Likely next moves to close these:
     each against CONTEXT verbatim — same hybrid pattern that worked for PII
     and citations).
 
+## v1.5 — 7B vs 3B comparison run (2026-06-24)
+
+Pulled `qwen2.5:7b-instruct-q4_K_M` (~4.7 GB) and re-ran all four fixtures
+with `VERIFY_MODEL=qwen2.5:7b-instruct-q4_K_M`. Direct A/B against v1 (3B):
+
+| Fixture | Check | 3B (v1) | 7B |
+|---|---|---|---|
+| 01 baseline | all 4 | PASS, 10s | PASS, **70s** |
+| 02 entity drift | entity_fidelity | caught county + rule, **missed docket digit** | **catches all 4 deltas** including docket digit |
+| 02 entity drift | claim_grounding | 2 grounded, 1 partial | 3 grounded, 1 ungrounded (sharper) |
+| 03 PII | pii_leak | **3/3 leaks caught** | **only 1/3** — SSN + `[ATTORNEY_NAME]` triaged as benign |
+| 04 hallucinated cite | entity_fidelity | **passed (false neg on Westfield)** | **catches Westfield + February 2026** |
+| 04 hallucinated cite | claim_grounding | caught Ramirez ruling | catches **both** Westfield holding AND Ramirez ruling |
+
+Root causes:
+
+- **7B's semantic-check gains are real**: bigger attention bandwidth lets it
+  enumerate every offending item rather than picking the most obvious one
+  and moving on. This closes both of v1's open gaps (docket digit drift,
+  Westfield-as-entity miss).
+- **7B's PII-triage regression is a prompt artifact, not a model truth**:
+  the bigger model used its better context-awareness to interpret
+  "your SSN on file (123-45-6789)" as ambiguously-attributed and so
+  potentially-benign. The triage prompt's "benign vs leak" categories were
+  written assuming a naive 3B that flags everything; 7B took the
+  context-judgment latitude and over-applied it.
+- **7B's 7× latency is largely a CPU-spill artifact**: only 2.7 GB
+  resident in VRAM (4 GB total on the 3050 Ti), the rest split to CPU.
+  Acceptable for offline validation; would be painful for inline real-time use.
+
+## v2 plan — single-model 7B with tightened PII triage
+
+### Recommendation
+
+**Promote `qwen2.5:7b-instruct-q4_K_M` as the default verifier model. Tighten
+the `pii_leak` triage prompt to restore the v1 hybrid's 3/3 PII recall on
+fixture 03. Keep `qwen2.5:3b-instruct-q4_K_M` available as a fallback
+(both pulled on the box).**
+
+### Why C over A or B
+
+- **A** (`OLLAMA_MAX_LOADED_MODELS=2`, per-check model) — combined ~6.6 GB
+  model weight vs 4 GB VRAM forces both models to partially CPU-spill
+  on every call. Likely slower overall than C *and* adds per-check model
+  plumbing. Net negative.
+- **B** (single load slot, swap per check) — each check pays a 10-30s
+  swap cost first time per fixture. With 4 checks that's 40-120s *added*
+  per fixture. Strictly worse than C.
+- **C** (single 7B + tighter triage prompt) — addresses the actual root
+  cause (over-permissive triage rules) rather than routing around it with
+  model gymnastics. Single model = simplest operational footprint and
+  predictable VRAM. The 7× latency vs 3B is acceptable for the validation-
+  pipeline use case (we're not running this on every keystroke).
+
+### Plan steps
+
+1. **Tighten `PII_TRIAGE_SYSTEM`** in `tools/verify-panel.py`:
+   - Add an explicit meta-rule at the top: *"When uncertain, FLAG. False
+     positives are recoverable in human review; missed leaks are not."*
+   - Make SSN handling unambiguous: *"Any string matching the NNN-NN-NNNN
+     pattern is ALWAYS a leak unless the surrounding text explicitly marks
+     it as test/demo/training data (e.g., 'example SSN', 'sample only',
+     redacted-with-asterisks form like XXX-XX-NNNN)."*
+   - Make unfilled placeholder handling unambiguous: *"Any literal
+     `{...}`, `[ALLCAPS_NAME]`, or `<ALLCAPS_NAME>` in client-facing
+     content is ALWAYS an unfilled placeholder leak, regardless of how
+     the surrounding text reads."*
+   - Keep the firm-signature carve-out for phone/email — those still
+     benefit from context.
+
+2. **Change the default `VERIFY_MODEL`** in `verify-panel.py` from
+   `qwen2.5:3b-instruct-q4_K_M` to `qwen2.5:7b-instruct-q4_K_M`. Keep it
+   env-overridable so 3B is still one env var away.
+
+3. **Re-run all four fixtures** with the new prompt + 7B model.
+   Acceptance criteria:
+   - Fixture 03 `pii_leak`: catches all 3 (`{client_name}`,
+     `[ATTORNEY_NAME]`, `123-45-6789`). Same 3/3 recall as v1 hybrid.
+   - Fixture 04 `entity_fidelity`: still catches Westfield + February
+     2026 (no regression from 7B baseline).
+   - Fixture 02 `entity_fidelity`: still catches docket digit swap (no
+     regression).
+   - Fixture 01: still PASS (no false positive introduced).
+   - Latencies broadly comparable to the 7B baseline (~70s per fixture);
+     no surprising slowdowns.
+
+4. **If acceptance criteria fail**: fall back to Option B (model per
+   check) — use 7B for the semantic checks (`entity_fidelity`,
+   `claim_grounding`) and 3B for `pii_leak` triage. Pay the swap cost
+   once per panel run. Document the decision in this file.
+
+5. **Update Ollama service config** (`machines/xps-9510/ollama.confd`):
+   - Keep `OLLAMA_MAX_LOADED_MODELS=1` (default — letting Ollama evict
+     and reload as needed; both models fit on disk, only one in VRAM
+     at a time).
+   - Consider raising `OLLAMA_KEEP_ALIVE` from `24h` → `168h` so the 7B
+     model doesn't get evicted by an inactivity timer mid-week. Decide
+     after observing real usage.
+
+6. **Update `CALIBRATION.md`** with v2 results (this section will become
+   the v1.5 baseline; a new "v2" section will record what happened).
+
+7. **Commit + push** the verify-panel.py changes, the updated CALIBRATION.md,
+   and a one-line note in `machines/xps-9510/HARDWARE.md` AI verifier
+   section that the default model is now 7B.
+
+### Rollback
+
+One env-var revert: `VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M` returns to
+v1 behavior. The 3B model stays pulled on the box; no infrastructure
+change needed.
+
 ## How to re-calibrate
 
 ```bash
 cd ~/ai/gentoo-machines
 for f in tools/verify-panel-fixtures/*.json; do
+    [ "$f" = "tools/verify-panel-fixtures/CALIBRATION.md" ] && continue
     echo "=== $(basename "$f") ==="
     python3 tools/verify-panel.py --case "$f"
 done
+# A/B against the other model:
+VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M python3 tools/verify-panel.py --case <fixture>
 ```
 
-Latency on the XPS Ollama (`qwen2.5:3b-instruct-q4_K_M`, RTX 3050 Ti):
-- entity_fidelity ~5-10 s (single LLM call, prompt size dependent)
-- pii_leak: 0 ms when regex finds nothing; ~500ms × #candidates otherwise
-- citation_format: 0 ms (pure regex)
-- claim_grounding: ~5-15 s (1 extraction + N judgments)
-- Total per fixture: ~10-17 s depending on how much triage runs
+Latency on the XPS Ollama (RTX 3050 Ti, 4 GB VRAM):
+
+| Check | qwen2.5:3b (1.9 GB on disk, fits VRAM) | qwen2.5:7b (4.7 GB on disk, partial CPU spill) |
+|---|---|---|
+| entity_fidelity | 5-10 s | 40-50 s |
+| pii_leak | 0 ms (regex no-op) or 0.5-2 s (triage) | 0 ms or 2-6 s |
+| citation_format | 0 ms (pure regex) | 0 ms (pure regex) |
+| claim_grounding | 5-15 s | 20-30 s |
+| **per fixture** | **~10-17 s** | **~60-75 s** |
