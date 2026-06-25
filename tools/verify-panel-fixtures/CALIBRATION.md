@@ -584,6 +584,31 @@ and the false-positive cost in a blocking context is too high.
 See DEPLOYMENT.md for the rationale, cron design, alerting thresholds, and
 the "what's deferred" list.
 
+### v5 baseline run — 14-fixture corpus, default v4 config, 2026-06-25
+
+Total wall time 27 min for 14 fixtures (mean 108 s/fixture). See
+`DEPLOYMENT.md` v5 baseline section for the per-check pass rates and
+latency profile. Key empirical findings:
+
+- **Pure-regex checks behaved perfectly** — 100% pass on both
+  `citation_format` and `pii_leak` across all 14 fixtures.
+- **entity_fidelity verbatim override fired 15 times** across the
+  corpus, preventing what would have been v3-style false positives.
+- **claim_grounding is the binding signal** — only 14% pass rate, but
+  every failure was the model adding doctrine not in CONTEXT (the
+  intended catch). Also the slowest check at 59 s mean.
+- **All 14 fixtures FAIL** — content-driven, not a quality issue.
+  Every prompt was designed to give the model room to add doctrine;
+  the panel correctly flagged that.
+- **Failure surface is narrow** — 11/14 corpus fixtures fail on
+  exactly ONE check (vs 2-3 on v3-baseline fixtures), suggesting v4
+  converged the signal rather than spraying noise.
+- **One observed entity_fidelity JSON-parse error** (fixture 19,
+  "model did not return well-formed JSON"). 1/14 = 7% error rate on
+  long outputs is a known fragility from v2 — fixable with
+  retry-on-parse-failure or the per-entity decomposition pattern, but
+  deferred until it shows up in production volume.
+
 ## How to re-calibrate
 
 ```bash
