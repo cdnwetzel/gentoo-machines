@@ -526,6 +526,64 @@ is the more conservative choice. For latency-sensitive sampling work,
 Legal Generalist is interesting. Voting is the dial to turn when a
 specific prompt is observed to be unreliable on a specific content type.
 
+## v5 — operational: calibration corpus + stats + deployment decision
+
+### Calibration corpus
+
+`tools/build-calibration-corpus.py` generates a meaningful-volume real-prose
+corpus by querying psrouter with varied legal-domain prompts. Default run
+covers 3 matter types (employment, contract, IP trade secret) × 4 question
+shapes (strongest theory, intake summary, discovery targets, opposing
+arguments) = 12 fixtures, captured under `real-psrouter/10-…21-…json`.
+
+The matter contexts are synthetic but realistic — rich varied concrete
+entities (specific docket numbers, parties, dates, dollar amounts, judges,
+contracts referenced by section) so the panel has meaningful grounding to
+stress-test against.
+
+```bash
+tools/build-calibration-corpus.py \
+    --out tools/verify-panel-fixtures/real-psrouter/ \
+    --model "Legal Generalist"
+```
+
+The 2026-06-25 batch is the v5 baseline. Each fixture's `meta` field
+records the matter type and question shape so future runs can be
+slice-and-diced by content category.
+
+### Stats logging
+
+`tools/verify-panel.py` now accepts `--stats-log <path>` (or the
+`VERIFY_STATS_LOG` env var). Each run appends one JSON line with:
+timestamp, fixture, config (model/backend/votes), per-check verdicts,
+latencies, finding counts, and override counts.
+
+`tools/panel-stats.py` reads the log and prints aggregates: overall
+panel pass rate, per-check pass rate + mean latency + mean findings,
+per-fixture breakdown, per-model/backend breakdown, and a drift signal
+that splits the run history at the midpoint to surface trends.
+
+```bash
+# Baseline run on the whole corpus
+tools/run-calibration-batch.sh tools/verify-panel-stats/runs.jsonl
+
+# Summary
+tools/panel-stats.py tools/verify-panel-stats/runs.jsonl --by-fixture
+```
+
+The stats directory is gitignored — these accumulate over time and
+shouldn't pollute commit history. The summary tool is what survives.
+
+### Deployment surface
+
+The deployment decision lives in `DEPLOYMENT.md` next to this file. Short
+version: **CLI tool (already shipped) + nightly sampling cron (to build).
+NOT inline real-time gating** — latency makes inline impractical today,
+and the false-positive cost in a blocking context is too high.
+
+See DEPLOYMENT.md for the rationale, cron design, alerting thresholds, and
+the "what's deferred" list.
+
 ## How to re-calibrate
 
 ```bash

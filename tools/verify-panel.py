@@ -824,6 +824,11 @@ def main():
     ap.add_argument("--checks",  default=",".join(CHECKS.keys()),
                     help=f"comma-separated check names (default: all). available: {','.join(CHECKS)}")
     ap.add_argument("--json",    action="store_true", help="emit raw JSON, no text rendering")
+    ap.add_argument("--stats-log",
+                    default=os.environ.get("VERIFY_STATS_LOG", ""),
+                    help="path to a JSONL file to append a one-line summary per run "
+                         "(timestamp, fixture, config, per-check verdicts, latencies, finding counts). "
+                         "Used by tools/panel-stats.py for drift tracking.")
     args = ap.parse_args()
 
     if args.case:
@@ -855,6 +860,57 @@ def main():
                 # Real psrouter-derived fixtures may use a plain string here
                 # ("TBD — populated after panel run") rather than a structured dict.
                 print(f"  {expected}")
+
+    # v5 — append one-line summary per run for accuracy/drift tracking. Designed
+    # to be cheap (each line ~500 bytes) so it can accumulate over months. Reader
+    # is tools/panel-stats.py.
+    if args.stats_log:
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(args.stats_log)) or ".", exist_ok=True)
+            row = {
+                "ts":             time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "fixture":        args.case or "(stdin)",
+                "fixture_base":   os.path.basename(args.case) if args.case else "(stdin)",
+                "verdict":        panel["verdict"],
+                "total_ms":       round(panel.get("total_ms", 0)),
+                "config": {
+                    "model":   JUDGE_MODEL,
+                    "backend": JUDGE_BACKEND,
+                    "votes":   VERIFY_VOTES,
+                    "checks":  enabled,
+                },
+                "checks": [
+                    {
+                        "name":    r.get("check"),
+                        "verdict": r.get("verdict"),
+                        "ms":      round(r.get("ms", 0)),
+                        # Cheap finding counts — full data lives in the model raw if needed
+                        "n_findings": (
+                            len(r.get("entities", [])) if r.get("check") == "entity_fidelity" else
+                            len(r.get("leaks", []))    if r.get("check") == "pii_leak" else
+                            len(r.get("ungrounded_citations", [])) if r.get("check") == "citation_format" else
+                            len(r.get("ungrounded_numbers", []))   if r.get("check") == "numeric_fidelity" else
+                            len(r.get("judgments", [])) if r.get("check") == "claim_grounding" else
+                            0
+                        ),
+                        "n_failing_findings": (
+                            sum(1 for e in r.get("entities", []) if e.get("status") not in ("grounded", "pass", "ok")) if r.get("check") == "entity_fidelity" else
+                            len(r.get("leaks", []))                if r.get("check") == "pii_leak" else
+                            len(r.get("ungrounded_citations", [])) if r.get("check") == "citation_format" else
+                            len(r.get("ungrounded_numbers", []))   if r.get("check") == "numeric_fidelity" else
+                            sum(1 for j in r.get("judgments", []) if j.get("status") not in ("grounded", "pass", "ok")) if r.get("check") == "claim_grounding" else
+                            0
+                        ),
+                        "overrides": r.get("overrides", 0),
+                    }
+                    for r in panel["checks"]
+                ],
+            }
+            with open(args.stats_log, "a") as f:
+                f.write(json.dumps(row) + "\n")
+        except Exception as e:
+            # Non-fatal — verifier output still printed
+            print(f"\n(stats-log write failed: {type(e).__name__}: {e})", file=sys.stderr)
 
     sys.exit(0 if panel["verdict"] == "pass" else 1)
 

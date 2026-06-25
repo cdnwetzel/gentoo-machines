@@ -56,3 +56,8 @@ authorized_keys
 __pycache__/
 *.pyc
 *.pyo
+
+# verify-panel accumulating stats (JSONL run log + daily reports). Each is
+# tens of bytes per run; keep out of git — read with tools/panel-stats.py.
+verify-panel-stats/
+tools/verify-panel-stats/
