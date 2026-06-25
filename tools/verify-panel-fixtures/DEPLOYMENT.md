@@ -34,11 +34,14 @@ cron (to be built). Inline real-time pre-send gating is NOT in scope yet.**
 
 **Inline pre-send gating is out of scope today.** Two reasons:
 
-1. **Latency.** Default v4 config is 50-100s per panel run on 7B local
-   (60-80s typical, up to 109s with `VERIFY_VOTES=3`). Even with
-   psrouter `Legal Generalist` as judge (~43s), this is far above the
-   "draft a reply, hit send" interaction budget. Blocking a paralegal
-   for ~1 minute per send would be a usability regression.
+1. **Latency.** Measured 108 s mean per fixture across the 14-fixture
+   v5 baseline corpus (range 54-174 s, mostly 100-145 s). `claim_grounding`
+   alone averages 59 s; `entity_fidelity` 49 s. The pure-regex checks
+   (citation_format, numeric_fidelity, pii_leak) contribute ~0 ms. Even
+   with psrouter `Legal Generalist` as judge (~43 s on the demo), this
+   is far above the "draft a reply, hit send" interaction budget.
+   Blocking a paralegal for ~2 minutes per send would be a usability
+   regression.
 
 2. **False-positive cost in a blocking context.** v4 dramatically
    reduced FP rate vs v3, but the panel still produces some — and an
@@ -85,6 +88,63 @@ email or ntfy push when:
 
 **Stats log**: all runs append to `verify-panel-stats/runs.jsonl`.
 `tools/panel-stats.py` reads it for accuracy and drift analysis.
+
+## v5 baseline — empirical numbers from the 14-fixture corpus run (2026-06-25)
+
+First run of `tools/run-calibration-batch.sh` against the freshly-built
+real-psrouter corpus, default v4 config (qwen2.5:7b-instruct-q4_K_M local,
+no voting). Reproducible with `tools/panel-stats.py
+tools/verify-panel-stats/runs.jsonl --by-fixture --by-model`.
+
+### Per-check reliability
+
+| Check | Pass rate | Mean latency | Notes |
+|---|---|---|---|
+| citation_format | 100.0% | 0 ms | Pure regex — no findings on this corpus |
+| pii_leak | 100.0% | 0 ms | No PII patterns in psrouter outputs |
+| numeric_fidelity | 78.6% | 0 ms | 3 fixtures caught hallucinated numbers (mostly "1964" from Civil Rights Act expansion) |
+| entity_fidelity | 78.6% | 49 s | 15 verbatim-overrides fired across 14 runs — v4 fix preventing the v3 false-positive class |
+| claim_grounding | 14.3% | 59 s | Catches the doctrine additions (temporal proximity, McDonnell Douglas burden-shifting, statute expansions) every real model output drifts into |
+
+### Panel-level metrics
+
+- Total wall time: 27 min for 14 fixtures
+- Mean per-fixture latency: 108 s (range 54-174 s)
+- All 14 fixtures: FAIL — expected because every real psrouter answer adds
+  some legal doctrine or expansion beyond the bare matter facts. The
+  interesting question is *which* checks fail, not whether any do.
+- Failure surface is narrow: 11/14 corpus fixtures fail on exactly ONE
+  check (vs 2-3 on the v3-baseline fixtures), suggesting v4 converged the
+  panel's signal rather than spraying noise.
+
+### What this means for the cron design
+
+- Throughput planning: at 108 s/draft, a nightly run can process roughly
+  N drafts in N×108 s. At 50 drafts/day that's 90 min nightly; at 200
+  drafts it's 6 hours. **If draft volume exceeds ~100/day, parallelize**
+  the batch runner (Ollama's `OLLAMA_NUM_PARALLEL=2` permits two
+  concurrent panels at the cost of extra VRAM pressure).
+- Alerting priority: `citation_format` findings remain the highest-value
+  signal (deterministic, near-zero FP). `numeric_fidelity` is similarly
+  deterministic but lower precision (it flags any number not in CONTEXT
+  including new years that may be benign — see "1964" pattern). LLM-driven
+  checks need human-review pairing before automated alerts.
+- Stats log will accumulate ~500 bytes per draft. At 50 drafts/day = 25KB/day
+  = 9MB/year. JSONL stays usable for years without rotation.
+
+### Caveats for this baseline
+
+- All-fail is **content-driven**, not a v4 quality issue. Every prompt
+  in the corpus was designed to give the model room to add doctrine; the
+  panel correctly flags that.
+- No human-labeled ground truth yet. "Pass rate" is the panel's verdict
+  rate, not its accuracy against human review. Building that ground truth
+  is the next operational step (sample 20-30 panel findings, classify
+  each as TRUE or FALSE positive, recompute per-check precision).
+- Drift signal (first 7 vs last 7 runs) shows content-driven variation
+  (employment vs IP outputs have different hallucination patterns), not
+  model drift. Becomes meaningful when the *same* fixtures run repeatedly
+  over time.
 
 ## What's deferred (will revisit)
 
