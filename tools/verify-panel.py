@@ -540,8 +540,13 @@ def main():
         if expected:
             print()
             print("=== Expected (from fixture) ===")
-            for k, v in expected.items():
-                print(f"  {k}: {v}")
+            if isinstance(expected, dict):
+                for k, v in expected.items():
+                    print(f"  {k}: {v}")
+            else:
+                # Real psrouter-derived fixtures may use a plain string here
+                # ("TBD — populated after panel run") rather than a structured dict.
+                print(f"  {expected}")
 
     sys.exit(0 if panel["verdict"] == "pass" else 1)
 

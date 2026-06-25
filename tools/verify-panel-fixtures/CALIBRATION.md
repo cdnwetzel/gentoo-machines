@@ -216,23 +216,146 @@ Acceptable for offline validation pipelines (not inline-real-time use).
   the model's malformed-JSON moment. Cosmetic; ignored by code now that
   verdict is computed from statuses.
 
-### Next experiments
+## v3 — real psrouter outputs (2026-06-25) — synthetic confidence was misleading
 
-- **Real psrouter outputs**: build a (context, output) pair using
-  `Legal Generalist` or `PS-Legal-72B` against a real firm KB passage,
-  run the panel, see how it behaves on production-shape content vs
-  hand-built fixtures. Tests the regex patterns and LLM judgments on
-  natural firm text rather than constructed cases.
-- **Bigger numeric-fidelity prefilter**: extend the regex approach to
-  numbers in general (currency, dates, docket-like patterns) — extract
-  every number in OUTPUT, check each against CONTEXT verbatim. This would
-  remove the false-positive noise on case-name commas while still
-  catching things like the docket digit swap with certainty.
-- **Inline streaming mode**: if compress/judge needs to happen live
-  in front of an iChris draft pipeline, the ~70s per panel run becomes
-  too slow. Options: parallel checks (asyncio + Ollama's NUM_PARALLEL=2),
-  smaller per-check prompts, or split structural-only (fast) vs
-  semantic checks (slow, run on a sampling basis).
+Ran the panel against two real psrouter responses to the same employment-
+matter prompt:
+  - `Legal Generalist` (spark2 32B) — 22s response, 265 tokens out
+  - `PS-Legal-72B` (spark1 72B) — 115s response, 362 tokens out
+
+Both outputs are realistic legal prose: the model reasons about retaliation
+vs gender-discrimination theories of liability, cites the matter facts, and
+adds legal doctrine (temporal proximity, pretext) not in the CONTEXT. No
+fabricated case law in either response. Both expand "Title VII" to
+"Title VII of the Civil Rights Act of 1964" — the canonical hallucination
+to catch.
+
+Fixtures saved at `verify-panel-fixtures/real-psrouter/`.
+
+### The findings
+
+**1. The 7B verifier is non-deterministic on real prose.** Two runs of the
+same fixtures produced different verdicts at the entity-fidelity level:
+
+| Fixture | Run 1 entity_fidelity | Run 2 entity_fidelity |
+|---|---|---|
+| 32B output | FAIL — `June 3, 2019` partial (false positive) | PASS — no findings |
+| 72B output | FAIL — `April 17, 2026`, `$4,200` (both false positives) | FAIL — caught Civil Rights Act of 1964 ✓, plus 4 more false positives |
+
+`temperature=0.0` in the request notwithstanding, Ollama / CUDA sampling
+isn't fully deterministic. Same input, different output.
+
+**2. False-positive rate is high on real prose.** Entities that appear
+verbatim in CONTEXT get flagged as ungrounded or partial when the
+verifier loses track of which surrounding text supports them:
+  - `April 17, 2026` — in CONTEXT ("Ms. Carter was terminated on
+    April 17, 2026"), flagged ungrounded
+  - `$78,400 annual salary` — in CONTEXT verbatim, flagged ungrounded
+  - `$4,200` — in CONTEXT verbatim ("year-end bonus of $4,200"),
+    flagged partial because the surrounding sentence is rephrased
+  - `June 3, 2019` — in CONTEXT verbatim, flagged partial
+
+The verifier extracts the entity correctly but matches it against the
+wrong section of CONTEXT, then concludes "not in context" or "different".
+On clearly-distorted entities the synthetic fixtures used (`docket 00874`
+vs `00847`, `Hunterdon` vs `Mercer County`), this didn't happen because
+the distortion was structural — every appearance in OUTPUT was the wrong
+form. On natural prose with one mention in OUTPUT and a more elaborate
+phrasing in CONTEXT, the model gets confused.
+
+**3. `claim_grounding` is too lenient on real prose.** Both runs of both
+fixtures returned "7 grounded, 0 partial, 0 ungrounded" — including the
+Civil Rights Act of 1964 expansion. The 2-call decomposition (extract
+claims → judge each) didn't help because the model's judgments are
+liberal: it sees Title VII in CONTEXT, sees Title VII in the claim, and
+calls the whole claim grounded even when the claim adds "Civil Rights
+Act of 1964" — content not in CONTEXT.
+
+**4. Pure-regex checks were the only reliable ones.** Across both runs
+of both fixtures, `pii_leak` (regex prefilter) and `citation_format`
+(pure regex) behaved consistently and correctly. The hybrid pattern is
+robust; the pure-LLM patterns are not.
+
+### What this means for the use case
+
+The panel is **not** ready as a pre-send check on real iChris drafts. The
+false-positive rate on natural prose would have humans dismissing too
+many alarms; the false-negative rate on subtle expansions (Civil Rights
+Act, doctrine additions) means real hallucinations would still slip.
+Combined with non-determinism, the same draft could be cleared one
+moment and rejected the next.
+
+Where it IS ready:
+  - `pii_leak` — structural patterns, reliable across runs.
+  - `citation_format` — fabricated federal/SCOTUS citations get caught
+    deterministically because the regex enumerates citations and set-
+    compares against CONTEXT. No model involvement.
+
+### Required improvements before this is production-trustworthy
+
+In rough priority order:
+
+  1. **Multi-sample voting** for the LLM checks. Run each LLM call 3 or 5
+     times with explicit-different temperatures or seeds, majority-vote
+     on the verdict. Trades latency for reliability. With the panel
+     already at ~80s per fixture, this is the most expensive but most
+     impactful change.
+
+  2. **Numeric-fidelity regex prefilter**. Same pattern as `pii_leak` and
+     `citation_format`: extract every number / dollar amount / docket /
+     date from OUTPUT via regex, check each against CONTEXT verbatim.
+     This catches the entity-drift cases (docket digit swap, $-amount
+     drift) *deterministically* and removes them from the LLM's load.
+     The LLM check is then narrower (named entities + paraphrased
+     references) which it handles more reliably.
+
+  3. **Tighten `claim_grounding` prompt with explicit examples** of
+     subtle expansions that should fail (Title VII → Title VII of the
+     Civil Rights Act of 1964 should be flagged as adding ungrounded
+     content). Few-shot examples may be necessary; 7B's zero-shot
+     judgment on these is too liberal.
+
+  4. **Improve entity_fidelity context-matching**. Either decompose
+     (one call per entity, with the entity quoted and the full CONTEXT
+     in scope), or post-process model output by doing a string-grep
+     of each extracted entity against CONTEXT before trusting the
+     model's "ungrounded" call.
+
+  5. **Try a stronger judge model**. The firm's `Legal Generalist`
+     (32B) or `PS-Legal-72B` via psrouter are accessible from the
+     XPS while it's in office; using them as the verifier judge
+     (not just the thing being verified) is a different architecture
+     but may be the right move for this domain. Calibration cost
+     would be substantial — likely a full re-pass of the fixture set
+     with the new judge.
+
+### Conclusion
+
+Real-world testing did what synthetic-fixture testing could not: it
+revealed the failure modes that matter in production. Pure-regex checks
+work. LLM-driven semantic checks (entity_fidelity, claim_grounding) on
+the 7B verifier are not yet trustworthy on natural legal prose. The
+required improvements are concrete and prioritized but represent real
+work — not a one-prompt tweak.
+
+The panel as it stands today is useful for:
+  - Catching unfilled placeholders (pii_leak)
+  - Catching fabricated federal/SCOTUS citations (citation_format)
+  - Spot-checking drafts where consistent false-positive noise is
+    tolerable for human review
+
+It is NOT yet useful for:
+  - Automated gating of iChris-style draft pipelines
+  - High-precision grounding checks where a single false positive
+    is expensive (human-review fatigue)
+  - Catching subtle expansions ("Title VII" → "Title VII of the
+    Civil Rights Act of 1964") that human reviewers would otherwise
+    miss
+
+### Next experiments (deprioritized — addressed in v3 findings above)
+
+- Inline streaming mode — premature; the panel isn't accurate enough yet
+  to be worth running inline.
 
 ## How to re-calibrate
 
