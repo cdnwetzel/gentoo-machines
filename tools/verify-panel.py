@@ -65,14 +65,31 @@ OLLAMA_HOST  = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/
 VERIFY_MODEL = os.environ.get("VERIFY_MODEL", "qwen2.5:7b-instruct-q4_K_M")
 TIMEOUT_SECS = float(os.environ.get("VERIFY_TIMEOUT", "120"))
 
+# v4 item #5: backend selection. Default is local Ollama on the XPS. For the
+# experimental "psrouter as judge" path we route via OpenAI-compatible API to
+# 192.168.111.162:8888 (firm's legal-tuned 32B/72B). Use a different judge by
+# setting these three together:
+#   JUDGE_BACKEND=openai-compat
+#   JUDGE_BASE_URL=http://192.168.111.162:8888
+#   JUDGE_MODEL="Legal Generalist"   (or "PS-Legal-72B")
+JUDGE_BACKEND  = os.environ.get("JUDGE_BACKEND", "ollama").lower()
+JUDGE_BASE_URL = os.environ.get("JUDGE_BASE_URL", OLLAMA_HOST).rstrip("/")
+JUDGE_MODEL    = os.environ.get("JUDGE_MODEL", VERIFY_MODEL)
+
+# v4 item #1: multi-sample voting. When >1, the LLM-driven checks (entity_fidelity,
+# claim_grounding) run their LLM call N times and aggregate findings. Costs Nx
+# latency but materially improves reliability under the observed non-determinism
+# (v3 fixture 05/06: two runs gave very different verdicts). Default 1 preserves
+# v3 behavior; set VERIFY_VOTES=3 for the reliability mode.
+VERIFY_VOTES = max(1, int(os.environ.get("VERIFY_VOTES", "1")))
+
 
 # ----------------------------------------------------------------------
-# Ollama call
+# Judge LLM call — dispatches to ollama or openai-compat (psrouter) backend
 # ----------------------------------------------------------------------
-def ollama_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str, float]:
-    """Call /api/chat, return (raw_content, latency_ms)."""
+def _ollama_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str, float]:
     body = {
-        "model":   VERIFY_MODEL,
+        "model":   JUDGE_MODEL,
         "stream":  False,
         "options": {"temperature": 0.0, "num_ctx": 8192},
         "messages": [
@@ -83,7 +100,7 @@ def ollama_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str
     if force_json:
         body["format"] = "json"
     req = urllib.request.Request(
-        f"{OLLAMA_HOST}/api/chat",
+        f"{JUDGE_BASE_URL}/api/chat",
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
     )
@@ -92,6 +109,41 @@ def ollama_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str
         resp = json.loads(r.read())
     ms = (time.time() - t0) * 1000
     return resp["message"]["content"], ms
+
+
+def _openai_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str, float]:
+    """OpenAI-compatible /v1/chat/completions — used for psrouter and any
+    other backend that speaks the OpenAI shape."""
+    body = {
+        "model":    JUDGE_MODEL,
+        "stream":   False,
+        "temperature": 0.0,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user",   "content": user},
+        ],
+    }
+    if force_json:
+        # vLLM / OpenAI-style JSON mode
+        body["response_format"] = {"type": "json_object"}
+    req = urllib.request.Request(
+        f"{JUDGE_BASE_URL}/v1/chat/completions",
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SECS) as r:
+        resp = json.loads(r.read())
+    ms = (time.time() - t0) * 1000
+    return resp["choices"][0]["message"]["content"], ms
+
+
+def ollama_chat(system: str, user: str, *, force_json: bool = True) -> tuple[str, float]:
+    """Single judge LLM call — dispatches based on JUDGE_BACKEND.
+    Kept named `ollama_chat` for backward-compat with the rest of this file."""
+    if JUDGE_BACKEND in ("openai-compat", "openai", "psrouter"):
+        return _openai_chat(system, user, force_json=force_json)
+    return _ollama_chat(system, user, force_json=force_json)
 
 
 def parse_json_or_raw(text: str) -> dict | list | str:
@@ -128,36 +180,119 @@ Reply JSON only:
 Verdict is "pass" only if EVERY entity is grounded. Any ungrounded or partial → "fail"."""
 
 
-def check_entity_fidelity(context: str, output: str) -> dict:
+def _extract_entities_one_run(context: str, output: str) -> tuple[list[dict], float, str]:
+    """Single LLM call to extract+judge entities. Returns (entities, ms, raw)."""
     raw, ms = ollama_chat(ENTITY_SYSTEM, f"CONTEXT:\n{context}\n\nOUTPUT:\n{output}")
     parsed = parse_json_or_raw(raw)
-    result = {"check": "entity_fidelity", "ms": ms, "raw": raw}
-
-    # Require only the entities list. Verdict is COMPUTED from entity
-    # statuses below, not trusted from the model — observed in v2 calibration
-    # that 7B sometimes places "verdict" inside the last entity object instead
-    # of at the top level. Computing verdict from statuses is what pii_leak
-    # and claim_grounding already do; this brings entity_fidelity into line.
     if not isinstance(parsed, dict) or not isinstance(parsed.get("entities"), list):
-        result["verdict"] = "error"
-        result["error"]   = "model did not return well-formed JSON (no entities list)"
-        return result
+        return [], ms, raw
+    return parsed["entities"], ms, raw
 
-    entities = parsed["entities"]
-    result["entities"] = entities
+
+def _vote_on_entities(runs: list[list[dict]], min_consensus: int) -> list[dict]:
+    """Combine entities across N runs. For each entity (by normalized text),
+    take the majority status across runs that mentioned it. Findings appearing
+    in fewer than min_consensus runs are dropped as noise."""
+    from collections import Counter
+    by_text: dict[str, list[dict]] = {}
+    for run in runs:
+        for e in run:
+            if not isinstance(e, dict):
+                continue
+            key = _normalize_for_grep(e.get("text", ""))
+            if not key:
+                continue
+            by_text.setdefault(key, []).append(e)
+    voted: list[dict] = []
+    for _key, occurrences in by_text.items():
+        if len(occurrences) < min_consensus:
+            continue  # not enough consensus to trust
+        statuses = [str(e.get("status", "error")).lower() for e in occurrences]
+        status, count = Counter(statuses).most_common(1)[0]
+        # Pick the most informative evidence string
+        evidence = max((e.get("evidence", "") for e in occurrences), key=len, default="")
+        # Use the first observed text + type
+        first = occurrences[0]
+        voted.append({
+            "text":     first.get("text", ""),
+            "type":     first.get("type", ""),
+            "status":   status,
+            "evidence": evidence,
+            "votes":    f"{count}/{len(occurrences)} agree on '{status}' across {len(runs)} runs",
+        })
+    return voted
+
+
+def check_entity_fidelity(context: str, output: str) -> dict:
+    # v4 item #1: multi-sample voting. With VERIFY_VOTES=N, run extraction N
+    # times and aggregate. N=1 preserves prior behavior.
+    runs: list[list[dict]] = []
+    raws: list[str] = []
+    total_ms = 0.0
+    for _ in range(VERIFY_VOTES):
+        entities, ms, raw = _extract_entities_one_run(context, output)
+        runs.append(entities)
+        raws.append(raw)
+        total_ms += ms
+
+    if VERIFY_VOTES > 1:
+        # min_consensus = ceil(N/2) — entity must appear in majority of runs
+        min_consensus = (VERIFY_VOTES + 1) // 2
+        entities = _vote_on_entities(runs, min_consensus)
+    else:
+        entities = runs[0]
+
+    result = {"check": "entity_fidelity", "ms": total_ms, "raw": raws[0] if raws else "", "votes": VERIFY_VOTES}
+
+    if not entities:
+        # Either parse failure on all runs, or no entities found
+        if VERIFY_VOTES == 1 and not isinstance(parse_json_or_raw(raws[0]) if raws else None, dict):
+            result["verdict"] = "error"
+            result["error"]   = "model did not return well-formed JSON (no entities list)"
+            return result
+        # Genuine empty — nothing to check, treat as pass
+        result["verdict"] = "pass"
+        result["entities"] = []
+        result["reasoning"] = "no entities extracted"
+        return result
 
     def _status(e: dict | object) -> str:
         return e.get("status", "error").lower() if isinstance(e, dict) else "error"
 
+    # v4 item #4 post-process: override LLM ungrounded/partial when the entity
+    # literally appears in CONTEXT. The LLM is the high-recall extractor; this
+    # string-match is the precision filter that catches LLM mistakes on entities
+    # that ARE in CONTEXT but the model lost track of.
+    n_overrides = 0
+    for e in entities:
+        if not isinstance(e, dict):
+            continue
+        s = _status(e)
+        if s in ("ungrounded", "partial"):
+            text = e.get("text", "")
+            if _appears_verbatim(text, context):
+                e["status_original"]   = s
+                e["override_reason"]   = "verbatim_string_match"
+                e["status"]            = "grounded"
+                n_overrides += 1
+
+    result["entities"] = entities
+
     bad = [e for e in entities if _status(e) not in ("grounded", "pass", "ok", "")]
-    n = len(entities)
     n_g = sum(1 for e in entities if _status(e) == "grounded")
     n_p = sum(1 for e in entities if _status(e) == "partial")
     n_u = sum(1 for e in entities if _status(e) == "ungrounded")
-    result["verdict"] = "fail" if bad else "pass"
-    result["reasoning"] = parsed.get("reasoning") or (
-        f"{n_g} grounded, {n_p} partial, {n_u} ungrounded (computed from entity statuses)"
-    )
+    result["verdict"]   = "fail" if bad else "pass"
+    result["overrides"] = n_overrides
+
+    # Computed reasoning ALWAYS — the model's reasoning becomes stale after we
+    # apply the verbatim override and/or majority vote.
+    reasoning_bits = [f"{n_g} grounded", f"{n_p} partial", f"{n_u} ungrounded"]
+    if n_overrides:
+        reasoning_bits.append(f"{n_overrides} LLM false-positive(s) overridden by verbatim match")
+    if VERIFY_VOTES > 1:
+        reasoning_bits.append(f"across {VERIFY_VOTES} sample runs")
+    result["reasoning"] = "; ".join(reasoning_bits) + " (computed)"
     return result
 
 
@@ -192,6 +327,39 @@ def _surrounding(text: str, span: tuple[int, int], width: int = 50) -> str:
     hi = min(len(text), span[1] + width)
     snippet = text[lo:hi].replace("\n", " ")
     return ("…" if lo > 0 else "") + snippet + ("…" if hi < len(text) else "")
+
+
+# ----------------------------------------------------------------------
+# Verbatim string-match helpers (v4 — addresses real-prose false positives)
+# ----------------------------------------------------------------------
+# v3 real-psrouter calibration showed the LLM verifier flags entities as
+# ungrounded even when they appear verbatim in CONTEXT (April 17 2026,
+# $78,400, $4,200, June 3 2019). It loses track of which CONTEXT span
+# supports a given entity when the surrounding prose is rephrased. Cheap
+# post-process: after the LLM judges an entity ungrounded/partial, check
+# whether the entity literally appears in CONTEXT. If it does, the LLM
+# was wrong; promote to grounded.
+
+def _normalize_for_grep(s: str) -> str:
+    """Light normalization so 'April 17, 2026' matches 'April 17,2026' or
+    'April 17 2026'. Conservative — we don't want to make UNGROUNDED items
+    look grounded by over-normalizing."""
+    if not isinstance(s, str):
+        return ""
+    s = s.strip(" \t\n.,;:!?()\"'`")
+    s = re.sub(r"\s+", " ", s)
+    return s.lower()
+
+
+def _appears_verbatim(needle: str, haystack: str) -> bool:
+    """True iff needle (lightly normalized) appears as a substring of haystack
+    (lightly normalized). Returns False for very short needles to avoid
+    coincidental matches like ' the ' inside arbitrary prose."""
+    n = _normalize_for_grep(needle)
+    h = _normalize_for_grep(haystack)
+    if len(n) < 3:
+        return False
+    return n in h
 
 
 def find_pii_candidates(output: str) -> list[dict]:
@@ -354,6 +522,91 @@ def check_citation_format(context: str, output: str) -> dict:
 
 
 # ----------------------------------------------------------------------
+# Check — numeric fidelity (v4 — applies the regex+verbatim pattern that
+# worked for citations to numbers/dollars/dates/dockets)
+# ----------------------------------------------------------------------
+# v3 real-prose calibration: the 7B LLM repeatedly flagged numbers that ARE
+# verbatim in CONTEXT ($78,400; $4,200; April 17, 2026; June 3, 2019). It
+# extracts numbers correctly but matches them against the wrong section of
+# CONTEXT. Same hybrid pattern that worked for pii_leak (regex extract,
+# compare deterministically) removes this entire class of false positive
+# AND catches real numeric drift (docket digit swap, dollar drift)
+# deterministically — never up to model judgment.
+
+# Concrete-number patterns we care about for legal-RAG outputs. Each pattern
+# captures the FULL span we want to compare verbatim (not just the digits).
+NUMBER_PATTERNS = [
+    # Currency: $4,200 / $78,400.00 / $5,000.50
+    re.compile(r'\$[\d,]+(?:\.\d+)?'),
+    # Long-form dates: "April 17, 2026" / "April 17 2026"
+    re.compile(r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b', re.IGNORECASE),
+    # ISO dates: 2026-04-17
+    re.compile(r'\b\d{4}-\d{2}-\d{2}\b'),
+    # Slash dates: 4/17/2026 or 04/17/26
+    re.compile(r'\b\d{1,2}/\d{1,2}/\d{2,4}\b'),
+    # Dockets (YYYY-XX-NNNNN or YYYY-XX-NNN style): 2026-CV-00847 / 2026-EM-00321
+    re.compile(r'\b\d{4}-[A-Z]{1,5}-\d{3,}\b'),
+    # Comma-grouped large numbers: 1,247
+    re.compile(r'\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b'),
+    # Bare 4-digit years (catch-all, run last so longer patterns win first)
+    re.compile(r'\b(?:19|20)\d{2}\b'),
+]
+
+
+def find_numbers(text: str) -> list[str]:
+    """Return the verbatim numeric strings (as they appear) found in text.
+    De-duplicates by normalized form so 'April 17, 2026' and 'april 17 2026'
+    are treated as the same finding."""
+    found = []
+    seen = set()
+    # Run patterns in declared order; longer/more-specific patterns first
+    # so we don't double-extract (e.g. "April 17, 2026" already covers 2026)
+    spans_taken: list[tuple[int, int]] = []
+    for pat in NUMBER_PATTERNS:
+        for m in pat.finditer(text):
+            # Skip if this span overlaps with a longer match already taken
+            if any(s <= m.start() and m.end() <= e for s, e in spans_taken):
+                continue
+            spans_taken.append((m.start(), m.end()))
+            norm = _normalize_for_grep(m.group(0))
+            if norm in seen: continue
+            seen.add(norm)
+            found.append(m.group(0))
+    return found
+
+
+def check_numeric_fidelity(context: str, output: str) -> dict:
+    """Extract every number / date / docket / currency from OUTPUT, compare
+    each verbatim against the same regex run on CONTEXT. Anything in OUTPUT
+    not in CONTEXT is flagged as a possible hallucination. Pure regex + set
+    membership; no LLM."""
+    out_nums = find_numbers(output)
+    if not out_nums:
+        return {
+            "check":     "numeric_fidelity",
+            "ms":        0.0,
+            "verdict":   "pass",
+            "numbers_in_output":  [],
+            "ungrounded_numbers": [],
+            "reasoning": "no numeric strings detected in OUTPUT",
+        }
+    ctx_nums_normalized = {_normalize_for_grep(n) for n in find_numbers(context)}
+    ungrounded = [n for n in out_nums if _normalize_for_grep(n) not in ctx_nums_normalized]
+    return {
+        "check":     "numeric_fidelity",
+        "ms":        0.0,
+        "verdict":   "fail" if ungrounded else "pass",
+        "numbers_in_output":  out_nums,
+        "ungrounded_numbers": ungrounded,
+        "reasoning": (
+            f"{len(ungrounded)}/{len(out_nums)} numbers not in CONTEXT — likely hallucinated or drifted"
+            if ungrounded else
+            f"all {len(out_nums)} numbers also appear in CONTEXT"
+        ),
+    }
+
+
+# ----------------------------------------------------------------------
 # Check 5 — Per-claim grounding (2-call decomposition)
 # ----------------------------------------------------------------------
 EXTRACT_CLAIMS_SYSTEM = """You are a claim extractor. Identify every SUBSTANTIVE factual or substantive claim made in the OUTPUT. A claim is a statement that asserts something concrete about the world — facts about people, organizations, events, numbers, relationships, dates, capabilities.
@@ -377,12 +630,45 @@ Reply JSON only:
 
 JUDGE_CLAIM_SYSTEM = """You are a grounding judge. Given a CONTEXT and a CLAIM, judge whether the CLAIM is supported by the CONTEXT.
 
-Rules:
-- GROUNDED: the claim is directly stated in the CONTEXT, or is an obvious paraphrase that preserves meaning.
-- UNGROUNDED: the claim introduces information not present in the CONTEXT, even if the information happens to be true in the real world.
-- PARTIAL: the claim is mostly in CONTEXT but distorts a detail (different number, different name, different date).
+META-RULE — read first:
+  When the CLAIM adds detail not in the CONTEXT (a fuller name, an extra qualifier, a doctrine framework, a year, an expansion), the answer is NOT "grounded" — even if the added detail is true in the real world. Default to UNGROUNDED or PARTIAL for any addition. False positives in grounding are recoverable in review; missed expansions are how hallucinations ship.
 
-You are NOT judging whether the claim is true in the real world. Only whether it stays within what CONTEXT provides.
+Rules:
+  - GROUNDED: the claim's content is directly stated in CONTEXT or is a trivial-rewording paraphrase (different word order, added "the/a/an", etc.) preserving the same facts.
+  - UNGROUNDED: the claim introduces facts (names, statutes, citations, dates, quantities, doctrines) not present in CONTEXT.
+  - PARTIAL: the claim has the right referent but distorts a detail (different number, different date, different name spelling).
+
+EXAMPLES of subtle ungrounded expansions (study these — they are FAILURE patterns the LLM-as-judge has historically missed):
+
+  Example 1 — EXPANSION ungrounded:
+    CONTEXT: "Plaintiff filed under Title VII."
+    CLAIM:   "Plaintiff filed under Title VII of the Civil Rights Act of 1964."
+    STATUS:  ungrounded
+    EVIDENCE: "CONTEXT mentions 'Title VII' but not the expansion to 'Civil Rights Act of 1964'. Even though the expansion is correct in the real world, the year and full statute name are not in CONTEXT."
+
+  Example 2 — TRIVIAL paraphrase grounded:
+    CONTEXT: "Terminated April 17, 2026."
+    CLAIM:   "She was terminated on April 17, 2026."
+    STATUS:  grounded
+    EVIDENCE: "Same date, trivial wording difference."
+
+  Example 3 — DOCTRINE addition ungrounded:
+    CONTEXT: "Terminated shortly after she made an internal complaint."
+    CLAIM:   "The close temporal proximity between the protected activity and the adverse action supports a retaliation claim under McDonnell Douglas burden-shifting."
+    STATUS:  ungrounded
+    EVIDENCE: "CONTEXT mentions termination after a complaint, but introduces 'temporal proximity', 'protected activity', and 'McDonnell Douglas' as doctrine framework that is not in CONTEXT."
+
+  Example 4 — DETAIL drift partial:
+    CONTEXT: "Annual salary $78,400."
+    CLAIM:   "Annual salary $78,500."
+    STATUS:  partial
+    EVIDENCE: "Salary amount drifted by $100."
+
+  Example 5 — NEW citation ungrounded:
+    CONTEXT: "The motion is based on Rule 12(b)(6)."
+    CLAIM:   "The motion relies on the Third Circuit's holding in Westfield v. Carter, 891 F.3d 412 (3d Cir. 2018)."
+    STATUS:  ungrounded
+    EVIDENCE: "CONTEXT mentions Rule 12(b)(6); the Westfield v. Carter citation and the Third Circuit holding are new authorities not in CONTEXT."
 
 Reply JSON only:
 {
@@ -391,9 +677,37 @@ Reply JSON only:
 }"""
 
 
+def _judge_one_claim(context: str, claim: str) -> dict:
+    """Single LLM judgment for one claim. With VERIFY_VOTES>1, takes majority
+    across N runs and notes the agreement count."""
+    from collections import Counter
+    statuses: list[str] = []
+    evidences: list[str] = []
+    total_ms = 0.0
+    for _ in range(VERIFY_VOTES):
+        raw, ms = ollama_chat(JUDGE_CLAIM_SYSTEM,
+                              f"CONTEXT:\n{context}\n\nCLAIM:\n{claim}")
+        total_ms += ms
+        parsed = parse_json_or_raw(raw)
+        if isinstance(parsed, dict):
+            statuses.append(str(parsed.get("status", "error")).lower())
+            evidences.append(str(parsed.get("evidence", "")))
+        else:
+            statuses.append("error")
+            evidences.append(raw[:200])
+    status, count = Counter(statuses).most_common(1)[0]
+    evidence = max(evidences, key=len, default="")
+    out = {"claim": claim, "status": status, "evidence": evidence, "ms": total_ms}
+    if VERIFY_VOTES > 1:
+        out["votes"] = f"{count}/{VERIFY_VOTES} agree on '{status}'"
+    return out
+
+
 def check_claim_grounding(context: str, output: str) -> dict:
     total_ms = 0.0
-    # 5a: extract
+    # 5a: extract claims (single call — multi-sample voting at the claim list
+    # level is harder because different runs may extract different claims;
+    # the voting at the judgment level below covers the consequential drift).
     raw_a, ms_a = ollama_chat(EXTRACT_CLAIMS_SYSTEM, f"OUTPUT:\n{output}")
     total_ms += ms_a
     parsed_a = parse_json_or_raw(raw_a)
@@ -402,27 +716,15 @@ def check_claim_grounding(context: str, output: str) -> dict:
                 "error": f"extraction did not return well-formed JSON: {raw_a[:200]}"}
     claims = parsed_a["claims"]
 
-    # 5b: judge each (sequential — keeps the model warm cleanly)
+    # 5b: judge each claim — with VERIFY_VOTES>1, multi-sample per judgment.
     judgments = []
     any_bad = False
     for claim in claims:
-        raw_b, ms_b = ollama_chat(JUDGE_CLAIM_SYSTEM,
-                                   f"CONTEXT:\n{context}\n\nCLAIM:\n{claim}")
-        total_ms += ms_b
-        parsed_b = parse_json_or_raw(raw_b)
-        if not isinstance(parsed_b, dict):
-            judgments.append({"claim": claim, "status": "error", "evidence": raw_b[:200], "ms": ms_b})
+        j = _judge_one_claim(context, claim)
+        total_ms += j["ms"]  # already accumulated inside _judge_one_claim; ok
+        if j["status"] != "grounded":
             any_bad = True
-            continue
-        status = parsed_b.get("status", "error")
-        if status != "grounded":
-            any_bad = True
-        judgments.append({
-            "claim": claim,
-            "status": status,
-            "evidence": parsed_b.get("evidence", ""),
-            "ms": ms_b,
-        })
+        judgments.append(j)
 
     return {
         "check":   "claim_grounding",
@@ -430,10 +732,12 @@ def check_claim_grounding(context: str, output: str) -> dict:
         "verdict": "fail" if any_bad else "pass",
         "claims_extracted": len(claims),
         "judgments": judgments,
+        "votes": VERIFY_VOTES,
         "reasoning": (
             f"{sum(1 for j in judgments if j['status'] == 'grounded')} grounded, "
             f"{sum(1 for j in judgments if j['status'] == 'partial')} partial, "
             f"{sum(1 for j in judgments if j['status'] == 'ungrounded')} ungrounded"
+            + (f" (each judgment voted across {VERIFY_VOTES} samples)" if VERIFY_VOTES > 1 else "")
         ),
     }
 
@@ -442,10 +746,11 @@ def check_claim_grounding(context: str, output: str) -> dict:
 # Panel
 # ----------------------------------------------------------------------
 CHECKS = {
-    "entity_fidelity": check_entity_fidelity,
-    "pii_leak":        check_pii_leak,
-    "citation_format": check_citation_format,
-    "claim_grounding": check_claim_grounding,
+    "entity_fidelity":  check_entity_fidelity,
+    "pii_leak":         check_pii_leak,
+    "citation_format":  check_citation_format,
+    "numeric_fidelity": check_numeric_fidelity,
+    "claim_grounding":  check_claim_grounding,
 }
 
 
@@ -494,6 +799,9 @@ def render_text(panel: dict) -> str:
         if r.get("ungrounded_citations"):
             for c in r["ungrounded_citations"]:
                 lines.append(f"    [hallucinated_cite] {c!r}")
+        if r.get("ungrounded_numbers"):
+            for n in r["ungrounded_numbers"]:
+                lines.append(f"    [hallucinated_number] {n!r}")
         if r.get("judgments"):
             for j in r["judgments"]:
                 if j.get("status") != "grounded":

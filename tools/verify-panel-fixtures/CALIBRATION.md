@@ -357,6 +357,145 @@ It is NOT yet useful for:
 - Inline streaming mode — premature; the panel isn't accurate enough yet
   to be worth running inline.
 
+## v4 — landed 2026-06-25
+
+All five v3-identified improvements implemented in `verify-panel.py`. Order
+of priority matches the v3 plan section.
+
+### #1 — Multi-sample voting (env-gated)
+
+New env var `VERIFY_VOTES` (default `1`). When > 1:
+- `entity_fidelity` runs its extraction call N times, then aggregates with
+  `_vote_on_entities()`: keep only findings appearing in ≥ majority of runs,
+  take majority status, attach a `votes` field showing agreement count.
+- `claim_grounding` extracts claims once (extraction is comparatively
+  stable; the volatile step is judgment) and judges each claim N times
+  via `_judge_one_claim()`, taking majority status per claim.
+
+Costs N× LLM latency. Default 1 preserves the v3 fast path; set
+`VERIFY_VOTES=3` for the reliability mode.
+
+### #2 — Numeric-fidelity regex prefilter
+
+New check `numeric_fidelity`. Same hybrid pattern as `pii_leak` and
+`citation_format`: regex extracts every currency amount, date (long-form,
+ISO, slash), docket, comma-grouped number, and 4-digit year from OUTPUT,
+set-compares (after normalization) against the same regex run on CONTEXT.
+
+Verified end-to-end on fixture 05 (`Legal Generalist`): catches `1964`
+deterministically — that's the year embedded in "Title VII of the Civil
+Rights Act of 1964" which CONTEXT doesn't contain. Same catch on fixture
+06 (`PS-Legal-72B`).
+
+Cleared the entire class of v3 false positives on grounded numbers
+(`April 17, 2026`, `$78,400`, `$4,200`, `June 3, 2019`) — they're now
+verbatim-matched in the regex step rather than judged by the LLM at all.
+
+### #3 — Few-shot examples in `JUDGE_CLAIM_SYSTEM`
+
+Five explicit examples added to the claim-grounding judge prompt covering:
+  - **Example 1** — *expansion ungrounded*: "Title VII" → "Title VII of
+    the Civil Rights Act of 1964" must be `ungrounded`, with an explicit
+    note that the expansion being TRUE in the real world doesn't make it
+    grounded
+  - **Example 2** — *trivial rewording grounded* (same date, added "on")
+  - **Example 3** — *doctrine framework ungrounded* (adding "McDonnell
+    Douglas burden-shifting" to a fact pattern that didn't mention it)
+  - **Example 4** — *detail drift partial* (salary $78,400 → $78,500)
+  - **Example 5** — *new citation ungrounded* (`Westfield v. Carter` not
+    in CONTEXT)
+
+Plus a META-RULE at the top: *"When the CLAIM adds detail not in the
+CONTEXT, the answer is NOT 'grounded' — even if the added detail is true
+in the real world."*
+
+### #4 — Verbatim string-grep override on `entity_fidelity`
+
+`check_entity_fidelity` now post-processes the LLM's per-entity statuses:
+for any entity the LLM marked `ungrounded` or `partial`, run
+`_appears_verbatim()` against CONTEXT (lightly normalized). If the entity
+text literally appears in CONTEXT, override the LLM's status to
+`grounded` and record the override.
+
+Result: real-prose false positives (April 17 2026, $78,400, $4,200, June
+3 2019) — all in CONTEXT verbatim — are no longer flagged. The LLM is
+treated as a high-recall extractor; the verbatim match is the precision
+filter.
+
+### #5 — psrouter as judge (alternative backend)
+
+New env vars `JUDGE_BACKEND` (`ollama` | `openai-compat`),
+`JUDGE_BASE_URL`, `JUDGE_MODEL`. When `JUDGE_BACKEND=openai-compat`,
+the LLM dispatcher calls a `/v1/chat/completions` endpoint with
+`response_format={"type": "json_object"}` — works with psrouter (vLLM
+backend) and any other OpenAI-compatible server.
+
+Verified end-to-end:
+
+```bash
+JUDGE_BACKEND=openai-compat \
+JUDGE_BASE_URL=http://192.168.111.162:8888 \
+JUDGE_MODEL="Legal Generalist" \
+python3 tools/verify-panel.py --case <fixture>
+```
+
+On a "Title VII → Civil Rights Act of 1964" test claim, `Legal Generalist`
+(spark2 32B) returned `status: ungrounded` with evidence *"The CONTEXT
+mentions 'Title VII' but not the expansion to 'Civil Rights Act of 1964'."*
+— it picked up the few-shot pattern and applied it correctly. ~6.8s per
+judgment vs ~30-50s for 7B local (32B fully on the firm's GPU pool vs
+7B partially CPU-spilled on the XPS).
+
+### How to drive v4
+
+Default (everything off, fastest):
+```bash
+python3 tools/verify-panel.py --case <fixture>
+```
+
+Reliability mode (multi-sample voting):
+```bash
+VERIFY_VOTES=3 python3 tools/verify-panel.py --case <fixture>
+```
+
+psrouter judge mode (faster + domain-tuned):
+```bash
+JUDGE_BACKEND=openai-compat JUDGE_BASE_URL=http://192.168.111.162:8888 \
+    JUDGE_MODEL="Legal Generalist" python3 tools/verify-panel.py --case <fixture>
+```
+
+Combine all three for the strongest configuration (high reliability +
+psrouter judge):
+```bash
+VERIFY_VOTES=3 JUDGE_BACKEND=openai-compat \
+JUDGE_BASE_URL=http://192.168.111.162:8888 \
+JUDGE_MODEL="Legal Generalist" \
+    python3 tools/verify-panel.py --case <fixture>
+```
+
+### What v4 changes about production-readiness
+
+The two structural failure modes from v3 (false positives on grounded
+numbers/entities, missed subtle expansions in claim grounding) are
+addressed by deterministic regex-based checks and few-shot prompting
+respectively. Non-determinism is addressed by an opt-in voting mode
+that trades latency for reliability.
+
+The panel is now at a point where it could plausibly gate a sampling-
+based human-review pipeline (run on a percentage of drafts, surface
+the high-confidence ungroundings) without unacceptable false-positive
+fatigue. Inline real-time gating still depends on per-call latency
+budget — for that use case, `VERIFY_VOTES=1` and a faster judge model
+(psrouter Legal Generalist or 3B local) keeps the panel under ~15s per
+draft.
+
+Remaining work belongs to a different category — operational:
+  - Build a calibration corpus from real (anonymized) draft logs, not
+    just synthetic + one-shot psrouter outputs
+  - Track per-check accuracy over time as model versions / fine-tunes change
+  - Decide on a deployment surface (CLI tool? inline before draft commit?
+    sampling cron?)
+
 ## How to re-calibrate
 
 ```bash
