@@ -496,6 +496,36 @@ Remaining work belongs to a different category — operational:
   - Decide on a deployment surface (CLI tool? inline before draft commit?
     sampling cron?)
 
+### Head-to-head on fixture 06 (`PS-Legal-72B` employment-matter output)
+
+claim_grounding only, three v4 configurations:
+
+| Config | Verdict | Findings | Latency |
+|---|---|---|---|
+| v4 default (just the new few-shot prompt) | FAIL | 4 grounded, **3 ungrounded** — Civil Rights Act of 1964, "temporal proximity" doctrine framework, "gender as factor" inference | 49 s |
+| v4 + `VERIFY_VOTES=3` | FAIL | Same 4/3 split, with vote agreement noted per judgment | 109 s (2.2×) |
+| v4 + psrouter `Legal Generalist` as judge | FAIL | 5 grounded, **1 ungrounded** — only catches Civil Rights Act; misses doctrine + inference. Evidence text exemplary — cites Example 1 from the prompt | 43 s |
+
+Three real findings:
+
+1. **The few-shot prompt is the highest-impact change.** Single-sample v4
+   with the new prompt catches all three subtle expansions; v3 caught none.
+2. **Voting was redundant here** — same verdict, 2.2× latency. The few-shot
+   prompt is stable enough that single-sample is reliable. Voting still
+   matters on noisier prompts; not a free pass to always-on.
+3. **Legal Generalist trades speed + evidence quality for leniency.**
+   Faster than 7B local on this fixture (43s vs 49s — 32B on a real GPU
+   pool beats 7B partially CPU-spilled on a laptop), evidence text is
+   exemplary (cites the few-shot rule verbatim), but misses the
+   temporal-proximity doctrine and "gender as factor" expansions.
+   A legal-tuned model sees doctrine as implicit-from-facts rather than
+   as an addition — domain fluency vs conservative grounding tradeoff.
+
+For the firm's use case (catching hallucinations is paramount), 7B local
+is the more conservative choice. For latency-sensitive sampling work,
+Legal Generalist is interesting. Voting is the dial to turn when a
+specific prompt is observed to be unreliable on a specific content type.
+
 ## How to re-calibrate
 
 ```bash
