@@ -189,19 +189,20 @@ Connection profiles (server, credentials, DNS) are stored in NetworkManager and 
 
 ### AI/ML Verifier Role
 
-The XPS 9510 runs an always-on Ollama HTTP service serving a small verifier
-model (`qwen2.5:3b-instruct-q4_K_M`, ~2.2 GB). The bigger AI nodes call into
-it for cheap, independent second-opinion checks (LLM-as-judge, schema
-validation, fact-check). Docked clamshell, lid-close-docked=ignore keeps it
-reachable around the clock.
+The XPS 9510 runs an always-on Ollama HTTP service serving verifier models.
+Bigger AI nodes call into it for cheap, independent second-opinion checks
+(LLM-as-judge, schema validation, grounding/citation checks). Docked
+clamshell, lid-close-docked=ignore keeps it reachable around the clock.
 
 | Component | Value |
 |-----------|-------|
 | Runtime | Ollama (upstream binary at `/usr/local/bin/ollama`) |
-| Default model | `qwen2.5:3b-instruct-q4_K_M` |
+| Default verifier model | `qwen2.5:7b-instruct-q4_K_M` (~4.7 GB) — used by `tools/verify-panel.py` per the v2 calibration; closes semantic-recall gaps the 3B couldn't (see `tools/verify-panel-fixtures/CALIBRATION.md`) |
+| Fallback / speed model | `qwen2.5:3b-instruct-q4_K_M` (~1.9 GB) — fits VRAM entirely, ~7× faster, lower semantic recall. Set `VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M` to use. |
 | Model storage | `/data/ml-models/ollama/` (second 990 PRO NVMe) |
 | Listen address | `0.0.0.0:11434` (firewall-gated) |
 | Allowed peers | precision-t5810 (LAN, primary), asrock-b550 (LAN), precision-7960 (VPN-only) |
+| Verification harness | `tools/verify-panel.py` — 4-check panel (entity_fidelity, pii_leak hybrid regex+LLM, citation_format pure-regex, claim_grounding decomposed). Calibration fixtures + decision history in `tools/verify-panel-fixtures/CALIBRATION.md`. |
 | Service config | `ollama.confd` + `ollama.initd` (OpenRC) |
 | Firewall | `nftables-ollama.nft` → `/etc/nftables/ollama.nft` |
 | Power envelope | RAPL PL1=35W / PL2=60W (`powercap-profile.sh`) |

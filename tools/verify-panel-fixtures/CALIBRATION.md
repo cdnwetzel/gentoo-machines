@@ -170,6 +170,70 @@ One env-var revert: `VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M` returns to
 v1 behavior. The 3B model stays pulled on the box; no infrastructure
 change needed.
 
+## v2 — landed 2026-06-25
+
+Three changes:
+
+1. Default `VERIFY_MODEL` → `qwen2.5:7b-instruct-q4_K_M`.
+2. `PII_TRIAGE_SYSTEM` rewritten with explicit ALWAYS-FLAG categories
+   (SSN, placeholders, debug markers, credit-card-shaped) and a
+   meta-rule "when uncertain, FLAG."
+3. `check_entity_fidelity` computes verdict from entity statuses instead
+   of trusting the model's `verdict` field. Brings entity_fidelity into
+   line with pii_leak and claim_grounding, which already do this. Fixes
+   a structural-JSON failure mode where 7B places `verdict` inside the
+   last entity object instead of at the top level (parses OK but lacks
+   the top-level key).
+
+### Acceptance criteria — all met
+
+| Criterion | Result |
+|---|---|
+| Fixture 01: PASS, no false positives | ✅ PASS (62s) |
+| Fixture 02 `entity_fidelity`: catches docket digit | ✅ FAIL with docket 00847 marked partial vs 00874, county ungrounded, rule partial — all expected drifts caught |
+| Fixture 03 `pii_leak`: 3/3 leaks | ✅ FAIL with all 3 flagged: `{client_name}`, `[ATTORNEY_NAME]` ("ALWAYS-FLAG category"), SSN ("SSN-shaped string in client-facing content without explicit marking as test/demo") |
+| Fixture 04 `entity_fidelity`: Westfield + Feb 2026 | ✅ FAIL with both caught; citation_format also catches via regex |
+
+### v2 measured latency (RTX 3050 Ti, 7B partially CPU-spilled)
+
+| Fixture | v2 total | v1 (3B) | factor |
+|---|---|---|---|
+| 01 baseline      |  62 s | 10 s | 6.2× |
+| 02 entity drift  |  60 s | 12 s | 5.0× |
+| 03 PII           |  65 s | 13 s | 5.0× |
+| 04 hallucinated  |  78 s | 17 s | 4.6× |
+| **full battery** | **265 s** (~4.4 min) | ~52 s | ~5× |
+
+Acceptable for offline validation pipelines (not inline-real-time use).
+
+### Remaining noise (not blocking)
+
+- Fixture 02 entity_fidelity raises a `Smith v. Acme Corp.` false-positive
+  because CONTEXT has a trailing comma after the case name and OUTPUT
+  doesn't. Doesn't change the verdict (FAIL is correct anyway); minor
+  noise in the per-entity list.
+- One `evidence` value in fixture 02's output retains a stray `}` from
+  the model's malformed-JSON moment. Cosmetic; ignored by code now that
+  verdict is computed from statuses.
+
+### Next experiments
+
+- **Real psrouter outputs**: build a (context, output) pair using
+  `Legal Generalist` or `PS-Legal-72B` against a real firm KB passage,
+  run the panel, see how it behaves on production-shape content vs
+  hand-built fixtures. Tests the regex patterns and LLM judgments on
+  natural firm text rather than constructed cases.
+- **Bigger numeric-fidelity prefilter**: extend the regex approach to
+  numbers in general (currency, dates, docket-like patterns) — extract
+  every number in OUTPUT, check each against CONTEXT verbatim. This would
+  remove the false-positive noise on case-name commas while still
+  catching things like the docket digit swap with certainty.
+- **Inline streaming mode**: if compress/judge needs to happen live
+  in front of an iChris draft pipeline, the ~70s per panel run becomes
+  too slow. Options: parallel checks (asyncio + Ollama's NUM_PARALLEL=2),
+  smaller per-check prompts, or split structural-only (fast) vs
+  semantic checks (slow, run on a sampling basis).
+
 ## How to re-calibrate
 
 ```bash

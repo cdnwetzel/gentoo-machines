@@ -58,8 +58,12 @@ import urllib.request
 import urllib.error
 
 OLLAMA_HOST  = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
-VERIFY_MODEL = os.environ.get("VERIFY_MODEL", "qwen2.5:3b-instruct-q4_K_M")
-TIMEOUT_SECS = float(os.environ.get("VERIFY_TIMEOUT", "60"))
+# Default model is 7B per the v1.5 calibration (see verify-panel-fixtures/CALIBRATION.md).
+# 7B closes the v1 semantic-recall gaps (docket digit swap, hallucinated case citations)
+# at ~7x latency vs 3B. Override to "qwen2.5:3b-instruct-q4_K_M" if speed matters more
+# than recall, or if the 7B model isn't pulled on the box.
+VERIFY_MODEL = os.environ.get("VERIFY_MODEL", "qwen2.5:7b-instruct-q4_K_M")
+TIMEOUT_SECS = float(os.environ.get("VERIFY_TIMEOUT", "120"))
 
 
 # ----------------------------------------------------------------------
@@ -128,13 +132,32 @@ def check_entity_fidelity(context: str, output: str) -> dict:
     raw, ms = ollama_chat(ENTITY_SYSTEM, f"CONTEXT:\n{context}\n\nOUTPUT:\n{output}")
     parsed = parse_json_or_raw(raw)
     result = {"check": "entity_fidelity", "ms": ms, "raw": raw}
-    if not isinstance(parsed, dict) or "verdict" not in parsed:
+
+    # Require only the entities list. Verdict is COMPUTED from entity
+    # statuses below, not trusted from the model — observed in v2 calibration
+    # that 7B sometimes places "verdict" inside the last entity object instead
+    # of at the top level. Computing verdict from statuses is what pii_leak
+    # and claim_grounding already do; this brings entity_fidelity into line.
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("entities"), list):
         result["verdict"] = "error"
-        result["error"]   = "model did not return well-formed JSON"
+        result["error"]   = "model did not return well-formed JSON (no entities list)"
         return result
-    result["verdict"]  = parsed.get("verdict", "error")
-    result["entities"] = parsed.get("entities", [])
-    result["reasoning"] = parsed.get("reasoning", "")
+
+    entities = parsed["entities"]
+    result["entities"] = entities
+
+    def _status(e: dict | object) -> str:
+        return e.get("status", "error").lower() if isinstance(e, dict) else "error"
+
+    bad = [e for e in entities if _status(e) not in ("grounded", "pass", "ok", "")]
+    n = len(entities)
+    n_g = sum(1 for e in entities if _status(e) == "grounded")
+    n_p = sum(1 for e in entities if _status(e) == "partial")
+    n_u = sum(1 for e in entities if _status(e) == "ungrounded")
+    result["verdict"] = "fail" if bad else "pass"
+    result["reasoning"] = parsed.get("reasoning") or (
+        f"{n_g} grounded, {n_p} partial, {n_u} ungrounded (computed from entity statuses)"
+    )
     return result
 
 
@@ -191,19 +214,29 @@ def find_pii_candidates(output: str) -> list[dict]:
 
 PII_TRIAGE_SYSTEM = """You triage candidate PII / placeholder leaks. A regex prefilter found a candidate in an OUTPUT meant for client-facing content. Decide whether it is a REAL leak that should be flagged, or a BENIGN occurrence that is fine.
 
-Real leaks (FLAG):
-  - Unfilled template placeholders the model should have substituted (e.g. literal `{client_name}`, `[ATTORNEY_NAME]`, `XXX-XX-XXXX`).
-  - Personal contact info that does not belong to the firm (a client's SSN, a personal phone, a personal email).
-  - Debug / internal markers (TODO, FIXME, XXX, "lorem ipsum") that shouldn't reach a recipient.
-  - Account / payment identifiers (credit cards, EINs) not in their proper redacted form.
+META-RULE — read first, applies to every decision below:
+  WHEN UNCERTAIN, FLAG. False positives are recoverable in human review; missed leaks are not. If you cannot prove a candidate is benign with explicit evidence in the surrounding text, the answer is "is_leak": true.
 
-Benign (DO NOT FLAG):
-  - The firm's own contact info in a signature block (firm phone, public firm email like info@firm.com).
-  - A redacted/masked value where the formatting is intentionally a mask (e.g. "XXX-XX-1234" as a deliberate partial reveal).
-  - A documented reference to a placeholder pattern as documentation (e.g. inside a code block illustrating a template).
+ALWAYS-FLAG categories (no exceptions, regardless of surrounding context):
+
+  1. SSN-shaped strings — any string matching the pattern NNN-NN-NNNN is ALWAYS a leak unless the surrounding text *explicitly* marks it as test/demo/example data using words like "example SSN", "sample SSN", "for illustration", "test data", "training data", or shown in deliberately-masked form (e.g. XXX-XX-1234 with at least three real X's). "Your SSN on file is …" or "verify your SSN (…)" is a real leak even though it doesn't unambiguously identify whose SSN — those framings are exactly how production templates leak client SSNs.
+
+  2. Unfilled template placeholders — any literal `{name}`, `{client_name}`, `[ATTORNEY_NAME]`, `[ALLCAPS_NAME]`, `<ALLCAPS_NAME>`, `XXX-XX-XXXX` is ALWAYS an unfilled placeholder leak in client-facing content. There is no legitimate reason for a recipient to see a template variable that wasn't substituted.
+
+  3. Debug / internal markers — `TODO`, `FIXME`, `XXX` (as a word, not as part of XXX-XX-XXXX), `TBD`, `DEBUG`, "lorem ipsum" — ALWAYS flag.
+
+  4. Credit-card-shaped strings (groups of 4-4-4-4 digits) — ALWAYS flag.
+
+CONTEXT-SENSITIVE categories (require explicit benign evidence to NOT flag):
+
+  5. Phone numbers — flag UNLESS the surrounding text clearly identifies the number as the firm's own (e.g. appears in a signature block with the firm's name, or labeled "Firm: 555-…", "Office: 555-…"). A bare phone number with no firm-identifying context is a leak.
+
+  6. Email addresses — flag UNLESS the surrounding text clearly identifies the email as the firm's own (e.g. firm-domain like info@firm.com, attorney@firmname.com inside a signature block). A client's personal email being echoed back is a leak.
+
+  7. EIN-shaped strings (NN-NNNNNNN) — flag UNLESS the surrounding text labels it as the firm's own EIN (e.g. "Our EIN: 12-3456789" in a billing context). A bare EIN-shaped number is a leak.
 
 Reply JSON ONLY:
-{"is_leak": true | false, "reason": "<one short sentence>"}"""
+{"is_leak": true | false, "reason": "<one short sentence — cite which rule applied>"}"""
 
 
 def triage_pii(candidate: dict) -> dict:
