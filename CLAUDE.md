@@ -33,7 +33,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired | macOS 12 (kids' machine) |
-| 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 3060 Ti | Production | Gentoo |
+| 5 | ASRock B550 | Ryzen 9 5950X | NVIDIA RTX 5060 Ti 16GB (Blackwell) | Production | Gentoo |
 | 6 | Dell Precision T5810 | Xeon E5-2699v4 | 2x NVIDIA RTX A4500 (Ampere, 20GB ECC each, NVLink) | Production | Gentoo |
 | 7 | Dell Precision 7960 | Xeon W5-3433 16C/32T (Sapphire Rapids) | RTX PRO 6000 Blackwell 96GB (600W) + RTX 5080 16GB Blackwell | Reference only (harvested) | RHEL 10.1 (production AI/ML) |
 | 8 | Surface Pro 6 | i5-8250U (Kaby Lake-R) | Intel UHD 620 | Production | Gentoo |
@@ -479,10 +479,10 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 - **Kernel**: Linux 6.18.21-gentoo
 - **Architecture**: x86_64, 16C/32T (Zen 3 / Vermeer, AVX2, SHA, no AVX-512)
 - **Compiler flags**: `-march=znver3 -O2 -pipe`
-- **Key drivers**: nvidia (RTX 3060 Ti GA104, kernel-open), iwlwifi (AX200), igc (I225-V 2.5GbE), nvme, ahci, snd_hda_intel, btusb+btintel, k10temp, ccp, piix4_smbus
-- **Firmware**: Loaded from /lib/firmware/ (iwlwifi-cc-a0-*, intel/ibt-0040-0041.*, nvidia/ga104/*, amd-ucode/*)
+- **Key drivers**: nvidia (RTX 5060 Ti GB206 Blackwell 16GB, kernel-open REQUIRED), iwlwifi (AX200), igc (I225-V 2.5GbE), nvme, ahci, snd_hda_intel, btusb+btintel, k10temp, ccp, piix4_smbus
+- **Firmware**: Loaded from /lib/firmware/ (iwlwifi-cc-a0-*, intel/ibt-0040-0041.*, nvidia/gb206/*, amd-ucode/*)
 - **Critical**: First AMD build — no Intel iGPU, DRM_I915 disabled, piix4 I2C (not i801)
-- **NVIDIA**: GA104 Ampere supports kernel-open modules (Turing+), latest nvidia-drivers branch
+- **NVIDIA**: GB206 Blackwell REQUIRES kernel-open modules (closed-source not supported for Blackwell), nvidia-drivers 595.58.03, CUDA 13.2
 - **No ECC**: 64GB DDR4-3200 (2x32GB Corsair), non-ECC
 - **Hardware ref**: `machines/asrock-b550/HARDWARE.md`
 
@@ -578,7 +578,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 - **OptiPlex 3090 SFF**: Production. Installed 2026-04-28, first boot straight to desktop. i5-10505 (Comet Lake, 6C/12T, no AVX-512), 16GB DDR4-2666 single-channel (1 of 2 slots populated), Intel UHD 630 + NVIDIA RTX A1000 8GB GDDR6 (GA107 Ampere, kernel-open, nvidia 595.58.03), no WiFi/BT, Realtek RTL8168 GbE, 256GB M.2 2230 NVMe, `-march=skylake`, Q470 chipset. Base: precision-t5810. **CRITICAL**: BIOS ships with SATA in Intel RST/RAID mode — must switch to AHCI before Linux can see the NVMe. 7GB tmpfs + disk fallback (CONSTRAINED 16GB profile). S3 deep + hibernate supported.
 - **Beelink MINI S**: Production. Celeron N5095A (4C/4T, Jasper Lake/Tremont), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel 3165 WiFi/BT, Realtek GbE, 256GB M.2 SATA SSD, `-march=tremont`. Installed 2026-04-15. Always-on mini PC. 4GB tmpfs + disk fallback. S3 deep sleep supported but disabled (always-on).
-- **ASRock B550**: Production. First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 3060 Ti (GA104 Ampere, kernel-open), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Installed 2026-04-05. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
+- **ASRock B550**: Production. First AMD build. Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 5060 Ti (GB206 Blackwell 16GB GDDR7, kernel-open REQUIRED), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, `-march=znver3`, AMD B550 chipset. Installed 2026-04-05. GPU upgraded from RTX 3060 Ti (GA104 Ampere 8GB) 2026-07-24. 1TB SATA SSD unused. 46GB tmpfs + disk fallback. S3 deep sleep supported.
 - **Precision T5810**: Broadwell-EP Xeon E5-2699v4 (22C/44T) — 256GB DDR4 ECC, 2x NVIDIA RTX A4500 (GA102GL Ampere, 20GB GDDR6 ECC each, NVLink-bridged for 40GB tensor-parallel pool, compute 8.6), Samsung 990 PRO 2TB NVMe, `-march=broadwell`, C610/X99 chipset. Harvest + configs generated 2026-03-11; GPUs upgraded from 2x GTX 1050 Ti (Pascal) to 2x A4500 + NVLink for AI/ML workloads (driver 580.142, current branch — no legacy pin). Performance-first (no power savings). Boot media: SABRENT Ventoy USB (DO NOT TOUCH).
 - **Precision 7960**: Reference only — stays on RHEL 10.1 production for AI/ML, no Gentoo install. Harvested 2026-03-19; **GPU config has since changed** — re-harvest pending for PCI-level details. Xeon W5-3433 16C/32T (Sapphire Rapids, AVX-512 + AMX), 128GB DDR5 ECC, **RTX PRO 6000 Blackwell 96GB GDDR7 (600W) + RTX 5080 16GB GDDR7 Blackwell** (the original secondary RTX A1000 was relocated to the OptiPlex 3090). NVIDIA 590.48.01 CUDA 13.1 at last harvest, 4x Samsung PM9C1a 1.8TB RAID10 via VMD, Aquantia 10GbE + Intel 1GbE, `-march=sapphirerapids`
 - **Surface Pro 9**: Will need linux-surface kernel patches for touchscreen, cameras, battery, etc. (Surface Pro 6 runs without them — touchscreen is a HW defect on this unit).

@@ -3,8 +3,8 @@
 # Auto grub-mkconfig on make install (kernel updates)
 sys-kernel/installkernel grub
 
-# NVIDIA proprietary driver (RTX 3060 Ti GA104 Ampere)
-# Ampere (GA104) supports kernel-open modules (Turing+ only)
+# NVIDIA proprietary driver (RTX 5060 Ti GB206 Blackwell)
+# Blackwell REQUIRES kernel-open modules — closed-source not supported
 x11-drivers/nvidia-drivers kernel-open modules tools
 media-libs/mesa -video_cards_nouveau
 

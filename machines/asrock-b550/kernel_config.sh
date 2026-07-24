@@ -6,7 +6,7 @@
 # Date: 2026-04-05
 #
 # CPU: AMD Ryzen 9 5950X 16-Core Processor (Zen 3, Vermeer)
-# GPU: NVIDIA RTX 3060 Ti (GA104, Ampere) — proprietary nvidia-drivers
+# GPU: NVIDIA RTX 5060 Ti (GB206, Blackwell) 16GB — nvidia-drivers (kernel-open REQUIRED)
 # WiFi: Intel AX200 (iwlwifi)
 # Audio: Realtek ALC1220 (HDA) + NVIDIA HDMI
 # Storage: MAXIO MAP1202 2TB NVMe (boot) + SATA SSD (unused)
@@ -206,7 +206,7 @@ $SC --enable EFIVAR_FS
 echo "  [OK] Filesystems"
 
 # ==========================================================================
-# PHASE 7: GPU - NVIDIA RTX 3060 Ti (GA104, Ampere)
+# PHASE 7: GPU - NVIDIA RTX 5060 Ti (GB206, Blackwell)
 # ==========================================================================
 echo "[Phase 7] GPU..."
 
@@ -560,5 +560,5 @@ echo ""
 echo "Required firmware (from linux-firmware):"
 echo "  - iwlwifi-cc-a0-*.ucode          (Intel AX200 WiFi)"
 echo "  - intel/ibt-0040-0041.*           (Intel BT)"
-echo "  - nvidia/ga104/*                  (RTX 3060 Ti)"
+echo "  - nvidia/gb206/*                  (RTX 5060 Ti)"
 echo "  - amd-ucode/*                     (AMD microcode)"
