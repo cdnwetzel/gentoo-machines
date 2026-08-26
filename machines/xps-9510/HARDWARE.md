@@ -59,8 +59,8 @@ Notable: **Full AVX-512** support (Tiger Lake), ideal for ML inference workloads
 
 ## Storage
 
-- **NVMe 0**: Samsung 990 PRO 1TB (`nvme` driver) — Gentoo root
-- **NVMe 1**: Samsung 990 PRO 1TB (`nvme` driver) — data
+- **NVMe 0**: Samsung 990 PRO 1TB (`nvme` driver). Gentoo root
+- **NVMe 1**: Samsung 990 PRO 1TB (`nvme` driver), data
 - **Card Reader**: Realtek RTS5260 (`rtsx_pci` driver)
 - **Layout**:
   - `/boot/efi` - 512M (vfat, nvme0n1p1)
@@ -119,15 +119,43 @@ SSTP VPN via `sstpc` + `pppd` with NetworkManager (`networkmanager-sstp` plugin)
 | Setting | Value |
 |---------|-------|
 | **Kernel deps** | `CONFIG_PPP=m`, `PPP_MPPE=m`, `PPP_ASYNC=m` (+ related PPP modules) |
-| **Device node** | `/dev/ppp` — auto-created by udev from `ppp_generic` module alias |
+| **Device node** | `/dev/ppp`, auto-created by udev from `ppp_generic` module alias |
 
 Connection profiles (server, credentials, DNS) are stored in NetworkManager and not committed to this repo.
 
 ## Platform-Specific
 
 - **Integrated Sensor Hub**: Intel ISH `[8086:43fc]` (`intel_ish_ipc`)
-- **Dell Platform Drivers**: DELL_LAPTOP, DELL_WMI, DELL_SMBIOS
+- **Dell Platform Drivers**: DELL_LAPTOP, DELL_WMI, DELL_SMBIOS, DELL_WMI_SYSMAN, DELL_WMI_DDV, DELL_PC
 - **Thermal**: Intel Dynamic Tuning `[8086:9a03]`
+
+### BIOS Settings from Linux (`dell_wmi_sysman`)
+
+Dell BIOS settings are readable and writable from the running OS. 117 attributes
+under `/sys/class/firmware-attributes/dell-wmi-sysman/attributes/`, `current_value`
+is root-only (0600). Most changes take effect on the next boot.
+
+```bash
+sudo grep . /sys/class/firmware-attributes/dell-wmi-sysman/attributes/{PrimaryBattChargeCfg,CustomChargeStart,CustomChargeStop,ThermalManagement}/current_value
+```
+
+| Attribute | Values | Notes |
+|-----------|--------|-------|
+| `PrimaryBattChargeCfg` | Adaptive / Standard / Express / PrimAcUse / Custom | default Adaptive; **Custom** in use here |
+| `CustomChargeStart` | 50-95 | only writable when `PrimaryBattChargeCfg=Custom` |
+| `CustomChargeStop` | 55-100 | only writable when `PrimaryBattChargeCfg=Custom` |
+| `AdvBatteryChargeCfg` | Disabled / Enabled | leave Disabled, conflicts with Custom |
+| `ThermalManagement` | Optimized / Cool / Quiet / UltraPerformance | default Optimized |
+
+No BIOS password is set (`authentication/{Admin,System}/is_enabled = 0`), so writes
+are accepted directly. If an admin password is ever set, it must first be written to
+`authentication/Admin/current_password` in the same session or every attribute write fails.
+
+### Battery Extensions (`dell_wmi_ddv`)
+
+Registers two ACPI battery hooks and an hwmon node (`dell_ddv`) exposing per-zone
+temps (CPU, SODIMM, Ambient x4, Video, HDD) and both fan tachometers.
+`cycle_count` reads 0 — Dell does not report cycle count through this path.
 
 ## Firmware (loaded from /lib/firmware/)
 
@@ -197,12 +225,12 @@ clamshell, lid-close-docked=ignore keeps it reachable around the clock.
 | Component | Value |
 |-----------|-------|
 | Runtime | Ollama (upstream binary at `/usr/local/bin/ollama`) |
-| Default verifier model | `qwen2.5:7b-instruct-q4_K_M` (~4.7 GB) — used by `tools/verify-panel.py` per the v2 calibration; closes semantic-recall gaps the 3B couldn't (see `tools/verify-panel-fixtures/CALIBRATION.md`) |
-| Fallback / speed model | `qwen2.5:3b-instruct-q4_K_M` (~1.9 GB) — fits VRAM entirely, ~7× faster, lower semantic recall. Set `VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M` to use. |
+| Default verifier model | `qwen2.5:7b-instruct-q4_K_M` (~4.7 GB), used by `tools/verify-panel.py` per the v2 calibration; closes semantic-recall gaps the 3B couldn't (see `tools/verify-panel-fixtures/CALIBRATION.md`) |
+| Fallback / speed model | `qwen2.5:3b-instruct-q4_K_M` (~1.9 GB), fits VRAM entirely, ~7× faster, lower semantic recall, Set `VERIFY_MODEL=qwen2.5:3b-instruct-q4_K_M` to use. |
 | Model storage | `/data/ml-models/ollama/` (second 990 PRO NVMe) |
 | Listen address | `0.0.0.0:11434` (firewall-gated) |
 | Allowed peers | precision-t5810 (LAN, primary), asrock-b550 (LAN), precision-7960 (VPN-only) |
-| Verification harness | `tools/verify-panel.py` — 4-check panel (entity_fidelity, pii_leak hybrid regex+LLM, citation_format pure-regex, claim_grounding decomposed). Calibration fixtures + decision history in `tools/verify-panel-fixtures/CALIBRATION.md`. |
+| Verification harness | `tools/verify-panel.py`, 4-check panel (entity_fidelity, pii_leak hybrid regex+LLM, citation_format pure-regex, claim_grounding decomposed), Calibration fixtures + decision history in `tools/verify-panel-fixtures/CALIBRATION.md`. |
 | Service config | `ollama.confd` + `ollama.initd` (OpenRC) |
 | Firewall | `nftables-ollama.nft` → `/etc/nftables/ollama.nft` |
 | Power envelope | RAPL PL1=35W / PL2=60W (`powercap-profile.sh`) |
@@ -223,28 +251,76 @@ echo "1+1 = 3" | tools/verify-llm.sh --task fact-check
 ## Performance Tuning
 
 ### Kernel Optimizations
-- **NR_CPUS=16** — matches actual 8C/16T (reduced from default 64, saves memory)
-- **Transparent Huge Pages** — enabled (always), reduces TLB misses for large ML workloads
-- **MGLRU (LRU_GEN)** — multi-gen LRU for better page reclaim under memory pressure
-- **KSM** — Kernel Same-page Merging, deduplicates memory across ML model instances
-- **HZ=1000** — low-latency timer for responsive desktop
-- **PREEMPT_VOLUNTARY** — good balance of throughput and interactivity
-- **zram with zstd** — compressed swap backend (better ratio than lzo-rle)
+- **NR_CPUS=16**, matches actual 8C/16T (reduced from default 64, saves memory)
+- **Transparent Huge Pages**, enabled (always), reduces TLB misses for large ML workloads
+- **MGLRU (LRU_GEN)**, multi-gen LRU for better page reclaim under memory pressure
+- **KSM**. Kernel Same-page Merging, deduplicates memory across ML model instances
+- **HZ=1000**, low-latency timer for responsive desktop
+- **PREEMPT_VOLUNTARY**, good balance of throughput and interactivity
+- **zram with zstd**, compressed swap backend (better ratio than lzo-rle)
 
 ### VM / Sysctl Tuning (`sysctl-performance.conf`)
-- **vm.swappiness=10** — prefer RAM over swap (32GB is plenty)
-- **vm.dirty_ratio=40** — batch NVMe writes for throughput
-- **vm.vfs_cache_pressure=50** — keep filesystem caches longer
-- **TCP tuning** — larger buffers, fast open enabled
+- **vm.swappiness=10**, prefer RAM over swap (32GB is plenty)
+- **vm.dirty_ratio=40**, batch NVMe writes for throughput
+- **vm.vfs_cache_pressure=50**, keep filesystem caches longer
+- **TCP tuning**, larger buffers, fast open enabled
 
 ### Power / Thermal
-- **thermald** — Intel thermal daemon, prevents throttling during sustained loads
-- **tlp** — automatic power profiles (performance on AC, powersave on battery)
-- **zram-init** — 8GB zstd-compressed swap as safety net for large model loads
+- **thermald**. Intel thermal daemon, prevents throttling during sustained loads
+- **tlp**, automatic power profiles (performance on AC, powersave on battery)
+- **zram-init**, 8GB zstd-compressed swap as safety net for large model loads
+
+#### Battery Charge Thresholds (`tlp.conf`) — 75 / 80
+
+```
+START_CHARGE_THRESH_BAT0=75
+STOP_CHARGE_THRESH_BAT0=80
+```
+
+Charging stops at 80% and does **not** resume until the pack drops below 75%.
+Verify live state (no root needed):
+
+```bash
+cat /sys/class/power_supply/BAT0/charge_control_{start,end}_threshold   # 75, 80
+cat /sys/class/power_supply/BAT0/charge_types                           # ... [Custom]
+```
+
+**TLP owns this setting, not BIOS.** `tlp` writes the thresholds through
+`dell_laptop` -> `dell_smbios` -> EC, which is the same knob as BIOS
+*Battery Configuration = Custom*. TLP re-asserts on every run and every AC
+transition, so a value set by hand in BIOS gets silently overwritten. Edit
+`/etc/tlp.conf` and run `sudo tlp start`; do not edit it in BIOS.
+
+**Expected behaviour, not a fault:** on AC at any charge level between the two
+thresholds the battery reads `Discharging` / not charging. This is the hysteresis
+band doing its job. Previously configured 50/80, which meant the pack could idle
+near 50% indefinitely.
+
+Why 75/80 rather than the usual 50/80: this is an always-on AC node, and the pack
+is worn (see below), so a 50% floor left only ~25 Wh of real runtime on a power
+cut. At an 80% ceiling the longevity benefit is already banked; the extra top-up
+cycles inside a 5% band are negligible.
+
+Alternative if EC-level enforcement is wanted independent of whether TLP is
+running: set `PrimaryBattChargeCfg=PrimAcUse` via `dell_wmi_sysman` **and** remove
+both `*_CHARGE_THRESH_BAT0` lines from `tlp.conf`. Do not do both — they fight.
+
+#### Battery Health
+
+| Metric | Value (2026-08-25) |
+|--------|--------------------|
+| Model | SMP DELL 70N2F95, Li-poly, mfg 2021-06 |
+| `energy-full` | 57.10 Wh |
+| `energy-full-design` | 84.29 Wh |
+| Health | **67.7%** |
+| Usable ceiling at 80% cap | ~45.7 Wh (~54% of design) |
+
+A third of design capacity is gone. Combined with the 80% cap, plan runtime
+against ~45 Wh, not the 84 Wh nameplate. Re-check with `upower -i /org/freedesktop/UPower/devices/battery_BAT0`.
 
 ### Storage
 - **I/O scheduler**: `none` (direct NVMe, no software scheduling overhead)
-- **Dual 990 PRO**: root on nvme0n1, data on nvme1n1 — parallel I/O for builds + data
+- **Dual 990 PRO**: root on nvme0n1, data on nvme1n1, parallel I/O for builds + data
 
 ## Key Differences from XPS 9315
 
