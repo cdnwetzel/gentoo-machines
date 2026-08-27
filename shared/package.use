@@ -36,3 +36,13 @@ media-libs/mesa -video_cards_nouveau
 
 # Auto-unmasked dependencies
 >=x11-libs/libdrm-2.4.131 video_cards_nouveau video_cards_radeon video_cards_amdgpu
+
+# Fingerprint reader (Dell Goodix 27c6:63ac on the XPS 9510 / 9315)
+# USE=pam is what builds pam_fprintd.so. Without it fprintd installs, enrolls
+# and verifies happily while PAM has nothing to load — a failure that looks
+# like a broken reader rather than a missing flag.
+sys-auth/fprintd pam -systemd
+# -tod on purpose: Dell's Touch OEM Driver blob covers only the Goodix 53xc
+# family, so on a 63ac it contributes nothing and obscures which driver is
+# actually claiming the device. Ubuntu's broken build is 1.94.7+tod1.
+sys-auth/libfprint -tod

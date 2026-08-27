@@ -1,3 +1,10 @@
 # /etc/portage/package.accept_keywords - Dell XPS 15 9510
 net-vpn/networkmanager-sstp ~amd64
 =sys-kernel/gentoo-sources-6.18* ~amd64
+
+# libfprint: Gentoo stable is 1.94.7, the exact version reported broken for the
+# Goodix 27c6:63ac in this machine ("Corrupted message header received" on
+# enroll). Known-good on identical hardware is 1.94.100, which is not in
+# ::gentoo yet, so take the newest testing build available.
+sys-auth/libfprint ~amd64
+sys-auth/fprintd ~amd64

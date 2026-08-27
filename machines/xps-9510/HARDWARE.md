@@ -91,7 +91,31 @@ Notable: **Full AVX-512** support (Tiger Lake), ideal for ML inference workloads
 
 ## Biometrics
 
-- **Fingerprint**: Goodix USB2.0 MISC (`27c6:63ac`)
+- **Fingerprint**: Goodix USB2.0 MISC (`27c6:63ac`) — Match-on-Chip, `goodixmoc`
+  driver in `sys-auth/libfprint`
+
+The identical sensor runs on the arch-machines XPS 13 9315, where fingerprint
+`sudo` works, so the hardware and the PAM approach are both proven. What is not
+proven here is the Gentoo package version:
+
+| | libfprint | 27c6:63ac |
+|---|---|---|
+| arch-machines xps-9315 | 1.94.100 | works |
+| Gentoo stable | 1.94.7 | reported broken — `Corrupted message header received` on enroll |
+| Gentoo `~amd64` | 1.94.10 | untested on this PID |
+
+The 1.94.7 failure is a goodixmoc protocol mismatch introduced when 63AC was
+added to the driver's PID table. Dell's Touch OEM Driver blob does not help —
+it covers only the Goodix 53xc family — so keep `USE=-tod`, which is what
+`shared/package.use` sets.
+
+`machines/xps-9510/package.accept_keywords` therefore takes `sys-auth/libfprint
+~amd64` to get 1.94.10 rather than the implicated stable. If enrollment still
+fails, the known-good 1.94.100 is not yet in `::gentoo` and would need a local
+ebuild.
+
+Setup, once enrolled: `sudo bash shared/fingerprint-setup.sh` — see that script
+for why it touches `/etc/pam.d/sudo` only and never `system-auth`.
 
 ## Thunderbolt / USB-C
 

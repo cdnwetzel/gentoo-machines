@@ -110,3 +110,6 @@ dev-util/ccache
 dev-util/geany
 dev-vcs/git
 net-libs/nodejs
+
+# Biometrics (Goodix 27c6:63ac — see shared/fingerprint-setup.sh)
+sys-auth/fprintd
