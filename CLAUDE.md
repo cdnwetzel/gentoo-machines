@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              deploy-portage.sh, migrate-package-env.sh, harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
+tools/              deploy-portage.sh, fleet-pull.sh, migrate-package-env.sh, harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -187,6 +187,20 @@ as unmapped and never written, because portage resolves a contradiction between
 two files in `package.use/` by last-read-wins rather than erroring. Backs up to
 `/var/lib/kernel-update/config-backups/` and reports whether the change implies
 a `--changed-use` rebuild.
+
+### fleet-pull.sh
+Bring every reachable machine's checkout up to `origin/main` over ssh:
+```bash
+tools/fleet-pull.sh              # pull every reachable target
+tools/fleet-pull.sh --check      # report only, pull nothing
+tools/fleet-pull.sh asrock       # one target
+```
+Needs no root anywhere, so it is the one fleet-wide action drivable end to end — the privileged
+half of any change still has to be run by hand on each box. Uses `--ff-only`; skips dirty or
+diverged checkouts with the reason, and treats an unreachable host as normal rather than an error.
+The repo is public, so a host with no GitHub deploy key falls back to pulling the https URL without
+rewriting its configured remote. Targets are `/etc/hosts` ssh aliases (`asrock`, `t5810`), not
+canonical repo names — see the header for why those differ.
 
 ### migrate-package-env.sh
 Convert a single-file `/etc/portage/package.env` into the directory layout. Dry run by default:
