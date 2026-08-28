@@ -87,7 +87,7 @@ RESET='\033[0m'
 # ============================================================================
 # Format: hostname|dmi|gpu|patches (pipe-delimited fields)
 declare -A MACHINES=(
-    [xps-9510]="hostname=xps-9510|dmi=XPS 15 9510|gpu=nvidia|patches=intel_idle-add-tiger-lake"
+    [xps-9510]="hostname=xps9510|dmi=XPS 15 9510|gpu=nvidia|patches=intel_idle-add-tiger-lake"
     [mbp-2015]="hostname=gentoo-mbp|dmi=MacBookPro12,1|gpu=intel|patches="
     [surface-pro-6]="hostname=surface-pro-6|dmi=Surface Pro|gpu=intel|patches="
     [nuc11]="hostname=nuc11|dmi=NUC11TNBi5|gpu=intel|patches=intel_idle-add-tiger-lake"
@@ -375,10 +375,17 @@ detect_machine() {
     # 2. Hostname match
     local hostname
     hostname=$(hostname)
+    # Compare with dashes stripped. The registry's xps-9510 entry read
+    # "xps-9510" while the machine is actually "xps9510", so its hostname match
+    # missed and detection succeeded only because the DMI fallback below caught
+    # it — a silent near-miss that nothing reported. Only asrock-b550 and
+    # precision-t5810 have an installer-set HOSTNAME_VALUE to check against;
+    # the remaining entries are unverified, so tolerate the dash rather than
+    # trust eight hand-written strings. Stripped forms are all still unique.
     for machine in "${!MACHINES[@]}"; do
         local expected
         expected=$(get_machine_field "$machine" hostname)
-        if [[ "$hostname" == "$expected" ]]; then
+        if [[ "${hostname//-/}" == "${expected//-/}" ]]; then
             echo "$machine"
             return
         fi

@@ -72,11 +72,11 @@ echo "=== 1. Machine detection ==="
 # both sides with dashes stripped covers that without a lookup table that
 # would then need keeping in sync with update-system.sh's MACHINES registry.
 #
-# NOTE: tools/update-system.sh's registry records this machine's hostname as
-# "xps-9510", which does not match the actual hostname "xps9510" — its
-# hostname match therefore misses and it detects via the DMI fallback instead.
-# Harmless today, but it means that registry field is untested. Worth fixing
-# there separately.
+# update-system.sh's MACHINES registry had the same problem in reverse: it
+# recorded this machine as "xps-9510" against a real hostname of "xps9510", so
+# its match missed and detection worked only via the DMI fallback. Both the
+# entry and the comparison there are fixed now, and it strips dashes the same
+# way this does.
 MACHINE=""
 if [[ -n "$MACHINE_OVERRIDE" ]]; then
     MACHINE="$MACHINE_OVERRIDE"
