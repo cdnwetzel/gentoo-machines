@@ -265,6 +265,7 @@ Shared files in `shared/` apply to all machines:
 | `shared/fstrim-weekly` | Weekly SSD TRIM maintenance script |
 | `shared/35-intel-microcode.install` | Install to `/etc/kernel/preinst.d/` — quiet override for upstream Intel microcode hook (drops `--list-all --list` dump on every `make install`) |
 | `shared/xhost-local.desktop` | XDG autostart: `xhost +local:` for X11 access |
+| `shared/portage_env_freerdp-ffmpeg-fix.conf` | CFLAGS workaround: freerdp <=3.29.0 vs ffmpeg `FF_PROFILE_*` -> `AV_PROFILE_*` rename. Installed/removed automatically by `update-system.sh` PORTAGE_WORKAROUNDS |
 | `patches/README.md` | Patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |

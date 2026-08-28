@@ -119,6 +119,13 @@ declare -A PATCH_REGISTRY=(
 #   max_version:  remove workaround when installed version > this
 declare -A PORTAGE_WORKAROUNDS=(
     # Add entries as: [name]="repo_file|package_atom|max_version"
+    #
+    # freerdp 3.29.0 fails against current ffmpeg, which renamed the AAC profile
+    # constants (FF_PROFILE_* -> AV_PROFILE_*). The define maps the old name onto
+    # the new one. 3.30.0 is in ::gentoo but has not been built here, so max_version
+    # is set to the version known to need it: if 3.30.0 still fails, raise it; if it
+    # builds clean, this removes itself on upgrade, which is the point of the field.
+    [freerdp-ffmpeg]="shared/portage_env_freerdp-ffmpeg-fix.conf|net-misc/freerdp|3.29.0"
 )
 
 # ============================================================================
@@ -227,6 +234,19 @@ get_target_release() {
 sync_portage_workarounds() {
     local changed=false
 
+    # /etc/portage/package.env may be a single file OR a directory of files —
+    # portage accepts both, and this fleet uses the directory form (xps-9510 has
+    # 00-notmpfs and cross-i686-elf in it). The original code appended to the
+    # path unconditionally, so on a directory host `echo >> /etc/portage/package.env`
+    # failed with "Is a directory" and every registry entry silently never landed.
+    # Own a dedicated file inside the directory rather than editing a hand-managed
+    # one like 00-notmpfs, so removal on upgrade cannot clip an unrelated line.
+    local PKGENV="/etc/portage/package.env"
+    if [[ -d "$PKGENV" ]]; then
+        PKGENV="${PKGENV}/90-workarounds"
+        [[ -f "$PKGENV" ]] || { $DRY_RUN || : > "$PKGENV"; }
+    fi
+
     for name in "${!PORTAGE_WORKAROUNDS[@]}"; do
         local entry="${PORTAGE_WORKAROUNDS[$name]}"
         local env_file pkg_atom max_ver
@@ -267,11 +287,11 @@ sync_portage_workarounds() {
                 fi
             fi
             # Add package.env entry if not present
-            if ! grep -q "^${pkg_atom}.*${env_name}" /etc/portage/package.env 2>/dev/null; then
+            if ! grep -q "^${pkg_atom}.*${env_name}" "$PKGENV" 2>/dev/null; then
                 if $DRY_RUN; then
                     info "[dry-run] Would add package.env: ${pkg_atom} ${env_name}"
                 else
-                    echo "${pkg_atom} ${env_name}" >> /etc/portage/package.env
+                    echo "${pkg_atom} ${env_name}" >> "$PKGENV"
                     info "Added package.env entry: ${pkg_atom} ${env_name}"
                     changed=true
                 fi
@@ -287,11 +307,11 @@ sync_portage_workarounds() {
                     changed=true
                 fi
             fi
-            if grep -q "^${pkg_atom}.*${env_name}" /etc/portage/package.env 2>/dev/null; then
+            if grep -q "^${pkg_atom}.*${env_name}" "$PKGENV" 2>/dev/null; then
                 if $DRY_RUN; then
                     info "[dry-run] Would remove package.env entry: ${pkg_atom} ${env_name}"
                 else
-                    sed -i "\|^${pkg_atom}.*${env_name}|d" /etc/portage/package.env
+                    sed -i "\|^${pkg_atom}.*${env_name}|d" "$PKGENV"
                     info "Removed package.env entry: ${pkg_atom} ${env_name}"
                     changed=true
                 fi

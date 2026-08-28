@@ -109,7 +109,11 @@ PAIRS=(
     "shared/package.use|/etc/portage/package.use/shared"
     "machines/$MACHINE/package.use|/etc/portage/package.use/$LIVE_NAME"
     "machines/$MACHINE/package.accept_keywords|/etc/portage/package.accept_keywords/$LIVE_NAME"
-    "machines/$MACHINE/package.env|/etc/portage/package.env/$LIVE_NAME"
+    # package.env destination is NOT the hostname. The live file is 00-notmpfs
+    # -- numbered so it sorts before cross-i686-elf and 90-workarounds, which
+    # portage reads in order. Mapping this to $LIVE_NAME warned about a file
+    # that should not exist while ignoring the one that does.
+    "machines/$MACHINE/package.env|/etc/portage/package.env/00-notmpfs"
 )
 # Tracked in the repo but with no inferable destination — reported, never written.
 UNMAPPED=(
