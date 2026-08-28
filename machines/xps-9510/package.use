@@ -29,7 +29,7 @@ net-vpn/networkmanager-sstp gui
 >=net-wireless/wpa_supplicant-2.11-r4 dbus
 
 # NVIDIA proprietary driver
-x11-drivers/nvidia-drivers kernel-open modules tools
+x11-drivers/nvidia-drivers kernel-open modules tools persistenced
 media-libs/mesa -video_cards_nouveau
 
 # Documents

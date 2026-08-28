@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
+tools/              deploy-portage.sh, harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -169,6 +169,24 @@ Regression harness for `generate-install.sh`. Runs the generator against three s
 ```bash
 tools/test-generate-install.sh
 ```
+
+### deploy-portage.sh
+Sync tracked portage config from the repo into `/etc/portage`. Dry run by default:
+```bash
+tools/deploy-portage.sh                       # diff repo vs live, change nothing
+sudo tools/deploy-portage.sh --apply          # write every file shown
+sudo tools/deploy-portage.sh --apply shared   # write one pair only
+sudo tools/deploy-portage.sh --revert         # restore newest backup
+tools/deploy-portage.sh --machine xps-9510    # override auto-detection
+```
+Detects the machine by matching hostname to a `machines/` directory with dashes
+stripped (`xps9510` → `xps-9510`). Only syncs 1:1 pairs that already exist on
+both sides; files whose contents were hand-merged into a differently-named live
+file (`shared/package.accept_keywords`, `shared/package.license`) are reported
+as unmapped and never written, because portage resolves a contradiction between
+two files in `package.use/` by last-read-wins rather than erroring. Backs up to
+`/var/lib/kernel-update/config-backups/` and reports whether the change implies
+a `--changed-use` rebuild.
 
 ### machine-profile.sh
 Shared hardware detection library — parses harvest.sh output into feature flags. Sourced by other tools, not run directly:
