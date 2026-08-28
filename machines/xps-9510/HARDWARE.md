@@ -94,25 +94,27 @@ Notable: **Full AVX-512** support (Tiger Lake), ideal for ML inference workloads
 - **Fingerprint**: Goodix USB2.0 MISC (`27c6:63ac`) — Match-on-Chip, `goodixmoc`
   driver in `sys-auth/libfprint`
 
-The identical sensor runs on the arch-machines XPS 13 9315, where fingerprint
-`sudo` works, so the hardware and the PAM approach are both proven. What is not
-proven here is the Gentoo package version:
+Working on Gentoo stable, no keywording required (2026-08-27):
 
-| | libfprint | 27c6:63ac |
+| | version | result |
 |---|---|---|
-| arch-machines xps-9315 | 1.94.100 | works |
-| Gentoo stable | 1.94.7 | reported broken — `Corrupted message header received` on enroll |
-| Gentoo `~amd64` | 1.94.10 | untested on this PID |
+| `sys-auth/libfprint` | 1.94.7 (stable, `USE=-tod`) | enrolls and verifies |
+| `sys-auth/fprintd` | 1.94.3-r1 (stable, `USE=pam`) | `pam_fprintd.so` built |
 
-The 1.94.7 failure is a goodixmoc protocol mismatch introduced when 63AC was
-added to the driver's PID table. Dell's Touch OEM Driver blob does not help —
-it covers only the Goodix 53xc family — so keep `USE=-tod`, which is what
-`shared/package.use` sets.
+```
+$ fprintd-enroll   → Enroll result: enroll-completed
+$ fprintd-verify   → Verify result: verify-match (done)
+```
 
-`machines/xps-9510/package.accept_keywords` therefore takes `sys-auth/libfprint
-~amd64` to get 1.94.10 rather than the implicated stable. If enrollment still
-fails, the known-good 1.94.100 is not yet in `::gentoo` and would need a local
-ebuild.
+`USE=pam` came from the profile default — `emerge sys-auth/fprintd` produced
+`/lib64/security/pam_fprintd.so` with no package.use deployed. The entry in
+`shared/package.use` is belt-and-braces.
+
+An earlier revision of this section claimed stable 1.94.7 was broken for this
+PID and that `~amd64` was required. It was not: that report traces to Ubuntu's
+`1.94.7+tod1`, where the Dell Touch OEM Driver blob — which covers only the
+Goodix 53xc family and does nothing for a 63ac — is the difference. Keep
+`USE=-tod`, which `shared/package.use` sets, and stay on stable.
 
 Setup, once enrolled: `sudo bash shared/fingerprint-setup.sh` — see that script
 for why it touches `/etc/pam.d/sudo` only and never `system-auth`.

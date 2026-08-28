@@ -132,23 +132,23 @@ if command -v rc-service >/dev/null 2>&1; then
     fi
 fi
 
-# This device is the reason the check exists. Goodix 27c6:63ac is claimed by
-# libfprint's goodixmoc driver, and 1.94.7 — the current Gentoo stable — is the
-# exact version Ubuntu reports as broken for this PID, failing enrollment with
-# "Corrupted message header received". The arch xps-9315 runs this same reader
-# happily on 1.94.100, so the working configuration is known; it is simply
-# newer than anything in ::gentoo today. Report the gap rather than pretend.
+# Goodix 27c6:63ac is claimed by libfprint's goodixmoc driver. Gentoo stable
+# libfprint 1.94.7 with USE=-tod enrolls and verifies it on the XPS 9510
+# (2026-08-27). An earlier version of this script warned that 1.94.7 was broken
+# for this PID and told you to keyword ~amd64; that came from Ubuntu's
+# 1.94.7+tod1 build, and the TOD blob is the variable, not the upstream
+# version. The blob covers only the Goodix 53xc family, so on a 63ac it adds
+# nothing and only muddies which code path runs. USE=tod is what this now
+# warns about — the version is not the problem.
 if lsusb 2>/dev/null | grep -qi '27c6:63ac'; then
     LFP=$(portageq best_version / sys-auth/libfprint 2>/dev/null | sed 's/.*libfprint-//')
-    info "Goodix 27c6:63ac detected; installed libfprint: ${LFP:-unknown}"
     case "$LFP" in
-        1.94.7*|1.94.4*|"")
-            warn "libfprint $LFP is the version range reported broken for 27c6:63ac."
-            info "If enrollment fails with 'Corrupted message header received',"
-            info "unmask a newer libfprint:"
-            info "    echo 'sys-auth/libfprint ~amd64' >> /etc/portage/package.accept_keywords/fprintd"
-            info "Known-good on identical hardware: 1.94.100 (not yet in ::gentoo)." ;;
-        *)  ok "libfprint $LFP is newer than the range reported broken for this PID." ;;
+        "") warn "Goodix 27c6:63ac detected but sys-auth/libfprint is not installed." ;;
+        1.94.7*)
+            ok "libfprint $LFP — the version verified working with this reader" ;;
+        *)  info "Goodix 27c6:63ac detected; installed libfprint: $LFP"
+            info "Verified on this hardware: 1.94.7 (USE=-tod). Others should be"
+            info "fine, but only 1.94.7 has actually been exercised here." ;;
     esac
     # Ubuntu's failing build is 1.94.7+tod1. The Dell TOD blob covers only the
     # 53xc family, so on a 63ac it adds nothing and muddies which driver is in

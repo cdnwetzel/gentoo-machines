@@ -1,10 +1,24 @@
 # /etc/portage/package.accept_keywords - Dell XPS 15 9510
 net-vpn/networkmanager-sstp ~amd64
+net-misc/sstp-client ~amd64
+www-client/chromium-bin ~amd64
+x11-drivers/nvidia-drivers ~amd64
+
+# Track the 6.18 LTS series (EOL Dec 2027). Point releases land as ~amd64
+# before stabilising, so this line is what keeps the machine current: as of
+# 2026-08-21, 6.18.41 is stable amd64 while 6.18.44 and 6.18.45 are ~amd64.
+# Without it the machine is pinned to stable-only 6.18.x and lags on patches.
 =sys-kernel/gentoo-sources-6.18* ~amd64
 
-# libfprint: Gentoo stable is 1.94.7, the exact version reported broken for the
-# Goodix 27c6:63ac in this machine ("Corrupted message header received" on
-# enroll). Known-good on identical hardware is 1.94.100, which is not in
-# ::gentoo yet, so take the newest testing build available.
-sys-auth/libfprint ~amd64
-sys-auth/fprintd ~amd64
+# libfprint/fprintd are deliberately NOT keyworded here. Gentoo stable --
+# libfprint 1.94.7 (USE=-tod) and fprintd 1.94.3-r1 -- enrolls and verifies the
+# Goodix 27c6:63ac in this machine. Measured 2026-08-27: fprintd-enroll reached
+# enroll-completed, fprintd-verify returned verify-match.
+#
+# An earlier revision of this file keyworded both to dodge 1.94.7, on the claim
+# that it was broken for this PID. That claim was wrong. It traced to Ubuntu's
+# 1.94.7+tod1 build, where the Dell TOD blob -- which covers only the Goodix
+# 53xc family and does nothing for a 63ac -- is the variable, not the upstream
+# version. Keep USE=-tod (shared/package.use sets it) and stay on stable.
+#
+# Do not re-add ~amd64 for these without a failure you have actually reproduced.

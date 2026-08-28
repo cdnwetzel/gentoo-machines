@@ -471,13 +471,31 @@ reached.
 leaves `._cfg0000_sudo` beside it, and accepting the new file wholesale in
 dispatch-conf drops your fingerprint line without a word.
 
-**Version trap specific to this sensor**: Gentoo stable `sys-auth/libfprint` is
-1.94.7, the exact version reported broken for PID 63AC — enrollment fails with
-`Corrupted message header received` after 63AC was added to goodixmoc's PID
-table. Dell's TOD blob covers only the Goodix 53xc family, so `USE=tod` cannot
-rescue it; keep `-tod`. The known-good version on identical hardware is
-1.94.100, which is not in `::gentoo`, so `~amd64` (1.94.10) is the best
-available starting point.
+**The version trap that wasn't.** This entry previously warned that Gentoo
+stable `sys-auth/libfprint` 1.94.7 was broken for PID 63AC — enrollment failing
+with `Corrupted message header received` — and told you to keyword `~amd64`.
+That was wrong, and it is worth keeping the correction rather than quietly
+deleting it: **stable 1.94.7 with `USE=-tod` enrolls and verifies the Goodix
+`27c6:63ac` on the XPS 9510** (2026-08-27, `enroll-completed` then
+`verify-match`, no keywording of any kind).
+
+The failure reports that produced the warning are all against Ubuntu's
+`1.94.7+tod1`. The Dell Touch OEM Driver blob covers only the Goodix 53xc
+family and does nothing for a 63ac except change which code path runs — so the
+`+tod1` patch is the variable, not the upstream version. Keep `USE=-tod`, which
+`shared/package.use` sets, and stay on stable.
+
+**`USE=pam` is a profile default**, at least on `default/linux/amd64/23.0`.
+`emerge sys-auth/fprintd` with no package.use deployed still built
+`/lib64/security/pam_fprintd.so`. The entry in `shared/package.use` is
+belt-and-braces; verify with `cat /var/db/pkg/sys-auth/fprintd-*/USE` rather
+than assuming either way.
+
+**The wider lesson**: a warning inherited from another distro's packaging is a
+hypothesis, not a finding. This one cost nothing because the test is one
+command — but it had already been copied into four files, where it read as
+established fact and would have sent the next machine down an unnecessary
+`~amd64` path.
 
 **Fix**: `sudo bash shared/fingerprint-setup.sh`, which checks all of the above
 before editing anything and reverts with `REVERT=1`.
