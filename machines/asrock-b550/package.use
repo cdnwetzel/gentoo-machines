@@ -13,3 +13,10 @@ net-misc/networkmanager wifi bluetooth
 
 # xfce4-screensaver wayland requirement
 gui-libs/libwlembed gtk
+
+# app-containers/podman requires iptables built with nftables. Portage wrote
+# this into package.use/shared as autounmask output on this machine; kept here
+# instead so deploying the shared file cannot strip it, and so machines without
+# podman are not forced into an iptables rebuild.
+# required by app-containers/containers-common, app-containers/podman
+>=net-firewall/iptables-1.8.13 nftables

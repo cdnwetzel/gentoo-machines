@@ -159,8 +159,18 @@ for pair in "${PAIRS[@]}"; do
         # A missing destination is exactly the guess this script refuses to
         # make: creating it may shadow settings that live elsewhere today.
         warn "$live does not exist — NOT creating it."
-        info "If that is genuinely where ${pair%%|*} belongs, create it once by"
-        info "hand, then this script will keep it in sync."
+        # Naming what IS there turns a dead-end warning into something
+        # actionable: package.env in particular is 00-notmpfs on the xps-9510
+        # but may be named anything on another machine, and the operator is the
+        # one who knows which file is the right destination.
+        livedir=$(dirname "$live")
+        if [[ -d "$livedir" ]]; then
+            existing=$(ls -1 "$livedir" 2>/dev/null | grep -v '\.bak-' | tr '\n' ' ')
+            info "Files present in ${livedir}: ${existing:-<none>}"
+        fi
+        info "If one of those is where ${pair%%|*} belongs, point PAIRS at it;"
+        info "if none is, create the destination once by hand and this script"
+        info "will keep it in sync from then on."
         continue
     fi
     if diff -q "$repo" "$live" >/dev/null 2>&1; then
