@@ -115,6 +115,18 @@ directory's real contents so the mapping in `PAIRS` can be corrected.
 
 ### 3. precision-t5810 — repo fix pushed, not yet applied
 
+**Interrupted state, 2026-08-28.** A `fetch` was run here out of order and
+aborted partway through (`/etc/portage/env` did not exist; fixed since). What
+already landed: the gentoo tree synced, `gentoo-sources-6.18.47` installed, and
+`/usr/src/linux` re-pointed from 6.18.21 to **6.18.47** — so a kernel build is
+now queued on this machine. What did not: the workaround install, and the news
+items were never displayed. Re-run `fetch` after pulling; it is idempotent.
+
+Also outstanding here, reported by that run:
+`emerge --oneshot sys-apps/portage` (portage update available, do it before
+other packages), and 2 unread news items.
+
+
 Standard procedure. After `360b444` the CUDA keyword is restored, so confirm
 the dry run **no longer** shows `-dev-util/nvidia-cuda-toolkit ~amd64`. If it
 still does, the pull did not land — stop.

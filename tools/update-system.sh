@@ -281,9 +281,22 @@ sync_portage_workarounds() {
                 if $DRY_RUN; then
                     info "[dry-run] Would install workaround: ${env_name} for ${pkg_atom} ${installed_ver}"
                 else
-                    cp "$src" "$dest"
-                    info "Installed workaround: ${env_name}"
-                    changed=true
+                    # /etc/portage/env is not created by portage and does not
+                    # exist on a machine that has never needed a per-package env
+                    # file — precision-t5810 had no such directory, so the cp
+                    # failed and took the whole fetch phase down with it after
+                    # the sync and the gentoo-sources install had already run.
+                    mkdir -p "$(dirname "$dest")"
+                    # A workaround that cannot be installed is a warning, not a
+                    # reason to abort an update. Nothing later in fetch depends
+                    # on it, and dying here strands the run mid-phase.
+                    if cp "$src" "$dest"; then
+                        info "Installed workaround: ${env_name}"
+                        changed=true
+                    else
+                        warn "Could not install workaround ${env_name} to ${dest} — continuing"
+                        continue
+                    fi
                 fi
             fi
             # Add package.env entry if not present
