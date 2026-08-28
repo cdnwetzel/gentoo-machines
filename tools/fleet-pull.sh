@@ -22,6 +22,17 @@
 #   unreachable host   reported, not an error. Half this fleet is powered off
 #                      at any given time and that is normal.
 #
+# NOT REACHABLE IS NOT THE SAME AS DOWN
+#
+# This fleet spans several sites on different subnets. Machines at a remote
+# site are typically powered on and perfectly healthy, just not routable from
+# the local one without a VPN. Only one machine in the list is normally powered
+# off.
+#
+# The summary line therefore says "not reachable from here", never "down". A
+# sweep that reports healthy machines as dead is a sweep people learn to
+# ignore, and this one is meant to be run on every push.
+#
 # TARGETS ARE SSH ALIASES, NOT MACHINE NAMES
 #
 # There are three naming schemes in play — repo directories (asrock-b550),
@@ -39,14 +50,14 @@ REPO_PATH="${REPO_PATH:-ai/gentoo-machines}"
 HTTPS_URL="https://github.com/cdnwetzel/gentoo-machines.git"
 MODE="pull"
 
-# ssh-target|repo machine name
+# ssh-target|repo machine name|where it lives
 TARGETS=(
-    "asrock|asrock-b550"
-    "t5810|precision-t5810"
-    "surface-pro-6|surface-pro-6"
-    "beelink-minis|beelink-minis"
-    "opti3090|optiplex-3090"
-    "nuc11|nuc11"
+    "asrock|asrock-b550|local subnet"
+    "t5810|precision-t5810|local subnet"
+    "beelink-minis|beelink-minis|remote site - VPN required"
+    "opti3090|optiplex-3090|remote site - VPN required"
+    "surface-pro-6|surface-pro-6|local, normally powered off"
+    "nuc11|nuc11|not installed - runs another distro today"
 )
 
 ok()   { echo "  [OK]   $*"; }
@@ -71,7 +82,8 @@ echo
 
 REACHED=0; PULLED=0; SKIPPED=0; DOWN=0
 for entry in "${TARGETS[@]}"; do
-    target="${entry%%|*}"; machine="${entry#*|}"
+    target="${entry%%|*}"; rest="${entry#*|}"
+    machine="${rest%%|*}"; where="${rest#*|}"
     [[ -n "$ONLY" && "$target" != "$ONLY" && "$machine" != "$ONLY" ]] && continue
 
     printf '%-16s ' "$target"
@@ -96,7 +108,7 @@ for entry in "${TARGETS[@]}"; do
             echo 'DIVERGED'
         fi
     " 2>/dev/null); then
-        echo "unreachable"; DOWN=$((DOWN+1)); continue
+        echo "not reachable from here  [${where}]"; DOWN=$((DOWN+1)); continue
     fi
     REACHED=$((REACHED+1))
 
@@ -120,6 +132,7 @@ for entry in "${TARGETS[@]}"; do
 done
 
 echo
-echo "=== ${REACHED} reachable, ${PULLED} pulled, ${SKIPPED} skipped, ${DOWN} down ==="
+echo "=== ${REACHED} reachable, ${PULLED} pulled, ${SKIPPED} skipped, ${DOWN} not reachable ==="
+[[ $DOWN -gt 0 ]] && info "Not reachable != down. Remote-site machines need the VPN, not a power button."
 [[ $SKIPPED -gt 0 ]] && info "Skipped machines need a look before they will pull."
 exit 0

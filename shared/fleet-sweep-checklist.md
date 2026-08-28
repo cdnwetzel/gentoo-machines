@@ -172,7 +172,7 @@ still does, the pull did not land — stop.
 Applying unpins `nvidia-drivers` 580.142 → current branch. That is intended for
 Ampere, but the upgrade lands on the next `@world`, not now. Decide deliberately.
 
-Hostname does not resolve fleet-wide; reachable at `10.0.1.125`.
+Hostname does not resolve fleet-wide; reach it by its ssh alias `t5810`.
 
 ### 4. surface-pro-6 — never swept
 
@@ -200,11 +200,12 @@ than assuming it moved in step with the xps-9510's 610.57.04.
 ## Falls out of this sweep
 
 - **Naming is inconsistent three ways.** `/etc/hosts` on the xps-9510 defines
-  `Asrock` -> 10.0.1.115 and `T5810` -> 10.0.1.125 (each listed twice), so
+  `Asrock` and `T5810` (each listed twice, inconsistently capitalised), so
   `asrock` and `t5810` resolve. The *canonical* repo names do not:
   `asrock-b550`, `precision-t5810`, `surface-pro-6`, `beelink-minis` and
-  `nuc11` all fail. `Opti3090` points at 192.168.111.97, a different subnet,
-  and is unreachable. So there are three naming schemes in play — repo machine
+  `nuc11` all fail. `Opti3090` points at an address on a remote
+  site's subnet and is unreachable without the VPN — it is powered on, not
+  down. So there are three naming schemes in play — repo machine
   dirs (`asrock-b550`), real hostnames (`asrock-b550`, `xps9510`), and hosts
   aliases (`Asrock`) — and hand-maintained hosts files on every node is the
   wrong end to fix it from. Related: the T5810 holds two DHCP addresses on one
