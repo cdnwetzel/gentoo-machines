@@ -108,13 +108,22 @@ re-pointing `/usr/src/linux` and queueing a kernel build behind it.
 
 </details>
 
-### 2. asrock-b550 — RESUME HERE
+### 2. asrock-b550 — complete ✅
 
-State as of 2026-08-28 00:40: `fetch` done (workaround installed, single
-freerdp entry present and correct), repo pulled to `67fb9de`, kernel symlink
-moved 6.18.21 -> 6.18.47 so a build is queued. **Migration not yet applied** —
-`/etc/portage/package.env` is still a single file. Nothing is broken; the
-deploy simply must not run before the migration.
+Done 2026-08-28. `fetch`, `migrate-package-env --apply`, `deploy-portage
+--apply` all complete; all four pairs report in sync. Both at-risk directives
+verified present afterwards: `iptables[nftables]` in
+`package.use/asrock-b550`, the freerdp workaround in
+`package.env/90-workarounds`.
+
+**Outstanding here, not from this sweep:** `emerge -p --changed-use --deep
+@world` wants 33 packages, essentially all version upgrades exposed by the tree
+sync rather than anything the portage changes caused — `iptables` is notably
+absent from that list. Includes `nvidia-cuda-toolkit-12.9.2` (5.7 GB),
+`llvm-22`, `rust-bin-1.96`, `nodejs-26`, `mesa-26`. Kernel build also queued
+(6.18.21 -> 6.18.47).
+
+<details><summary>procedure used, kept for the other single-file machines</summary>
 
 #### Migrate package.env FIRST, then standard procedure
 
@@ -129,7 +138,9 @@ sudo tools/migrate-package-env.sh --apply
 
 Afterwards `00-notmpfs` should hold the ten notmpfs entries and match the repo
 copy exactly, and `90-workarounds` the single freerdp line. Then standard
-procedure. Expect three diffs, all safe after `360b444`:
+procedure.
+
+</details> Expect three diffs, all safe after `360b444`:
 
 - `shared` — adds the fingerprint block; **no longer** removes
   `iptables[nftables]`, which is now carried in the machine file
