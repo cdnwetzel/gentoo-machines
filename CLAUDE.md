@@ -19,7 +19,7 @@ machines/           Per-machine kernel configs, make.conf, hardware docs
   precision-7960/   Dell Precision 7960 / Xeon W5 (reference only)
   surface-pro-6/    Surface Pro 6 (Kaby Lake-R) - PRODUCTION
   surface-pro-9/    Surface Pro 9 (planned)
-tools/              deploy-portage.sh, harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
+tools/              deploy-portage.sh, migrate-package-env.sh, harvest.sh, deep_harvest.sh, kconfig-lint.sh, kernel-config-template.sh, machine-profile.sh, build-kernel-remote.sh, generate-config.sh, generate-install.sh, test-generate-install.sh, update-system.sh, verify-install.sh
 shared/             Common portage files, XFCE desktop config restore scripts
 patches/            Kernel patches
 INSTALL.md          General-purpose installation guide (any machine)
@@ -187,6 +187,21 @@ as unmapped and never written, because portage resolves a contradiction between
 two files in `package.use/` by last-read-wins rather than erroring. Backs up to
 `/var/lib/kernel-update/config-backups/` and reports whether the change implies
 a `--changed-use` rebuild.
+
+### migrate-package-env.sh
+Convert a single-file `/etc/portage/package.env` into the directory layout. Dry run by default:
+```bash
+tools/migrate-package-env.sh                  # show the split, change nothing
+sudo tools/migrate-package-env.sh --apply
+sudo tools/migrate-package-env.sh --revert
+```
+Needed because two tools now write package.env entries — `deploy-portage.sh` overwrites its
+destination, `update-system.sh` PORTAGE_WORKAROUNDS appends and removes. On a directory host each
+owns a separate file (`00-notmpfs`, `90-workarounds`); on a single-file host they collide and a
+deploy silently deletes the registry's entry. Registry-owned lines are identified by reading
+PORTAGE_WORKAROUNDS rather than hardcoding, and the script refuses to run if it cannot read that
+registry. Verifies the directive set is byte-identical before and after. Observed layouts
+2026-08-28: xps-9510 directory, precision-t5810 and asrock-b550 single-file.
 
 ### machine-profile.sh
 Shared hardware detection library — parses harvest.sh output into feature flags. Sourced by other tools, not run directly:

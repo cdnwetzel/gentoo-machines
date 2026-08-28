@@ -100,9 +100,20 @@ broken (`echo >>` into a directory) until 2026-08-27. Afterwards
 Note `fetch` also syncs the tree and may pull a newer `gentoo-sources`,
 re-pointing `/usr/src/linux` and queueing a kernel build behind it.
 
-### 2. asrock-b550 — repo fix pushed, not yet applied
+### 2. asrock-b550 — migrate package.env FIRST, then standard procedure
 
-Standard procedure. Expect three diffs, all safe after `360b444`:
+`/etc/portage/package.env` here is a **single file**, and both tools want to
+own it. Migrate before deploying, or the deploy deletes the freerdp entry the
+workaround registry installed on 2026-08-28:
+
+```bash
+tools/migrate-package-env.sh                  # dry run — read the split
+sudo tools/migrate-package-env.sh --apply
+```
+
+Afterwards `00-notmpfs` should hold the ten notmpfs entries and match the repo
+copy exactly, and `90-workarounds` the single freerdp line. Then standard
+procedure. Expect three diffs, all safe after `360b444`:
 
 - `shared` — adds the fingerprint block; **no longer** removes
   `iptables[nftables]`, which is now carried in the machine file
@@ -161,11 +172,16 @@ than assuming it moved in step with the xps-9510's 610.57.04.
 
 ## Falls out of this sweep
 
-- **No hostname on the LAN resolves** from the xps-9510 — not
-  `precision-t5810`, `asrock-b550`, `surface-pro-6`, `beelink-minis`,
-  `optiplex-3090` or `nuc11`, with or without `.lan`. Only raw IPs work. Every
-  cross-machine step is hand-driven until DHCP reservations and DNS exist.
-  Related: the T5810 holds two DHCP addresses on one interface.
+- **Naming is inconsistent three ways.** `/etc/hosts` on the xps-9510 defines
+  `Asrock` -> 10.0.1.115 and `T5810` -> 10.0.1.125 (each listed twice), so
+  `asrock` and `t5810` resolve. The *canonical* repo names do not:
+  `asrock-b550`, `precision-t5810`, `surface-pro-6`, `beelink-minis` and
+  `nuc11` all fail. `Opti3090` points at 192.168.111.97, a different subnet,
+  and is unreachable. So there are three naming schemes in play — repo machine
+  dirs (`asrock-b550`), real hostnames (`asrock-b550`, `xps9510`), and hosts
+  aliases (`Asrock`) — and hand-maintained hosts files on every node is the
+  wrong end to fix it from. Related: the T5810 holds two DHCP addresses on one
+  interface.
 - **`shared/package.accept_keywords` and `shared/package.license` have no
   destination.** Reported as unmapped on every run because their contents were
   hand-merged into differently-named live files. Needs a decision, not a fix.
