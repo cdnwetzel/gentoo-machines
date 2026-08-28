@@ -45,11 +45,16 @@ NVIDIA machines will use **proprietary nvidia-drivers**. Surface Pro 6 runs stoc
 
 All production machines track **6.18 LTS** (EOL Dec 2027) via `=sys-kernel/gentoo-sources-6.18* ~amd64` in their `package.accept_keywords`. Use `tools/update-system.sh` for guided system and kernel updates.
 
+Per-machine kernel and driver versions below are point-in-time — recorded when a machine was last
+touched — and they go stale silently, because nothing re-checks them. Treat them as provenance, not
+as current state. `tools/update-system.sh check` reports the running kernel, the target, and the
+driver version for real; `tools/deploy-portage.sh` does the same for portage config.
+
 ## Machine-Specific Details
 
 ### Dell XPS 13 9315 (Configs Updated)
 
-- **Kernel**: Linux 6.12.58-gentoo
+- **Last Gentoo kernel**: Linux 6.12.58-gentoo (machine returned to Windows)
 - **Architecture**: x86_64, hybrid P-Core/E-Core (Alder Lake)
 - **Compiler flags**: `-march=alderlake -O2 -pipe`
 - **Key drivers**: i915, iwlwifi (AX211), nvme, sof-audio, intel_ipu6, intel_ish, ppp (SSTP VPN)
@@ -341,7 +346,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 ### Dell XPS 15 9510 (Production)
 
 - **AI verifier role**: Always-on Ollama HTTP service on `:11434` serving `qwen2.5:3b-instruct-q4_K_M` from `/data/ml-models/ollama/`. Firewall-restricted to local AI peers (T5810 primary, asrock-b550, 7960 VPN-only). RAPL PL1=35W/PL2=60W cap via `powercap-profile.sh` keeps thermals stable during sustained calls. Bigger nodes invoke via `tools/verify-llm.sh` for LLM-as-judge / schema / fact-check verification.
-- **Kernel**: Linux 6.18.18-gentoo
+- **Kernel**: Linux 6.18.46-gentoo (verified 2026-08-28)
 - **Architecture**: x86_64, uniform 8C/16T (Tiger Lake-H, AVX-512)
 - **Compiler flags**: `-march=tigerlake -O2 -pipe`
 - **Key drivers**: i915 (module), nvidia 610.57.04 (kernel-open modules, `Dual MIT/GPL`), iwlwifi (AX203, module), nvme, snd_hda_intel, btusb, r8152 (USB Ethernet)
@@ -424,7 +429,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 ### Dell Precision T5810 (Harvested + Configs Generated)
 
-- **Kernel**: Linux 6.18.16-gentoo (Production)
+- **Kernel**: Linux 6.18.21-gentoo (Production, verified 2026-08-28)
 - **Architecture**: x86_64, 22C/44T (Broadwell-EP, AVX2, no AVX-512)
 - **Compiler flags**: `-march=broadwell -O2 -pipe`
 - **Key drivers**: nvidia 580.142 (2x GA102GL RTX A4500 Ampere, proprietary current branch, CUDA 13.0, compute 8.6), e1000e (I217-LM), nvme, ahci, snd_hda_intel (Realtek ALC3220 + 2x NVIDIA GA102 HDMI)
