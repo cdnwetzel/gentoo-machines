@@ -76,7 +76,13 @@ emerge -pv --changed-use --deep @world | tail -20
 
 ## Per-machine state
 
-### 1. xps-9510 — portage swept ✅, `fetch` outstanding
+### 1. xps-9510 — complete ✅
+
+Fingerprint `sudo`, portage sweep and `fetch` all done. Workaround registry
+wrote `package.env/90-workarounds`; news clear. Kernel symlink moved
+6.18.46 -> 6.18.47, so a build is queued here too.
+
+<details><summary>original step, kept for reference</summary>
 
 Fingerprint `sudo` done; portage deployed; repo and live agree.
 
@@ -100,7 +106,17 @@ broken (`echo >>` into a directory) until 2026-08-27. Afterwards
 Note `fetch` also syncs the tree and may pull a newer `gentoo-sources`,
 re-pointing `/usr/src/linux` and queueing a kernel build behind it.
 
-### 2. asrock-b550 — migrate package.env FIRST, then standard procedure
+</details>
+
+### 2. asrock-b550 — RESUME HERE
+
+State as of 2026-08-28 00:40: `fetch` done (workaround installed, single
+freerdp entry present and correct), repo pulled to `67fb9de`, kernel symlink
+moved 6.18.21 -> 6.18.47 so a build is queued. **Migration not yet applied** —
+`/etc/portage/package.env` is still a single file. Nothing is broken; the
+deploy simply must not run before the migration.
+
+#### Migrate package.env FIRST, then standard procedure
 
 `/etc/portage/package.env` here is a **single file**, and both tools want to
 own it. Migrate before deploying, or the deploy deletes the freerdp entry the
