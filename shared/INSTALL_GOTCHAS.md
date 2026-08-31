@@ -391,56 +391,6 @@ Titan X Pascal, Quadro P-series, etc.) MUST use `-kernel-open`.
 **Prevention**: kernel-config-template.sh and generate-config.sh should detect GPU
 architecture from PCI ID and auto-set the correct USE flag.
 
-## 29. Hostname Overridden by DHCP (OpenRC)
-**Problem (ASRock B550)**: `/etc/hostname` was set correctly but DHCP client
-overwrote hostname on boot, causing update-system.sh machine detection to fail.
-**Fix**: Set hostname in BOTH locations:
-```bash
-echo "asrock-b550" > /etc/hostname
-sed -i 's/^hostname=.*/hostname="asrock-b550"/' /etc/conf.d/hostname
-```
-**Impact**: update-system.sh and verify-install.sh rely on hostname for machine
-detection. Boards with generic DMI (e.g. ASRock "To Be Filled By O.E.M.") cannot
-fall back to DMI matching.
-**Prevention**: Install scripts now set both files.
-
-## 30. Desktop Profile Not Set in Headless Install
-**Problem (ASRock B550)**: Part3 chroot install builds headless. After first boot,
-no desktop environment — need to manually set desktop profile and emerge XFCE.
-**Fix**: Post-install steps:
-```bash
-eselect profile set 3    # desktop profile
-emerge --sync && emerge --update --deep --newuse @world
-emerge xfce-base/xfce4-meta
-echo "exec startxfce4" > ~/.xinitrc
-gpasswd -a chris video
-```
-**Prevention**: Part3 scripts now use `default/linux/amd64/23.0/desktop` profile.
-
-## 31. Stale EFI Boot Entries from Previous OS
-**Problem (ASRock B550)**: After installing Gentoo over Fedora + Windows, old EFI
-boot entries remained (Fedora, Windows Boot Manager, duplicates).
-**Fix**: Clean up manually after install:
-```bash
-efibootmgr                    # list entries
-efibootmgr -b 0000 -B        # delete by number
-```
-**Impact**: Cosmetic — old entries may appear in BIOS boot menu but won't boot.
-**Prevention**: Varies by machine. Not scriptable since entry numbers differ.
-
-## 32. set -euo pipefail Kills Install Scripts on Benign Failures
-**Problem (ASRock B550)**: Part1 and part3 scripts die on commands that return
-non-zero in normal operation (grep with no match, ls with missing globs, blkid
-before kernel picks up new partitions).
-**Fix**: Guard all commands that can legitimately return non-zero:
-```bash
-grep pattern file || true                              # grep no-match
-ls /boot/vmlinuz-* 2>/dev/null || echo "[WARN] ..."    # glob no-match
-$(blkid ... 2>/dev/null || echo 'NOT FOUND')           # blkid timing
-```
-**Prevention**: Audit all scripts with pipefail in mind. Any bare grep, ls with
-globs, or command substitution that can fail needs a guard.
-
 ## 33. Fingerprint (fprintd): USE=pam, and never touch system-auth
 **Problem (XPS 9510, Goodix `27c6:63ac`)**: three separate traps, in the order
 you hit them.
@@ -544,3 +494,55 @@ as asked.
 repo's `shared/INSTALL_GOTCHAS.md` #49, #50 and #51. The checked-in
 `machines/xps-9315/.config` here predates all of it and still shows the old
 values; it is a historical snapshot of the 6.12.58 build, not a target.
+
+---
+
+## 35. Hostname Overridden by DHCP (OpenRC)
+**Problem (ASRock B550)**: `/etc/hostname` was set correctly but DHCP client
+overwrote hostname on boot, causing update-system.sh machine detection to fail.
+**Fix**: Set hostname in BOTH locations:
+```bash
+echo "asrock-b550" > /etc/hostname
+sed -i 's/^hostname=.*/hostname="asrock-b550"/' /etc/conf.d/hostname
+```
+**Impact**: update-system.sh and verify-install.sh rely on hostname for machine
+detection. Boards with generic DMI (e.g. ASRock "To Be Filled By O.E.M.") cannot
+fall back to DMI matching.
+**Prevention**: Install scripts now set both files.
+
+## 36. Desktop Profile Not Set in Headless Install
+**Problem (ASRock B550)**: Part3 chroot install builds headless. After first boot,
+no desktop environment — need to manually set desktop profile and emerge XFCE.
+**Fix**: Post-install steps:
+```bash
+eselect profile set 3    # desktop profile
+emerge --sync && emerge --update --deep --newuse @world
+emerge xfce-base/xfce4-meta
+echo "exec startxfce4" > ~/.xinitrc
+gpasswd -a chris video
+```
+**Prevention**: Part3 scripts now use `default/linux/amd64/23.0/desktop` profile.
+
+## 37. Stale EFI Boot Entries from Previous OS
+**Problem (ASRock B550)**: After installing Gentoo over Fedora + Windows, old EFI
+boot entries remained (Fedora, Windows Boot Manager, duplicates).
+**Fix**: Clean up manually after install:
+```bash
+efibootmgr                    # list entries
+efibootmgr -b 0000 -B        # delete by number
+```
+**Impact**: Cosmetic — old entries may appear in BIOS boot menu but won't boot.
+**Prevention**: Varies by machine. Not scriptable since entry numbers differ.
+
+## 38. set -euo pipefail Kills Install Scripts on Benign Failures
+**Problem (ASRock B550)**: Part1 and part3 scripts die on commands that return
+non-zero in normal operation (grep with no match, ls with missing globs, blkid
+before kernel picks up new partitions).
+**Fix**: Guard all commands that can legitimately return non-zero:
+```bash
+grep pattern file || true                              # grep no-match
+ls /boot/vmlinuz-* 2>/dev/null || echo "[WARN] ..."    # glob no-match
+$(blkid ... 2>/dev/null || echo 'NOT FOUND')           # blkid timing
+```
+**Prevention**: Audit all scripts with pipefail in mind. Any bare grep, ls with
+globs, or command substitution that can fail needs a guard.

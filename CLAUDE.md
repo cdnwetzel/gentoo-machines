@@ -303,7 +303,7 @@ Shared files in `shared/` apply to all machines:
 | `patches/README.md` | Patch descriptions and upstream status |
 | `patches/ipu-bridge-fix-double-brace.patch` | Fix double-brace build failure in ipu-bridge (gentoo-sources 6.12.58) |
 | `patches/intel_idle-add-tiger-lake.patch` | Add Tiger Lake to intel_idle for proper C-state management |
-| `shared/INSTALL_GOTCHAS.md` | Universal install known issues (28 lessons from all machines) |
+| `shared/INSTALL_GOTCHAS.md` | Universal install known issues — 39 entries numbered to #38 (20a is a sub-entry) |
 | `shared/machine-checklist.md` | Universal onboarding checklist for new machines |
 | `shared/fleet-sweep-checklist.md` | One-off 2026-08-28 sweep: bring every machine's `/etc/portage` back in step with the repo, ordered lowest-risk first |
 | `backlog.md` | Prioritized open items tracker |
