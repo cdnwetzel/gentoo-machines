@@ -502,3 +502,45 @@ before editing anything and reverts with `REVERT=1`.
 **Prevention**: keep fingerprint on `sudo` only. The XFCE screen locker is a
 trap of its own — see the header of that script; on the sibling Arch machine
 adding pam_fprintd there made the *password* stop working.
+
+## 34. XPS 9315 IPU6 camera: four symbols, one symptom
+**Problem (XPS 9315, Alder Lake-U)**: the obvious camera config —
+`IPU_BRIDGE` + `VIDEO_INTEL_IPU6` + `INTEL_SKL_INT3472` + `INTEL_MEI_VSC_HW` —
+builds clean, lints clean, and gives you no camera. Every boot:
+```
+pci 0000:00:05.0: deferred probe pending: intel-ipu6: IPU6 bridge init failed
+```
+with no `/dev/video*` and no `/dev/media*`. Four separate symbols were missing
+and **each produced that identical message**, so none was visible until the one
+before it was fixed. Fixing three of them still leaves a camera that
+enumerates and shows a black frame.
+
+| Missing | Why it is not obvious |
+|---|---|
+| `MEDIA_PCI_SUPPORT` | defconfig leaves it off, so `VIDEO_INTEL_IPU6` is absent from the symbol table entirely — `scripts/config` exits 0 having done nothing, and you go looking for an out-of-tree driver that was in-tree all along |
+| `USB_LJCA` (+ GPIO/I2C/SPI_LJCA) | this machine's DSDT puts the VSC's SPI behind a **USB** bridge (`CVFS==0x02` branch), not the LPSS SPI controller — so `vsc-tp` has no device to bind to |
+| `INTEL_VSC` | not the same symbol as `INTEL_MEI_VSC`; it is `drivers/media/pci/intel/ivsc` (ivsc-csi), and without it `ipu_bridge_init()` returns `-EPROBE_DEFER` forever |
+| `PINCTRL_TIGERLAKE` | the PCH GPIO `_HID` is `INTC1055`, which is in `pinctrl-tigerlake.c`. `PINCTRL_ALDERLAKE` covers Alder Lake **S and N** only. Choosing the driver by marketing name is the obvious mistake |
+
+Then a fifth, which is not a driver at all: `UDMABUF`. The ISYS hands userspace
+raw Bayer, libcamera debayers in its `SoftwareIsp`, and that allocator needs a
+dma-buf provider. Without one libcamera logs `Could not open any dma-buf
+provider`, disables debayering at **WARN** level, and keeps enumerating. Enable
+`DMABUF_HEAPS`/`DMABUF_HEAPS_SYSTEM` too, but `udmabuf` is the one that works
+for a desktop user: udev ships a `uaccess` rule for it and none for
+`/dev/dma_heap/*`, which stays root-only.
+
+**Fix**: all of the above are in `machines/xps-9315/kernel_config.sh` Phase 12
+and Phase 17, with the DSDT and match-table evidence inline.
+
+**Prevention**: driver names describe lineage, not coverage — verify the ACPI
+`_HID` actually appears in the driver's match table rather than matching a
+product name. And note that a config linter cannot catch any of this: every one
+of these symbols was either never requested, or requested and delivered exactly
+as asked.
+
+**Provenance**: diagnosed on real hardware in the sibling `arch-machines` repo,
+2026-08-28 to 2026-08-31, where the camera now works. Full traces in that
+repo's `shared/INSTALL_GOTCHAS.md` #49, #50 and #51. The checked-in
+`machines/xps-9315/.config` here predates all of it and still shows the old
+values; it is a historical snapshot of the 6.12.58 build, not a target.

@@ -2,7 +2,11 @@
 # ============================================================================
 # Gentoo Kernel Config - Dell XPS 13 9315
 # ============================================================================
-# WARNING: Best-effort — not verified on live system (returned to Windows)
+# WARNING: Best-effort — not verified on live system (returned to Windows).
+#          EXCEPTION: the camera (Phase 12) and pinctrl (Phase 17) blocks
+#          were corrected against real silicon in the sibling arch-machines
+#          repo, 2026-08-28..2026-08-31, where this camera now works.
+#          See shared/INSTALL_GOTCHAS.md #34.
 #
 # Derived from:
 #   - XPS 9315 HARDWARE.md (PCI IDs, drivers, firmware from live harvest)
@@ -288,23 +292,132 @@ echo "  [OK] Thunderbolt"
 # ==========================================================================
 echo "[Phase 12] Camera (IPU6)..."
 
-# IPU6 ISP
-$SC --module IPU_BRIDGE 2>/dev/null || true
-$SC --module VIDEO_INTEL_IPU6 2>/dev/null || echo "  [INFO] IPU6 may need out-of-tree driver"
-
-# Camera PMIC (INT3472)
-$SC --module INTEL_SKL_INT3472 2>/dev/null || true
-
-# OV01A10 sensor
-$SC --module VIDEO_OV01A10 2>/dev/null || true
-
-# Visual Sensing Controller
-$SC --module INTEL_MEI_VSC_HW 2>/dev/null || true
+# EVERYTHING BELOW WAS CORRECTED AGAINST REAL SILICON IN arch-machines
+# (2026-08-28 .. 2026-08-31). This config previously had the short version --
+# IPU_BRIDGE + VIDEO_INTEL_IPU6 + INT3472 + INTEL_MEI_VSC_HW -- which produces
+# a kernel that looks complete, builds clean, and gives you no camera. Four
+# separate symbols were missing and each one produced the *same* symptom, so
+# none became visible until the one before it was fixed. See
+# arch-machines shared/INSTALL_GOTCHAS.md #49, #50 and #51.
 
 # Media/V4L2 framework
 $SC --enable MEDIA_SUPPORT
 $SC --enable MEDIA_CAMERA_SUPPORT
 $SC --enable VIDEO_DEV
+
+# The IPU6 driver lives in drivers/media/pci/intel/ipu6, so it is gated behind
+# MEDIA_PCI_SUPPORT -- which x86 defconfig leaves OFF. Miss this and
+# VIDEO_INTEL_IPU6 is not "unset", it is absent from the symbol table, and the
+# `|| echo` fallback reports "may need out-of-tree driver" and sends you to an
+# overlay for a driver that was in the tree all along.
+$SC --enable MEDIA_PCI_SUPPORT
+
+# IPU_BRIDGE is the ACPI shim mapping Windows-style sensor descriptions onto
+# V4L2. It needs I2C, which is how the sensor's control plane is wired.
+$SC --enable I2C
+$SC --module IPU_BRIDGE
+$SC --module VIDEO_INTEL_IPU6 2>/dev/null || echo "  [INFO] IPU6 not in-tree here"
+
+# Camera power/clock control.
+#
+# INT3472 is the ACPI device that powers the sensor and hands it a clock. On a
+# Windows-designed machine like this one it fans out to discrete GPIOs and
+# power gates, so without it the sensor enumerates but is never powered -- a
+# /dev/video node that returns nothing but timeouts.
+#
+# Its dependency list is long (ACPI, COMMON_CLK, I2C, GPIOLIB, LEDS_CLASS,
+# REGULATOR) and defconfig supplies only some of it. LEDS_CLASS is the
+# surprising one: it gates the privacy LED, not anything you would think of as
+# a "LED subsystem".
+$SC --enable COMMON_CLK
+$SC --enable LEDS_CLASS
+$SC --enable REGULATOR
+$SC --enable REGULATOR_FIXED_VOLTAGE
+$SC --module INTEL_SKL_INT3472
+
+# OV01A10 sensor
+$SC --module VIDEO_OV01A10 2>/dev/null || true
+
+# THE VSC ON THIS MACHINE IS BEHIND A USB BRIDGE, NOT THE LPSS SPI CONTROLLER.
+#
+# Established by decompiling this machine's DSDT. \_SB.PC00.SPI1.SPFD (_HID
+# INTC1094, the VSC transport) has a *conditional* _CRS: when CVFS == 0x02 its
+# SpiSerialBus parent is \_SB.PC00.XHCI.RHUB.HS04.VSPI, a USB device, and its
+# _DEP names XHCI.RHUB.HS04.{VGPO,VSPI}. This machine takes that branch --
+# proved by INTC1096/1097/1098 (Intel UsbGpio / UsbI2C / UsbSPI) existing in
+# ACPI at all, since the DSDT only declares them inside that If.
+#
+# That is Intel's La Jolla Cove Adapter. Without USB_LJCA those three never get
+# real devices, SPFD's _DEP is never satisfied, no SPI device is created for
+# it, and vsc-tp has nothing to bind to -- so every downstream driver
+# (mei_vsc, ivsc-csi, ipu_bridge) waits forever on a device that cannot appear.
+# The visible symptom is "IPU6 bridge init failed", a long way from a missing
+# USB driver.
+#
+# GPIO/I2C/SPI_LJCA all `default USB_LJCA`, but request them explicitly: they
+# are the point, not a side effect.
+$SC --module USB_LJCA
+$SC --module GPIO_LJCA
+$SC --module I2C_LJCA
+$SC --module SPI_LJCA
+
+# Visual Sensing Controller (mei_vsc).
+#
+# The IVSC talks to the host over SPI, and x86 defconfig does NOT enable SPI.
+# Without these, INTEL_MEI_VSC_HW does not merely end up unset, it disappears
+# from the symbol table entirely (its `depends on ACPI && SPI` is unmet), and
+# the `2>/dev/null || true` idiom turns that into silence. The camera then
+# fails in a way that looks like missing firmware or a userspace problem.
+#
+# SPI_PXA2XX is the right controller: Intel's LPSS SPI blocks on Alder Lake are
+# PXA2xx-compatible SSP ports.
+$SC --enable SPI
+$SC --module SPI_PXA2XX
+# SPI_INTEL_PCI needs SPI_MEM, which nothing else here selects.
+$SC --enable SPI_MEM
+$SC --module SPI_INTEL_PCI
+
+$SC --module INTEL_MEI_VSC_HW
+$SC --module INTEL_MEI_VSC 2>/dev/null || true
+
+# INTEL_VSC IS NOT INTEL_MEI_VSC. Two subsystems ship near-identical names:
+#
+#   INTEL_MEI_VSC / _HW   drivers/misc/mei/            -- SPI transport + MEI
+#                                                         client. Both were on.
+#   INTEL_VSC             drivers/media/pci/intel/ivsc -- the actual IVSC
+#                                                         drivers, ivsc-csi and
+#                                                         ivsc-ace. This was not.
+#
+# Without ivsc-csi there is no MEI_CSI_UUID child device, so
+# ipu_bridge_get_ivsc_csi_dev() returns NULL and ipu_bridge_init() returns
+# -EPROBE_DEFER forever:
+#
+#   pci 0000:00:05.0: deferred probe pending: intel-ipu6: IPU6 bridge init failed
+#
+# with no /dev/video* and no /dev/media*. Every dependency (INTEL_MEI, ACPI,
+# VIDEO_DEV) was already satisfied; this is a one-symbol fix.
+$SC --module INTEL_VSC
+
+# dma-buf heaps -- needed by libcamera's software ISP, not by any driver above.
+#
+# The ISYS hands userspace raw Bayer (SBGGR10_1X10 from the OV01A10), so
+# something must debayer it. libcamera does that in its SoftwareIsp, which
+# allocates through DmaBufAllocator -- and that needs a provider. With none,
+# libcamera still enumerates the camera and quietly drops debayering:
+#
+#   ERROR DmaBufAllocator: Could not open any dma-buf provider
+#   ERROR SoftwareIsp: Failed to create DmaBufAllocator object
+#   WARN  SimplePipeline: Failed to create software ISP, disabling software
+#         debayering
+#
+# UDMABUF is the one that fixes it for a human. libcamera tries /dev/dma_heap/*
+# first and falls back to /dev/udmabuf, but udev ships a uaccess rule for
+# udmabuf and none for dma_heap, so /dev/dma_heap/system stays root-only and
+# the desktop user cannot open it. Enable both; rely on udmabuf. Confirm with
+# `getfacl /dev/udmabuf` as the desktop user, not as root.
+$SC --enable DMABUF_HEAPS
+$SC --enable DMABUF_HEAPS_SYSTEM
+$SC --enable UDMABUF
 
 echo "  [OK] Camera (IPU6)"
 
@@ -389,9 +502,31 @@ $SC --enable I2C_DESIGNWARE_PCI
 
 $SC --module I2C_I801
 
-# Pinctrl — Alder Lake
 $SC --enable PINCTRL
 $SC --enable PINCTRL_INTEL
+
+# PINCTRL_TIGERLAKE IS THE ONE THIS MACHINE NEEDS, DESPITE BEING ALDER LAKE.
+#
+# The PCH GPIO controller here (\_SB.GPI0) reports _HID INTC1055, and INTC1055
+# is in pinctrl-tigerlake.c's match table, not pinctrl-alderlake.c's. Its
+# Kconfig help says so outright:
+#
+#     config PINCTRL_TIGERLAKE ... PCH pins of the following platforms:
+#       - Alder Lake H, P, PS, and U        <- this machine is Alder Lake-U
+#
+# PINCTRL_ALDERLAKE covers Alder Lake **S and N** only (adls_soc_data,
+# adln_soc_data). Picking it by name is the obvious mistake and this config
+# made it: INTC1055:00 stays an unbound platform device with no gpiochip, so
+# every GpioIo/GpioInt naming \_SB.GPI0 is unresolvable. Nothing errors -- the
+# machine boots, WiFi and audio work -- but the camera's whole power and
+# interrupt path runs through it:
+#
+#   spi spi-INTC1094:00: deferred probe pending: vsc-tp: Failed to get irq
+#   int3472-discrete INT3472:06: GPIO type 0x02 unknown; the sensor may not work
+#
+# Diagnosed on hardware 2026-08-28 in arch-machines. ALDERLAKE stays enabled:
+# harmless, and correct for other machines sharing this config lineage.
+$SC --enable PINCTRL_TIGERLAKE
 $SC --enable PINCTRL_ALDERLAKE 2>/dev/null || true
 
 echo "  [OK] I2C/Serial IO"
