@@ -33,7 +33,7 @@ gentoo-machines/
 │   │   ├── grub           # GRUB config (i915 GuC, NVIDIA dynamic power)
 │   │   ├── HARDWARE.md    # Hardware + software environment reference
 │   │   └── ...            # sysctl, zram, tlp, prime-run, 3-phase install scripts
-│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X (Zen 3 + NVIDIA Ampere) - PRODUCTION
+│   ├── asrock-b550/       # ASRock B550 / Ryzen 9 5950X (Zen 3 + NVIDIA Blackwell) - PRODUCTION
 │   ├── precision-t5810/   # Dell Precision T5810 / Xeon E5 (Broadwell-EP + dual NVIDIA) - PRODUCTION
 │   ├── surface-pro-6/     # Surface Pro 6 (Kaby Lake-R + Marvell WiFi + HiDPI) - PRODUCTION
 │   ├── beelink-minis/     # Beelink MINI S (Jasper Lake mini-PC, always-on) - PRODUCTION

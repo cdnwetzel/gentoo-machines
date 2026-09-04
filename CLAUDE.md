@@ -545,7 +545,7 @@ cd /usr/src/linux && make olddefconfig && make -j$(nproc)
 
 | File | Purpose |
 |------|---------|
-| `machines/asrock-b550/kernel_config.sh` | 22-phase programmatic kernel config (Zen 3 + NVIDIA Ampere) |
+| `machines/asrock-b550/kernel_config.sh` | 22-phase programmatic kernel config (Zen 3 + NVIDIA Blackwell) |
 | `machines/asrock-b550/make.conf` | Portage: `-march=znver3`, VIDEO_CARDS="nvidia", 46GB tmpfs |
 | `machines/asrock-b550/HARDWARE.md` | Full hardware inventory |
 | `machines/asrock-b550/world` | Package set (WiFi + BT + NVIDIA) |
