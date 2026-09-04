@@ -4,7 +4,13 @@
 
 **Status**: Reference only. This machine stays on RHEL for production workloads. Hardware inventory collected for fleet documentation.
 
-> ⚠ **GPU configuration changed after this harvest.** The original secondary **RTX A1000 8GB** (slot `16:00.0`) was relocated to the OptiPlex 3090 and replaced by an **RTX 5080 16GB Blackwell** (GB203). The PCI table, audio device IDs, i2c topology, and per-GPU details below still reflect the **2026-03-19 snapshot** with the A1000 in slot 2 — re-harvest required for the 5080's PCI/subsystem IDs, HDA controller ID, and i2c adapter range. The Pro 6000 Blackwell entry (slot `ac:00.0`) is unchanged.
+> ⚠ **BOTH GPUs changed after this harvest — every GPU detail below is stale.** Current config is **RTX 5080 16 GB + RTX 5060 Ti OC 16 GB** (32 GB total, no NVLink, mismatched cards).
+>
+> Two separate swaps happened since 2026-03-19:
+> 1. The original secondary **RTX A1000 8GB** (slot `16:00.0`) was relocated to the OptiPlex 3090 and replaced by an **RTX 5080 16GB Blackwell** (GB203).
+> 2. The primary **RTX PRO 6000 Blackwell 96GB** (slot `ac:00.0`) was **SOLD** and replaced by an **RTX 5060 Ti OC 16GB**.
+>
+> The PCI table, audio device IDs, i2c topology, per-GPU details, and VRAM figures below all reflect the **2026-03-19 snapshot** and describe two cards that are no longer installed. **Re-harvest required** for both cards' PCI/subsystem IDs, HDA controller IDs, and i2c adapter ranges. Treat everything GPU-related in this file as provenance only — do not use it for capacity planning.
 
 ## System Overview
 
@@ -84,10 +90,10 @@ VMD-managed NVMe at domains 10000, 10001, 10002:
 **No Intel iGPU** -- Xeon W5 has no integrated graphics.
 **Persistence Mode**: On (both GPUs).
 
-### RTX PRO 6000 Blackwell (Primary AI/ML GPU)
+### RTX PRO 6000 Blackwell (REMOVED — sold; 2026-03-19 snapshot only)
 
 - **Architecture**: Blackwell (GB202GL)
-- **VRAM**: 96 GB GDDR7 (single largest GPU memory in fleet)
+- **VRAM**: 96 GB GDDR7 — **no longer present in this machine or the fleet**
 - **Compute Capability**: 12.0
 - **Key features**: FP8/FP4, 5th-gen Tensor Cores, PCIe Gen5 x16
 - **TDP**: 600W max
@@ -247,7 +253,7 @@ VMD-managed NVMe at domains 10000, 10001, 10002:
 | **CPU** | Xeon W5-3433 (SPR) | Xeon E5-2699v4 (BDW-EP) | i7-11800H (TGL-H) | i7-5557U (BDW) | i5-8250U (KBL-R) |
 | **Threads** | 32 | 44 | 16 | 4 | 8 |
 | **RAM** | 128GB DDR5 ECC | 256GB DDR4 ECC | 32GB DDR4 | 8GB DDR3 | 8GB LPDDR3 |
-| **GPU** | RTX PRO 6000 Blackwell 96GB + RTX 5080 16GB | 2x RTX A4500 20GB (NVLink) | RTX 3050 Ti + Intel UHD | Intel Iris 6100 | Intel UHD 620 |
+| **GPU** | RTX 5080 16GB + RTX 5060 Ti OC 16GB (32GB, no NVLink) | 2x RTX A4500 20GB (NVLink, 40GB pool) | RTX 3050 Ti + Intel UHD | Intel Iris 6100 | Intel UHD 620 |
 | **GPU VRAM** | 112 GB total | 40 GB total (NVLink-pooled) | 4 GB (dGPU) | shared | shared |
 | **Storage** | 477GB NVMe + 4x1.8TB RAID10 + 1.8TB HDD | 2TB NVMe | 2x NVMe | 256GB SSD | 238GB NVMe |
 | **Network** | 1GbE + 10GbE | 1GbE | WiFi + USB Ethernet | WiFi | WiFi |
