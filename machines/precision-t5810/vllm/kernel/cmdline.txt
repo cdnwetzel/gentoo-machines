@@ -1,0 +1,25 @@
+# Kernel command line for the T5810 inference kernel.
+# Put the first block in your bootloader (GRUB_CMDLINE_LINUX / efibootmgr -u / boot entry).
+
+# --- baseline: use these
+intel_pstate=active intel_idle.max_cstate=1 processor.max_cstate=1
+iommu=pt pcie_aspm=off pci=pcie_bus_perf
+nvidia-drm.modeset=0 nvidia.NVreg_PreserveVideoMemoryAllocations=0
+
+# --- optional, real gain on Broadwell (retpoline + IBRS + MDS clears are expensive
+#     on the CUDA ioctl path). Personal box, trusted LAN, no untrusted code: your call.
+mitigations=off
+
+# --- optional, only if you pin the two TP workers (see build/pin.md):
+#     keep cores 0-3 (+ HT 22-25) for the OS/API server, hand 4-21 to vLLM
+# nohz_full=4-21,26-43 rcu_nocbs=4-21,26-43 irqaffinity=0-3,22-25
+
+# What each does:
+#  intel_idle.max_cstate=1  C1 only. C6 exit on Broadwell is ~100 µs; that shows up
+#                           directly as decode jitter when the host thread wakes to
+#                           launch the next graph. Costs idle wattage, that's all.
+#  iommu=pt                 DMA passthrough. Keeps VT-d available for KVM later without
+#                           paying remapping cost on every host<->GPU transfer.
+#  pcie_aspm=off            never let the x16 links go to L1 between bursts
+#  pci=pcie_bus_perf        max MPS/MRRS on the root ports (PCIe 3.0 only matters for
+#                           weight load + host copies, but no reason to leave it slow)
