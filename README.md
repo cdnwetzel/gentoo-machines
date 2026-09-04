@@ -12,7 +12,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Beelink MINI S](machines/beelink-minis/) | Celeron N5095A (Jasper Lake) | Intel UHD Gen11 LP | **Production** | Gentoo |
 | [Dell OptiPlex 3090 SFF](machines/optiplex-3090/) | i5-10505 (Comet Lake, 6C/12T) | Intel UHD 630 + NVIDIA RTX A1000 8GB | **Production** | Gentoo |
-| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Config maintained | Windows (returned) |
+| [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | Config maintained | Dual-boot Win 11 + Arch |
 | [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired (config maintained) | macOS 12 (kids' machine) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |

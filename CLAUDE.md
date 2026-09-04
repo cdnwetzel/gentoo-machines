@@ -29,7 +29,7 @@ INSTALL.md          General-purpose installation guide (any machine)
 
 | # | Machine | CPU | GPU | Kernel Status | Current OS |
 |---|---------|-----|-----|---------------|------------|
-| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production (config maintained) | Windows (returned) |
+| 1 | Dell XPS 13 9315 | i5-1230U (Alder Lake) | Intel Iris Xe | Production (config maintained) | Dual-boot Win 11 + Arch |
 | 2 | Intel NUC11TNBi5 | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
 | 3 | Dell XPS 15 9510 | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | Production | Gentoo |
 | 4 | MacBook Pro 12,1 (2015) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired | macOS 12 (kids' machine) |
@@ -54,7 +54,8 @@ driver version for real; `tools/deploy-portage.sh` does the same for portage con
 
 ### Dell XPS 13 9315 (Configs Updated)
 
-- **Last Gentoo kernel**: Linux 6.12.58-gentoo (machine returned to Windows)
+- **Last Gentoo kernel**: Linux 6.12.58-gentoo (no longer runs Gentoo — now dual-boot Win 11 + Arch)
+- **Now on Arch**: the Gentoo build here was ported to Arch as a learning exercise; that work lives in the sibling **`arch-machines`** repo (`cdnwetzel/arch-machines`), which also carries xps-9510. Fixes flow both ways — e.g. the IPU6 camera fixes were ported back here from arch-machines in `e167bf3`.
 - **Architecture**: x86_64, hybrid P-Core/E-Core (Alder Lake)
 - **Compiler flags**: `-march=alderlake -O2 -pipe`
 - **Key drivers**: i915, iwlwifi (AX211), nvme, sof-audio, intel_ipu6, intel_ish, ppp (SSTP VPN)

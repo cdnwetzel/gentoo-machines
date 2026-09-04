@@ -1,6 +1,8 @@
 # Dell XPS 13 9315 - Hardware Reference
 
-**Current OS**: Gentoo Linux (production)
+**Current OS**: Dual-boot Windows 11 + Arch Linux (Arch config lives in the sibling `arch-machines` repo)
+
+**Note**: this file's hardware data was harvested when the machine ran Gentoo (last kernel 6.12.58-gentoo). The hardware itself is unchanged, so the inventory below still holds; only the OS line moved.
 
 ## System Overview
 

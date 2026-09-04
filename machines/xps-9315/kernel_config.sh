@@ -2,7 +2,10 @@
 # ============================================================================
 # Gentoo Kernel Config - Dell XPS 13 9315
 # ============================================================================
-# WARNING: Best-effort — not verified on live system (returned to Windows).
+# WARNING: Best-effort — these updates were never verified on live Gentoo.
+#          Gentoo did run here once (last kernel 6.12.58-gentoo, source of the
+#          harvest data), but the machine moved to Windows and now dual-boots
+#          Win 11 + Arch.
 #          EXCEPTION: the camera (Phase 12) and pinctrl (Phase 17) blocks
 #          were corrected against real silicon in the sibling arch-machines
 #          repo, 2026-08-28..2026-08-31, where this camera now works.
