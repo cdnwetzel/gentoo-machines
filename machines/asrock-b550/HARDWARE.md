@@ -13,7 +13,7 @@ Harvested 2026-04-05 from Fedora 43 live USB.
 | Max Boost | 5.05 GHz |
 | RAM | 64GB DDR4-3200 (2x32GB Corsair CMK64GX4M2E3200C16, dual-rank) |
 | ECC | None |
-| GPU | NVIDIA GeForce RTX 5060 Ti (GB206, Blackwell) 16GB GDDR7 |
+| GPU | NVIDIA GeForce RTX 5060 Ti OC (GB206, Blackwell) 16GB GDDR7 |
 | NVMe | MAXIO MAP1202 2TB (DRAM-less, PCIe 4.0) |
 | SATA SSD | 1TB (unused, Windows/NTFS) |
 | WiFi | Intel Wi-Fi 6 AX200 (iwlwifi) |
@@ -60,7 +60,7 @@ aes avx avx2 f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 
 
 ## GPU Details
 
-- **NVIDIA GeForce RTX 5060 Ti 16GB GDDR7**
+- **NVIDIA GeForce RTX 5060 Ti OC 16GB GDDR7**
   - Architecture: Blackwell (GB206)
   - VRAM: 16GB GDDR7
   - TDP: 180W

@@ -7,7 +7,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | Machine | CPU | GPU | Status | Current OS |
 |---------|-----|-----|--------|------------|
 | [Dell XPS 15 9510](machines/xps-9510/) | i7-11800H (Tiger Lake-H) | Intel UHD + NVIDIA RTX 3050 Ti | **Production** | Gentoo |
-| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 5060 Ti 16GB (GB206 Blackwell) | **Production** | Gentoo |
+| [ASRock B550](machines/asrock-b550/) | Ryzen 9 5950X (Zen 3, 16C/32T) | NVIDIA RTX 5060 Ti OC 16GB (GB206 Blackwell) | **Production** | Gentoo |
 | [Dell Precision T5810](machines/precision-t5810/) | Xeon E5-2699v4 (22C/44T) | 2x NVIDIA RTX A4500 (Ampere, 20GB ECC, NVLink) | **Production** | Gentoo |
 | [Surface Pro 6](machines/surface-pro-6/) | i5-8250U (Kaby Lake-R) | Intel UHD 620 | **Production** | Gentoo |
 | [Beelink MINI S](machines/beelink-minis/) | Celeron N5095A (Jasper Lake) | Intel UHD Gen11 LP | **Production** | Gentoo |
@@ -249,7 +249,7 @@ Kaby Lake-R i5, Marvell 88W8897 WiFi (not Intel), 8GB RAM. 2736x1824 PixelSense 
 Returned to macOS 12 as a kids' machine. Kernel config and install scripts are maintained in the repo for reference. Full Apple hardware support: applesmc, mbpfan, bcm5974, brcmfmac, CS4208 audio.
 
 ### Production: ASRock B550 Phantom Gaming-ITX/ax (First AMD)
-Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 5060 Ti 16GB (GB206 Blackwell, `kernel-open` REQUIRED; upgraded from RTX 3060 Ti 2026-07-24), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
+Ryzen 9 5950X (16C/32T, Zen 3), 64GB DDR4-3200, NVIDIA RTX 5060 Ti OC 16GB (GB206 Blackwell, `kernel-open` REQUIRED; upgraded from RTX 3060 Ti 2026-07-24), Intel AX200 WiFi/BT, Intel I225-V 2.5GbE, MAXIO MAP1202 2TB NVMe, AIO liquid cooling. First AMD platform in the fleet — AMD-specific drivers throughout: `amd-pstate`, `k10temp`, `piix4_smbus`, `ccp` (PSP), `edac_mce_amd`. No Intel iGPU, no MEI, no i801. 22-phase `kernel_config.sh`, 3-phase automated install scripts, 46GB portage tmpfs with disk fallback.
 
 ### Production: Beelink MINI S (Always-On Mini PC)
 Celeron N5095A (4C/4T, Jasper Lake/Tremont — no HT, no AVX/AVX2), 8GB DDR4-2666 single-channel, Intel UHD Gen11 LP, Intel Wireless-AC 3165, Realtek RTL8168 GbE, 256GB M.2 SATA SSD (no NVMe on this board). Always-on via elogind drop-in that disables all sleep/suspend. 4GB portage tmpfs with disk fallback for large packages (binary-only browsers).
