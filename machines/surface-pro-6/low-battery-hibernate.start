@@ -1,0 +1,4 @@
+#!/bin/bash
+# Low-battery hibernate monitor — background loop (no cron)
+# Install: cp to /etc/local.d/low-battery-hibernate.start
+/usr/local/bin/low-battery-hibernate.sh --loop &

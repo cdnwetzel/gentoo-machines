@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Allow local root X access
+Exec=xhost +local:0
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

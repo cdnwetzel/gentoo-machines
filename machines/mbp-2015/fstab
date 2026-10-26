@@ -1,0 +1,5 @@
+# /etc/fstab - MacBook Pro 12,1 - Gentoo Linux
+UUID=68704bd6-7ac7-4ade-9096-d0c9b52a5c9a /           ext4  defaults,noatime                                    0 1
+UUID=0c18a030-873f-4c97-85ba-6ad91bed0a88 /boot        ext4  defaults,noatime                                    0 2
+UUID=27C3-64F0                            /boot/efi    vfat  defaults,noatime,umask=0077                          0 0
+tmpfs                                     /var/tmp/portage tmpfs size=12G,uid=portage,gid=portage,mode=775,nosuid,noatime,nodev 0 0

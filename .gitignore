@@ -1,0 +1,67 @@
+# SSH keys and credentials
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pem
+*.key
+*.pub
+
+# WPA / WiFi credentials
+wpa_supplicant.conf
+
+# Shadow / password files
+shadow
+shadow-
+passwd-
+gshadow
+gshadow-
+
+# Shell history
+.*_history
+.bash_history
+
+# Env files with secrets
+.env
+*.env
+# But allow portage package.env files
+!**/package.env
+!**/portage_env_notmpfs.conf
+
+# GPG / keyring
+*.gpg
+*.asc
+secring.*
+pubring.*
+
+# SSH known hosts / authorized keys
+known_hosts
+authorized_keys
+
+# Logs that may contain sensitive info
+*.log
+
+# NetworkManager connection profiles (may contain WiFi/VPN credentials)
+*.nmconnection
+
+# Kernel config backups
+**/.config.backup-*
+
+# Temporary / editor files
+*.swp
+*.swo
+*~
+\#*\#
+
+# Python bytecode caches (e.g. tools/ab-test-headroom.py drops these)
+__pycache__/
+*.pyc
+*.pyo
+
+# Prebuilt binary artifacts (rootfs tarballs, kernel bundles) — far too large
+# for git; canonical copies live on the build host (see the machine's binhost.md)
+machines/*/prebuilt/
+
+# verify-panel accumulating stats (JSONL run log + daily reports). Each is
+# tens of bytes per run; keep out of git — read with tools/panel-stats.py.
+verify-panel-stats/
+tools/verify-panel-stats/

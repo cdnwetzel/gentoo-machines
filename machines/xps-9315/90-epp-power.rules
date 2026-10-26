@@ -1,0 +1,2 @@
+# /etc/udev/rules.d/90-epp-power.rules — re-apply EPP policy on AC plug/unplug
+ACTION=="change", SUBSYSTEM=="power_supply", RUN+="/usr/local/bin/epp-toggle"

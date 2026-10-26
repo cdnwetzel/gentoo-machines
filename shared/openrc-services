@@ -1,0 +1,101 @@
+# OpenRC Services - shared across Gentoo machines
+# Enable these services after installation
+#
+# Machine-conditional services are marked with [CONDITION]
+
+# ============================================================================
+# DEFAULT RUNLEVEL — all machines
+# ============================================================================
+rc-update add NetworkManager default
+rc-update add acpid default
+rc-update add bluetooth default
+rc-update add dbus default
+rc-update add display-manager default    # configure via /etc/conf.d/display-manager
+rc-update add local default
+rc-update add metalog default
+rc-update add netmount default
+rc-update add sshd default
+rc-update add zram-init default          # compressed swap (all machines) — must be default, not boot (early-boot race fails silently)
+
+# Time synchronization — all machines (fixes clock drift after sleep/reboot)
+rc-update add chronyd default
+
+# [LAPTOPS] Thermal management — Intel laptops only
+rc-update add thermald default           # MBP 2015, XPS 9315, XPS 9510, Surface Pro 6, NUC11
+
+# [LAPTOPS] Power management — laptops with battery
+rc-update add tlp default                # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
+
+# [XPS 9510] AI verifier role — RAPL power cap + firewall + Ollama HTTP server
+# rc-update add powercap-profile default  # XPS 9510 only — caps PL1=35W/PL2=60W
+# rc-update add nftables-ollama default   # XPS 9510 only — firewall (must start before ollama)
+# rc-update add ollama default            # XPS 9510 only — verifier on :11434 (firewall-restricted)
+
+# [T5810] AI compression layer — Headroom in two flavours (different design fits)
+# rc-update add headroom-proxy default    # T5810 only — :8787 loopback, proxy mode (multi-turn agents)
+# rc-update add headroom-lib default      # T5810 only — :8788 loopback, library mode (cwdotcom single-turn RAG)
+
+# [LAPTOPS] Low-battery hibernate — cron or local.d background loop
+# Installed by shared/hibernate-setup.sh:
+#   With cron:    */2 * * * * /usr/local/bin/low-battery-hibernate.sh
+#   Without cron: /etc/local.d/low-battery-hibernate.start (--loop mode)
+# Logs to /var/log/low-battery-hibernate.log + syslog (user.warning)
+# Requires: swap file + GRUB resume params (run hibernate-setup.sh first)
+# Desktops with UPS: use apcupsd doshutdown override instead
+
+# [APPLE] Fan control — Apple hardware only
+# rc-update add mbpfan default           # MBP 2015 ONLY (applesmc fan control)
+
+# ============================================================================
+# BOOT RUNLEVEL
+# ============================================================================
+rc-update add elogind boot               # session management (all machines)
+rc-update add alsasound boot             # ALSA state save/restore
+
+# Standard boot services (usually enabled by default in stage3)
+rc-update add binfmt boot
+rc-update add bootmisc boot
+rc-update add fsck boot
+rc-update add hostname boot
+rc-update add hwclock boot
+rc-update add keymaps boot
+rc-update add localmount boot
+rc-update add loopback boot
+rc-update add modules boot
+rc-update add mtab boot
+rc-update add procfs boot
+rc-update add root boot
+rc-update add save-keymaps boot
+rc-update add save-termencoding boot
+rc-update add seedrng boot
+rc-update add swap boot
+rc-update add sysctl boot
+rc-update add systemd-tmpfiles-setup boot
+rc-update add termencoding boot
+
+# [LAPTOPS] Brightness save/restore — laptops with backlight
+# rc-update add acpilight boot           # XPS 9315, XPS 9510, MBP 2015, Surface Pro 6
+
+# ============================================================================
+# SYSINIT RUNLEVEL
+# ============================================================================
+rc-update add cgroups sysinit
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+rc-update add kmod-static-nodes sysinit
+rc-update add sysfs sysinit
+rc-update add systemd-tmpfiles-setup-dev sysinit
+rc-update add udev sysinit
+rc-update add udev-trigger sysinit
+
+# ============================================================================
+# SHUTDOWN RUNLEVEL
+# ============================================================================
+rc-update add killprocs shutdown
+rc-update add mount-ro shutdown
+rc-update add savecache shutdown
+
+# ============================================================================
+# NONETWORK RUNLEVEL
+# ============================================================================
+rc-update add local nonetwork

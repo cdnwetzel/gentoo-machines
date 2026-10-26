@@ -1,0 +1,16 @@
+#!/bin/sh
+# /usr/local/bin/epp-toggle — intel_pstate EPP: performance-leaning on AC,
+# power-leaning on battery. Idempotent; safe to call repeatedly.
+# Called by udev on AC plug/unplug (90-epp-power.rules) and once at boot
+# (/etc/local.d/epp-toggle.start).
+epp=balance_power
+for p in /sys/class/power_supply/*; do
+    [ "$(cat "$p/type" 2>/dev/null)" = "Mains" ] || continue
+    if [ "$(cat "$p/online" 2>/dev/null)" = "1" ]; then
+        epp=balance_performance
+        break
+    fi
+done
+for f in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+    [ -w "$f" ] && echo "$epp" > "$f"
+done

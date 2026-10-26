@@ -1,0 +1,36 @@
+# /etc/conf.d/headroom-lib — Headroom library wrapper env
+#
+# This wraps `from headroom import compress` — library mode, not the proxy.
+# Bypasses the proxy's prefix-freeze policy which doesn't fit single-turn
+# RAG. See /etc/init.d/headroom-lib + headroom-lib-server.py for the rest.
+
+# --- bind ---
+# Loopback only. The cwdotcom VPS reaches this via the existing
+# portfolio-ai-tunnel.service ssh -L 8788:127.0.0.1:8788 (cwdotcom repo,
+# cloud/systemd/portfolio-ai-tunnel.service).
+HEADROOM_LIB_HOST="127.0.0.1"
+HEADROOM_LIB_PORT="8788"
+
+# --- venv ---
+# Shared with the existing headroom-proxy service. No second install.
+HEADROOM_VENV="/home/user/.local/headroom-venv"
+
+# --- telemetry ---
+HEADROOM_TELEMETRY="off"
+
+# --- kompress (ML text compressor) toggle ---
+# Default "1" = kompress OFF (structural compression only), tuned for the
+# current sole consumer (cwdotcom). Measured behavior on cwdotcom RAG:
+#   - kompress ON:  80%+ compression but lossy — "What GPUs does Chris run"
+#                   regresses from rich multi-sentence to 41-char stub
+#                   "Chris runs A4500 GPUs." (target_ratio hint is ignored
+#                   by the kompress ML model — it overshoots regardless).
+#   - kompress OFF: 47% real savings on prose RAG, full answer detail
+#                   preserved, selftest 4/4 PASS.
+#
+# Note: this is a SERVICE-LEVEL switch (read at startup). Headroom's library
+# API doesn't support per-call kompress disable, only via env at startup.
+# If a future consumer (iChris multi-turn ops agent, etc.) wants the
+# aggressive ML compression, run a SECOND headroom-lib service on a
+# different port with HEADROOM_DISABLE_KOMPRESS="" and route them there.
+HEADROOM_DISABLE_KOMPRESS="1"

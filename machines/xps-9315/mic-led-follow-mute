@@ -1,0 +1,7 @@
+#!/bin/sh
+# /usr/local/bin/mic-led-follow-mute — F4 mic-mute LED on the 9315 is stuck on;
+# force the kernel ctl-led to track capture mute state. Cosmetic fix only.
+# Called from 91-mic-led.rules on sound-card add.
+mode=/sys/class/sound/ctl-led/mic/mode
+[ -w "$mode" ] && echo follow-mute > "$mode"
+exit 0

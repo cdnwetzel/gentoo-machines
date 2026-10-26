@@ -1,0 +1,11 @@
+{
+  "_comment": "Baseline: every claim in OUTPUT is supported by CONTEXT. Expect all three panel checks to pass.",
+  "context": "Smith Industries filed a motion to dismiss on March 14, 2026 in the matter of Smith v. Acme Corp., docket 2026-CV-00847, before Judge Ramirez in the Superior Court of Mercer County, NJ. The motion argues that the plaintiff failed to state a claim under Rule 12(b)(6). Lead counsel for Smith Industries is Maria Chen of Portnoy Schneck LLC. The court has set a hearing for April 22, 2026.",
+  "output": "On March 14, 2026, Smith Industries filed a motion to dismiss in Smith v. Acme Corp. (docket 2026-CV-00847) before Judge Ramirez in the Mercer County Superior Court. The motion is based on Rule 12(b)(6), arguing failure to state a claim. Maria Chen of Portnoy Schneck LLC is lead counsel. A hearing has been scheduled for April 22, 2026.",
+  "expected": {
+    "panel_verdict": "pass",
+    "entity_fidelity": "pass (all entities lift directly from CONTEXT)",
+    "pii_leak":        "pass (no placeholders or PII patterns)",
+    "claim_grounding": "pass (every claim has a CONTEXT quote)"
+  }
+}

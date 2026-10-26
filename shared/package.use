@@ -1,0 +1,48 @@
+# Gentoo package.use - shared across machines
+# Remote layout: /etc/portage/package.use/<per-package files>
+
+# Browser support
+www-client/chromium-bin widevine vaapi
+www-client/google-chrome widevine
+
+# Graphics/Media
+media-libs/freetype harfbuzz
+media-libs/mesa vulkan
+media-plugins/alsa-plugins pulseaudio
+
+# PipeWire audio (replaces PulseAudio)
+media-video/pipewire sound-server dbus elogind bluetooth pipewire-alsa extra
+xfce-extra/xfce4-pulseaudio-plugin libnotify
+
+# Desktop
+dev-libs/libdbusmenu gtk3
+app-text/xmlto text
+
+# Hardware (common Intel platforms)
+sys-apps/fwupd uefi gnutls tpm nvme thunderbolt
+
+# Networking
+net-libs/nodejs npm
+net-misc/remmina rdp vnc ssh
+net-vpn/networkmanager-sstp gui
+
+# NetworkManager WiFi support
+>=net-wireless/wpa_supplicant-2.11-r4 dbus
+
+# NVIDIA: USE flags are machine-specific (kernel-open varies by GPU generation)
+# See INSTALL_GOTCHAS.md #29 (file ordering) and #31 (kernel-open Turing+ only)
+# Each NVIDIA machine sets its own nvidia-drivers line in its machine-specific file.
+media-libs/mesa -video_cards_nouveau
+
+# Auto-unmasked dependencies
+>=x11-libs/libdrm-2.4.131 video_cards_nouveau video_cards_radeon video_cards_amdgpu
+
+# Fingerprint reader (Dell Goodix 27c6:63ac on the XPS 9510 / 9315)
+# USE=pam is what builds pam_fprintd.so. Without it fprintd installs, enrolls
+# and verifies happily while PAM has nothing to load — a failure that looks
+# like a broken reader rather than a missing flag.
+sys-auth/fprintd pam -systemd
+# -tod on purpose: Dell's Touch OEM Driver blob covers only the Goodix 53xc
+# family, so on a 63ac it contributes nothing and obscures which driver is
+# actually claiming the device. Ubuntu's broken build is 1.94.7+tod1.
+sys-auth/libfprint -tod

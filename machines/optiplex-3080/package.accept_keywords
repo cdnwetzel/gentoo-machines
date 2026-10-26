@@ -1,0 +1,2 @@
+# /etc/portage/package.accept_keywords - OptiPlex 3080 (i3-10105)
+=sys-kernel/gentoo-sources-6.18* ~amd64

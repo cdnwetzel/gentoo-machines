@@ -1,0 +1,128 @@
+
+=== 1. Identity
+$ uname -a
+Linux optiplex-3080 6.18.57 #1 SMP PREEMPT_DYNAMIC Thu Oct 15 18:33:52 UTC 2026 x86_64 Intel(R) Core(TM) i3-10105 CPU @ 3.70GHz GenuineIntel GNU/Linux
+$ cat /sys/class/dmi/id/product_name
+OptiPlex 3080
+$ cat /etc/gentoo-release
+Gentoo Base System release 2.18
+
+=== 2. CPU / memory
+$ lscpu | grep -E 'Model name|^CPU\(s\)|MHz'
+CPU(s):                                  8
+Model name:                              Intel(R) Core(TM) i3-10105 CPU @ 3.70GHz
+CPU(s) scaling MHz:                      18%
+CPU max MHz:                             4400.0000
+CPU min MHz:                             800.0000
+$ free -m
+               total        used        free      shared  buff/cache   available
+Mem:           15752         500       15353          24         181       15251
+Swap:           4095           0        4095
+$ zramctl
+NAME       ALGORITHM DISKSIZE DATA COMPR TOTAL STREAMS MOUNTPOINT
+/dev/zram0 zstd            4G   4K   68B   20K         [SWAP]
+
+=== 3. Storage
+$ lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+NAME          SIZE MODEL                                    FSTYPE MOUNTPOINTS
+sda          28.6G Ultra                                           
+├─sda1       28.6G                                                 
+└─sda2         32M                                                 
+sr0          1024M DVD+-RW GU90N                                   
+zram0           4G                                          swap   [SWAP]
+nvme0n1     238.5G Fanxiang S500Pro 256GB                          
+├─nvme0n1p1   600M                                          vfat   
+├─nvme0n1p2     2G                                          ext4   /boot
+└─nvme0n1p3 235.9G                                          ext4   /
+$ df -h / /boot
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       232G  9.3G  211G   5% /
+/dev/nvme0n1p2  2.0G   71M  1.8G   4% /boot
+$ sudo smartctl -a /dev/nvme0n1 | grep -E 'Percentage Used|Available Spare|Temperature'
+sudo: smartctl: command not found
+
+=== 4. Network
+$ ip -br addr
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+sit0@NONE        DOWN           
+enp2s0           UP             198.51.100.107/24 fe80::9300:4080:8ebf:377/64 
+$ nmcli -t device status 2>/dev/null || true
+enp2s0:ethernet:connected:Wired connection 1
+lo:loopback:connected (externally):lo
+sit0:iptunnel:unmanaged:
+$ ping -c3 gentoo.org
+PING gentoo.org (151.101.65.91) 56(84) bytes of data.
+64 bytes from 151.101.65.91: icmp_seq=1 ttl=62 time=3.21 ms
+64 bytes from 151.101.65.91: icmp_seq=2 ttl=62 time=2.97 ms
+64 bytes from 151.101.65.91: icmp_seq=3 ttl=62 time=3.18 ms
+
+--- gentoo.org ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2003ms
+rtt min/avg/max/mdev = 2.966/3.118/3.208/0.108 ms
+$ chronyc tracking 2>/dev/null | head -4
+Reference ID    : D1FDD270 (bng01.chrl01-nc.us.uniti.net)
+Stratum         : 2
+Ref time (UTC)  : Fri Oct 16 17:49:06 2026
+System time     : 0.001083358 seconds slow of NTP time
+
+=== 5. Services (OpenRC)
+$ rc-update show default
+       NetworkManager | default
+                acpid | default
+              chronyd | default
+               cronie | default
+                 dbus | default
+             earlyoom | default
+                local | default
+              metalog | default
+             netmount | default
+                 sshd | default
+             thermald | default
+            zram-init | default
+$ rc-service sshd status
+ * status: started
+$ rc-service earlyoom status
+ * status: started
+$ rc-service thermald status
+ * status: started
+$ pgrep -a earlyoom
+1633 /usr/bin/earlyoom -m 5 -s 20 --prefer (^|/)(node|python|java) --avoid (^|/)(sshd|cronie|crond|init|metalog|chronyd)$
+
+=== 6. Never-sleep (fleet requirement)
+$ cat /etc/elogind/logind.conf.d/always-on.conf
+[Login]
+HandleSuspendKey=ignore
+HandleSuspendKeyLongPress=ignore
+HandleHibernateKey=ignore
+HandleHibernateKeyLongPress=ignore
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+IdleAction=ignore
+$ grep -E '^Handle|^Idle' /etc/elogind/logind.conf.d/always-on.conf
+HandleSuspendKey=ignore
+HandleSuspendKeyLongPress=ignore
+HandleHibernateKey=ignore
+HandleHibernateKeyLongPress=ignore
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+IdleAction=ignore
+
+=== 7. Microcode + kernel
+$ grep microcode /proc/cpuinfo | head -1
+microcode	: 0x100
+$ dmesg | grep -i microcode | head -3
+[    0.075603] SRBDS: Mitigation: Microcode
+[    0.075623] GDS: Mitigation: Microcode
+[    0.191867] microcode: Current revision: 0x00000100
+$ zgrep -E 'CONFIG_(BLK_DEV_NVME|SATA_AHCI|R8169)' /proc/config.gz 2>/dev/null || true
+CONFIG_BLK_DEV_NVME=y
+CONFIG_SATA_AHCI=y
+# CONFIG_SATA_AHCI_PLATFORM is not set
+CONFIG_R8169=m
+
+=== 8. Fleet verification
+clone gentoo-machines and run tools/verify-install.sh
+
+=== DONE — attach this log to the machine's STATUS.md entry

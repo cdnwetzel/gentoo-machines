@@ -1,0 +1,16 @@
+# /etc/ppp/openssl-sstp.cnf — OpenSSL policy override, applied to sstpc ONLY
+# via OPENSSL_CONF in the sstpc-rras wrapper. Needed only if the RRAS server's
+# TLS stack rejects the handshake at the default OpenSSL 3 security level
+# (SHA-1 cert signatures, RSA <= 1024, old cipher floors). SECLEVEL=1 accepts
+# SHA-1 sigs and 1024-bit RSA for this one process; the rest of the system
+# stays at the default level 2.
+openssl_conf = openssl_init
+
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+CipherString = DEFAULT@SECLEVEL=1

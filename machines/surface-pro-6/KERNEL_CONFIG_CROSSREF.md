@@ -1,0 +1,108 @@
+# Kernel Config Cross-Reference: Key Decisions for Surface Pro 6
+
+## Base Config Decision
+Start from MBP 2015 .config (kernel 6.18.x, MGLRU+zstd enabled, low-RAM profile)
+NOT XPS 9315 (older 6.12, missing MGLRU, missing CRYPTO_ZSTD)
+
+## Must Be Built-In (=y) — No Initramfs
+- CONFIG_BLK_DEV_NVME=y (boot drive)
+- CONFIG_NVME_CORE=y
+- CONFIG_EXT4_FS=y (root filesystem)
+- CONFIG_VFAT_FS=y (EFI partition)
+- CONFIG_NLS_CODEPAGE_437=y (VFAT dep)
+- CONFIG_NLS_ISO8859_1=y (VFAT dep)
+- CONFIG_EFI=y, CONFIG_EFI_STUB=y
+- CONFIG_ZRAM=y (swap, no initramfs to load module)
+- CONFIG_INTEL_IDLE=y
+
+## Must Be Module (=m) — Firmware from /lib/firmware/
+- CONFIG_DRM_I915=m (needs kbl_dmc_ver1_04.bin)
+- CONFIG_MWIFIEX=m, CONFIG_MWIFIEX_PCIE=m (needs mrvl/pcie8897_uapsta.bin)
+- CONFIG_SND_HDA_INTEL=m
+- CONFIG_BT_HCIBTUSB=m (needs mrvl/usb8897_uapsta.bin)
+
+## Surface-Specific (from linux-surface patches)
+All as modules:
+- CONFIG_SURFACE_AGGREGATOR=m + BUS=y + REGISTRY/CDEV/HUB/TABLET_SWITCH=m
+- CONFIG_SURFACE_ACPI_NOTIFY=m
+- CONFIG_SURFACE_DTX=m
+- CONFIG_SURFACE_GPE=m
+- CONFIG_SURFACE_HID=m + CORE=m
+- CONFIG_SURFACE_KBD=m
+- CONFIG_SURFACE_PLATFORM_PROFILE=m
+- CONFIG_SURFACE_HOTPLUG=m
+- CONFIG_SURFACE_PRO3_BUTTON=m
+- CONFIG_HID_IPTS=m (touchscreen — may not work on this unit but enable anyway)
+- CONFIG_BATTERY_SURFACE=m
+- CONFIG_CHARGER_SURFACE=m
+- CONFIG_SENSORS_SURFACE_FAN=m
+- CONFIG_SENSORS_SURFACE_TEMP=m
+
+## Performance Tuning
+- CONFIG_NR_CPUS=8
+- CONFIG_PREEMPT=y + CONFIG_PREEMPT_DYNAMIC=y
+- CONFIG_HZ_1000=y
+- CONFIG_NO_HZ_IDLE=y
+- CONFIG_TRANSPARENT_HUGEPAGE=y + ALWAYS=y
+- CONFIG_LRU_GEN=y + ENABLED=y (MGLRU)
+- CONFIG_KSM=y
+- CONFIG_SCHED_AUTOGROUP=y
+- CONFIG_ZRAM_BACKEND_ZSTD=y + CONFIG_CRYPTO_ZSTD=y
+- CONFIG_ZRAM_DEF_COMP="zstd"
+
+## WiFi (Marvell, NOT Intel)
+- CONFIG_MWIFIEX=m
+- CONFIG_MWIFIEX_PCIE=m
+- Remove: CONFIG_IWLWIFI, CONFIG_IWLMVM (not needed)
+
+## Audio
+- CONFIG_SND_HDA_INTEL=m
+- CONFIG_SND_HDA_CODEC_REALTEK=m (handles ALC298)
+- CONFIG_SND_HDA_CODEC_HDMI=m
+- CONFIG_SND_HDA_I915=y
+- CONFIG_SND_HDA_PATCH_LOADER=y
+- No model quirk needed (Fedora confirms autoconfig works)
+
+## Sensors (ISH + IIO)
+- CONFIG_INTEL_ISH_HID=m
+- CONFIG_HID_SENSOR_HUB=m
+- CONFIG_HID_SENSOR_ACCEL_3D=m
+- CONFIG_HID_SENSOR_GYRO_3D=m
+- CONFIG_HID_SENSOR_ALS=m
+- CONFIG_HID_SENSOR_DEVICE_ROTATION=m
+- CONFIG_HID_SENSOR_IIO_COMMON=m + TRIGGER=m
+- CONFIG_IIO=m
+
+## Camera (IPU3 — staging, cameras WIP per linux-surface)
+- CONFIG_STAGING=y + STAGING_MEDIA=y
+- CONFIG_VIDEO_IPU3_CIO2=m
+- CONFIG_VIDEO_IPU3_IMGU=m
+- CONFIG_IPU_BRIDGE=m
+- CONFIG_INTEL_SKL_INT3472=m
+- CONFIG_VIDEO_OV5693=m, OV7251=m, OV8865=m, DW9719=m
+
+## I2C / Serial IO
+- CONFIG_MFD_INTEL_LPSS=y + ACPI=y + PCI=y
+- CONFIG_I2C_DESIGNWARE_CORE=y + PLATFORM=y + PCI=y
+- CONFIG_INPUT_SOC_BUTTON_ARRAY=m
+
+## VPN (SSTP)
+- CONFIG_PPP=y + BSDCOMP=y + DEFLATE=y + MPPE=y + ASYNC=y + FILTER=y
+- CONFIG_TUN=m
+
+## Firmware Loading
+- CONFIG_EXTRA_FIRMWARE="" (empty — all from /lib/firmware/)
+- CONFIG_FW_LOADER=y
+- CONFIG_FW_LOADER_USER_HELPER=y (Gentoo convention)
+
+## Gentoo-Specific (MUST keep)
+- CONFIG_GENTOO_LINUX=y
+- CONFIG_GENTOO_LINUX_INIT_SCRIPT=y
+- CONFIG_GENTOO_LINUX_PORTAGE=y
+- CONFIG_GENTOO_LINUX_UDEV=y
+- CONFIG_IKCONFIG=y + PROC=y (useful for debugging)
+
+## Microcode
+- CPU: Family 6, Model 142, Stepping 10
+- Signature: 0x000806ea
+- make.conf: MICROCODE_SIGNATURES="-s 0x000806ea"

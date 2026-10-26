@@ -1,0 +1,3 @@
+# /etc/udev/rules.d/99-udmabuf.rules — libcamera SoftISP needs udmabuf access
+# for the session user (uaccess tag is honored by elogind). From Gentoo libcamera wiki.
+ACTION=="add", SUBSYSTEM=="misc", KERNEL=="udmabuf", TAG+="uaccess"

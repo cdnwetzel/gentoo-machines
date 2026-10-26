@@ -1,0 +1,8 @@
+#!/bin/bash
+# Set hibernate resume device for swap file on nvme0n1p3
+# Without this, /sys/power/resume stays 0:0 and elogind reports
+# CanHibernate=false, blocking all idle-hibernate actions.
+#
+# The kernel resume= cmdline param handles restore-from-hibernate at boot,
+# but does not set /sys/power/resume for initiating new hibernations.
+echo 259:3 > /sys/power/resume

@@ -1,0 +1,28 @@
+/* ~/.config/waybar/style.css — minimal dark */
+/* NOT DEPLOYED — see configs/waybar/config. */
+* {
+    font-family: monospace;
+    font-size: 12px;
+    min-height: 0;
+}
+window#waybar {
+    background: #1a1a1a;
+    color: #d4d4d4;
+    border-bottom: 1px solid #333;
+}
+#workspaces button {
+    padding: 0 6px;
+    color: #888;
+    border: none;
+    box-shadow: none;
+}
+#workspaces button.focused {
+    color: #fff;
+    background: #333;
+}
+#cpu, #memory, #battery, #pulseaudio, #network, #clock, #window {
+    padding: 0 8px;
+}
+#battery.warning { color: #e5c07b; }
+#battery.critical { color: #e06c75; }
+#pulseaudio.muted { color: #888; }

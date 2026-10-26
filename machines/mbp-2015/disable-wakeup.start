@@ -1,0 +1,8 @@
+#!/bin/bash
+# Disable LID0 and XHC1 wakeup to prevent immediate resume from suspend
+# MacBook Pro 12,1
+for device in LID0 XHC1; do
+    if grep -q "$device.*enabled" /proc/acpi/wakeup; then
+        echo "$device" > /proc/acpi/wakeup
+    fi
+done

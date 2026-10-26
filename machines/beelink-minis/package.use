@@ -1,0 +1,9 @@
+# Beelink MINI S (N5095A) - machine-specific package.use
+# Install to: /etc/portage/package.use/beelink-minis-n5095
+
+# installkernel: auto-run grub-mkconfig on kernel install
+sys-kernel/installkernel grub
+
+# networkmanager-sstp needs these for the GUI (same as SP6)
+net-vpn/networkmanager-sstp gui
+>=gui-libs/libwlembed-0.0.0_pre20250715 gtk

@@ -1,0 +1,24 @@
+# /etc/default/grub - Beelink MINI S (N5095A)
+# After editing: grub-mkconfig -o /boot/grub/grub.cfg
+
+GRUB_DISTRIBUTOR="Gentoo"
+
+GRUB_TIMEOUT=5
+GRUB_TIMEOUT_STYLE=menu
+
+# Kernel command line
+# - i915.enable_fbc=1 / enable_psr=2: framebuffer compression + panel self-refresh (power savings)
+# - mitigations=auto: keep full mitigations (Jasper Lake has several CPU vulns incl. SRBDS)
+# - intel_iommu=on: enable VT-d (matches kernel IOMMU_DEFAULT_ON, harmless duplicate)
+GRUB_CMDLINE_LINUX="i915.enable_fbc=1 i915.enable_psr=2 intel_iommu=on"
+
+# Non-recovery defaults
+#GRUB_CMDLINE_LINUX_DEFAULT=""
+
+# Normal 1080p HDMI — no HiDPI tricks needed (unlike Surface Pro 6)
+GRUB_GFXMODE=auto
+
+# Theme
+GRUB_THEME="/boot/grub/themes/gentoo_glass/theme.txt"
+
+GRUB_DISABLE_LINUX_PARTUUID=false

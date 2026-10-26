@@ -1,0 +1,7 @@
+# Portage environment overrides for Dell XPS 13 9315
+# Remote layout: /etc/portage/env/<filename>
+
+# --- /etc/portage/env/low-memory.conf ---
+# Assign to packages via /etc/portage/package.env
+# to reduce parallelism for RAM-heavy builds
+MAKEOPTS="-j4"

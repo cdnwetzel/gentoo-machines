@@ -1,0 +1,51 @@
+=== Synthetic harvest: AMD desktop / NVMe + SATA / NVIDIA Ampere (asrock-b550 shape) ===
+
+[1. PCI DEVICES - CORE HARDWARE]
+01:00.0 VGA compatible controller: NVIDIA Corporation GA104 [GeForce RTX 3060 Ti]
+	Kernel driver in use: nvidia
+05:00.0 Ethernet controller: Intel Corporation Ethernet Controller I225-V
+	Kernel driver in use: igc
+06:00.0 Network controller: Intel Corporation Wi-Fi 6 AX200
+	Kernel driver in use: iwlwifi
+
+[2. CPU DETAILS]
+Vendor ID:                          AuthenticAMD
+Model name:                         AMD Ryzen 9 5950X 16-Core Processor
+CPU threads (nproc):                32
+
+[3. MOTHERBOARD/DMI - CHIPSET]
+  sys_vendor: ASRock
+  chassis_type: 3
+
+[6. CURRENTLY LOADED MODULES]
+nvidia
+iwlwifi
+igc
+snd_hda_intel
+btusb
+btintel
+nvme
+
+[8. STORAGE - DRIVE CONTROLLER]
+NAME           FSTYPE MOUNTPOINT SIZE
+nvme0n1                          1.8T
+|-nvme0n1p1    vfat              600M
+|-nvme0n1p2    ext4              2G
+`-nvme0n1p3    ext4              1.8T
+sda                              931G
+
+[10. AUDIO SUBSYSTEM]
+  Type: HDA
+  Codec: Realtek ALC1220
+
+[11. PLATFORM VENDOR]
+  Platform: GENERIC (ASRock)
+
+[12. BOOT TYPE]
+  Boot: EFI
+
+[13. SUSPEND CAPABILITIES]
+  S3 deep: supported
+
+[15. GCC -march SUGGESTION]
+  Suggested: CFLAGS="-march=znver3 -O2 -pipe"

@@ -1,0 +1,2 @@
+# /etc/udev/rules.d/91-mic-led.rules — fix stuck-on F4 mic LED (9315 quirk)
+ACTION=="add", SUBSYSTEM=="sound", KERNEL=="card*", RUN+="/usr/local/bin/mic-led-follow-mute"

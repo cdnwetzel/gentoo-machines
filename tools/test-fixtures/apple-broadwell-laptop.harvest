@@ -1,0 +1,48 @@
+=== Synthetic harvest: Apple laptop / Broadwell / brcm WiFi (mbp-2015 shape) ===
+
+[1. PCI DEVICES - CORE HARDWARE]
+00:02.0 VGA compatible controller: Intel Corporation Broadwell-U Integrated Graphics
+	Kernel driver in use: i915
+03:00.0 Network controller: Broadcom Inc. BCM43602 802.11ac Wireless LAN SoC
+	Kernel driver in use: brcmfmac
+
+[2. CPU DETAILS]
+Vendor ID:                          GenuineIntel
+Model name:                         Intel(R) Core(TM) i7-5557U CPU @ 3.10GHz
+CPU threads (nproc):                4
+
+[3. MOTHERBOARD/DMI - CHIPSET]
+  sys_vendor: Apple Inc.
+  chassis_type: 10
+
+[6. CURRENTLY LOADED MODULES]
+i915
+brcmfmac
+btusb
+btbcm
+snd_hda_codec_cs420x
+applesmc
+ahci
+
+[8. STORAGE - DRIVE CONTROLLER]
+NAME        FSTYPE MOUNTPOINT SIZE
+sda                          233G
+|-sda1      vfat              200M
+|-sda2      ext4              1G
+`-sda3      ext4              232G
+
+[10. AUDIO SUBSYSTEM]
+  Type: HDA
+  Codec: Cirrus Logic CS4208
+
+[11. PLATFORM VENDOR]
+  Platform: APPLE (APPLE_PROPERTIES, SENSORS_APPLESMC)
+
+[12. BOOT TYPE]
+  Boot: EFI
+
+[13. SUSPEND CAPABILITIES]
+  S3 deep: supported
+
+[15. GCC -march SUGGESTION]
+  Suggested: CFLAGS="-march=broadwell -O2 -pipe"

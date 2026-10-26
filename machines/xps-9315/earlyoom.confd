@@ -1,0 +1,4 @@
+# /etc/conf.d/earlyoom — kill memory hogs before the kernel OOM thrashes.
+# -m 5: trigger below 5% free mem;  -s 20: require swap also below 20%.
+# Bias kills toward Firefox content processes; never kill the session.
+EARLYOOM_ARGS="-m 5 -s 20 --prefer '(^|/)(firefox|Web Content|Isolated Web Co)' --avoid '(^|/)(sway|swaybar|i3status|pipewire|wireplumber|foot|sshd)$'"

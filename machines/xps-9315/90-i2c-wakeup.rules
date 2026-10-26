@@ -1,0 +1,5 @@
+# /etc/udev/rules.d/90-i2c-wakeup.rules
+# 9315 quirk: an I2C device (VEN_0488) wakes the machine from s2idle after ~4s.
+# Disable it as a wakeup source. Verify the device exists first:
+#   ls /sys/bus/i2c/devices/ | grep VEN_0488
+ACTION=="add", SUBSYSTEM=="i2c", KERNEL=="i2c-VEN_0488:00", ATTR{power/wakeup}="disabled"

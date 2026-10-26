@@ -1,0 +1,8 @@
+# OptiPlex 3080 (i3-10105) - machine-specific package.use
+# Install to: /etc/portage/package.use/optiplex-3080
+
+# installkernel: auto-run grub-mkconfig on kernel install
+sys-kernel/installkernel grub
+
+# wired-only desktop: NM requires -wext when -wifi (REQUIRED_USE wext->wifi)
+net-misc/networkmanager -wifi -wext -bluetooth

@@ -1,0 +1,23 @@
+From: Claude Opus 4.6 <noreply@anthropic.com>
+Subject: media: intel: ipu-bridge: fix double brace typo in ipu_bridge_check_ivsc_dev
+
+A stray extra opening brace on line 195 of ipu-bridge.c causes all
+subsequent static functions to be parsed as nested functions inside
+ipu_bridge_check_ivsc_dev(). GCC 15 (Gentoo) tolerates this, but
+GCC 14 and earlier reject it with "invalid storage class for function".
+
+Fix by removing the duplicate brace.
+
+Affects: gentoo-sources-6.12.58
+
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -192,7 +192,7 @@
+ 	adev = ipu_bridge_get_ivsc_acpi_dev(sensor_adev);
+ 	if (adev) {
+ 		csi_dev = ipu_bridge_get_ivsc_csi_dev(adev);
+-		if (!csi_dev) { {
++		if (!csi_dev) {
+ 			acpi_dev_put(adev);
+ 			dev_err(ADEV_DEV(adev), "Failed to find MEI CSI dev\n");
+ 			return -ENODEV;

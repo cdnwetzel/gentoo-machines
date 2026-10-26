@@ -1,0 +1,38 @@
+# /etc/ppp/peers/rras — firm RRAS SSTP (vpn.example.com) over pppd, PAP auth
+# (required by the firm's Duo MFA proxy)
+#
+# PAP => MPPE is impossible (no MS-CHAPv2 key material), hence nomppe.
+# Encryption comes from the SSTP TLS tunnel; the security boundary is server-cert
+# verification, so --ca-cert is mandatory. --cert-warn is for debugging only.
+#
+# User vpnuser on vpn.example.com. If RRAS rejects the bare name, try
+# 'DOMAIN\\vpnuser' here and in pap-secrets. Still needed: the firm's CA PEM at
+# /etc/ppp/rras-ca.pem.
+remotename rras
+linkname rras
+ipparam rras
+
+# Wrapper applies OPENSSL_CONF SECLEVEL=1 to sstpc only. If the RRAS server has a
+# modern cert (TLS 1.2+, SHA-256, RSA>=2048), call sstpc directly instead:
+#   pty "sstpc --ipparam rras --nolaunchpppd --ca-cert /etc/ppp/rras-ca.pem --tls-ext vpn.example.com"
+pty "/usr/local/sbin/sstpc-rras --ipparam rras --nolaunchpppd --ca-cert /etc/ppp/rras-ca.pem --tls-ext vpn.example.com"
+
+name vpnuser
+
+# PAP-only auth posture
+require-pap
+refuse-chap
+refuse-mschap
+refuse-mschap-v2
+refuse-eap
+nomppe
+
+# Tunnel hygiene
+mtu 1400
+mru 1400
+nobsdcomp
+nodeflate
+noauth
+persist
+maxfail 0
+usepeerdns

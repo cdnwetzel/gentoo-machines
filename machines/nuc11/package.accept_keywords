@@ -1,0 +1,2 @@
+# /etc/portage/package.accept_keywords - Intel NUC11TNBi5
+=sys-kernel/gentoo-sources-6.18* ~amd64

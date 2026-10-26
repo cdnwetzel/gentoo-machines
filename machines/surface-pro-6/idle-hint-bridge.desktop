@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Idle Hint Bridge
+Comment=Bridge X11 idle time to elogind IdleHint for hibernate support
+Exec=/usr/local/bin/idle-hint-bridge
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,8 @@
+#!/bin/sh
+# /etc/local.d/zram.start — zram swap without extra packages (zramctl is in util-linux).
+# Use this if the P5 decision lands on zram; if zswap wins, delete this file.
+# rc-update add local default  (local.d scripts run at the 'default' runlevel)
+modprobe zram num_devices=1 || exit 0
+dev=$(zramctl --find --size 4096M --algorithm zstd) || exit 1
+mkswap "$dev" >/dev/null
+swapon --priority 100 "$dev"

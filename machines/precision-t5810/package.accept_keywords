@@ -1,0 +1,23 @@
+# Gentoo package.accept_keywords - Dell Precision T5810
+
+# Track 6.18 LTS kernel (EOL Dec 2027)
+=sys-kernel/gentoo-sources-6.18* ~amd64
+
+# Testing packages needed
+www-client/google-chrome ~amd64
+www-client/chromium-bin ~amd64
+net-vpn/networkmanager-sstp ~amd64
+net-misc/sstp-client ~amd64
+
+# NVIDIA driver — Ampere (RTX A4500 GA102GL) supports the current branch.
+# Pin removed when GPUs were upgraded from 2x GTX 1050 Ti (Pascal, required 580.xx legacy branch)
+# to 2x RTX A4500 + NVLink. Track current ~amd64 nvidia-drivers.
+x11-drivers/nvidia-drivers ~amd64
+
+# dev-util/nvidia-cuda-toolkit has NO stable version in ::gentoo — every ebuild
+# is KEYWORDS="-* ~amd64". This line is therefore not optional on a machine with
+# the toolkit installed: without it the installed package is masked and @world
+# wants to remove it. It was dropped when the Pascal 580.xx pin above was
+# rewritten for the A4500 upgrade; live kept it because live was never
+# overwritten. Restored 2026-08-27 (installed there: 12.9.1-r1).
+dev-util/nvidia-cuda-toolkit ~amd64

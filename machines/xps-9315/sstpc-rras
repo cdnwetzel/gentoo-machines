@@ -1,0 +1,8 @@
+#!/bin/sh
+# /usr/local/sbin/sstpc-rras — wrapper: SECLEVEL=1 OpenSSL policy for sstpc only.
+# Delete this wrapper (and point the peers file at sstpc directly) if the RRAS
+# server presents a modern certificate and TLS 1.2+.
+# UNVERIFIED path: confirm the sstpc binary location with `type -a sstpc`
+# (expected /usr/sbin/sstpc or /usr/bin/sstpc) and adjust exec target.
+export OPENSSL_CONF=/etc/ppp/openssl-sstp.cnf
+exec /usr/sbin/sstpc "$@"

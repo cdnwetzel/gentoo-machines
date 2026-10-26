@@ -1,0 +1,15 @@
+# Gentoo package.use - Dell OptiPlex 3090 SFF
+
+# Auto grub-mkconfig on make install (kernel updates)
+sys-kernel/installkernel grub
+
+# NVIDIA proprietary driver (RTX A1000 GA107 Ampere)
+# Ampere supports kernel-open modules (Turing+)
+x11-drivers/nvidia-drivers kernel-open modules tools
+media-libs/mesa -video_cards_nouveau
+
+# NetworkManager — no WiFi/BT (Dell SFF, wired only)
+net-misc/networkmanager -wifi -wext -bluetooth
+
+# xfce4-screensaver wayland requirement
+gui-libs/libwlembed gtk

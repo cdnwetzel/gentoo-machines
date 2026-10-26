@@ -1,0 +1,29 @@
+# Kernel install: GRUB hook + dracut initramfs (gentoo-kernel-bin rescue kernel needs one)
+sys-kernel/installkernel grub dracut
+sys-boot/grub mount
+
+# Audio/camera: pipewire is the sound server and exposes libcamera devices
+media-video/pipewire sound-server libcamera extra
+media-video/wireplumber -systemd
+media-libs/libcamera tools drm udev v4l
+
+# Sway without Xwayland (pure Wayland). Flip +X here if an X-only app ever turns up.
+gui-wm/sway swaybar swaynag tray -X
+gui-libs/wlroots -X
+
+# fwupd for Dell BIOS/TB4 updates via LVFS
+sys-apps/fwupd uefi nvme thunderbolt
+
+# no local MTA: sudo would pull virtual/mta (nullmailer) just to mail failed-auth notices
+app-admin/sudo -sendmail
+
+# firefox-bin is linked against gtk+[X]. X *client* libs only:
+# no X server, no Xwayland.
+x11-libs/gtk+:3 X
+x11-libs/cairo X
+media-libs/libepoxy X
+media-libs/libglvnd X
+media-libs/freetype harfbuzz
+
+# swaybar status: volume via libpulse (pipewire-pulse)
+x11-misc/i3status pulseaudio

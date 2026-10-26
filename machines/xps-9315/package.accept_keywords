@@ -1,0 +1,2 @@
+# 6.18 LTS track, same as the rest of the fleet (EOL Dec 2027)
+=sys-kernel/gentoo-sources-6.18* ~amd64

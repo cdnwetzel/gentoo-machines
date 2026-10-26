@@ -1,0 +1,18 @@
+# /etc/fstab - Dell XPS 13 9315 Gentoo
+# WARNING: Not verified on live system — update UUIDs for your installation
+#
+# Simplified layout: EFI + root + zram (no swap partition, no separate /home)
+# Previous layout had 5 partitions (EFI, swap 24G, root 50G, /var/tmp 40G, /home 124G)
+# New layout uses the full disk more efficiently with portage tmpfs in RAM
+
+# <device>                                <mount>          <fs>   <opts>                                                 <dump> <pass>
+UUID=<your-root-uuid>                      /                ext4   noatime,discard                                         0      1
+UUID=<your-efi-uuid>                       /boot/efi        vfat   noauto,umask=0077                                       0      2
+
+# Ramdisks
+tmpfs                                      /tmp             tmpfs  size=4G,nosuid,nodev                                    0      0
+tmpfs                                      /var/tmp/portage tmpfs  size=4G,uid=portage,gid=portage,mode=775,nosuid,noatime,nodev 0 0
+
+# No swap partition — zram-init provides 4GB compressed zstd swap
+# No separate /home — root has the full disk (~255GB)
+# No separate /var/tmp — portage uses tmpfs (large packages fall back to disk)

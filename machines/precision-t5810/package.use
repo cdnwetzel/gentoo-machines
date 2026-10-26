@@ -1,0 +1,16 @@
+# Gentoo package.use - Dell Precision T5810
+
+# Auto grub-mkconfig on make install (kernel updates)
+sys-kernel/installkernel grub
+
+# NVIDIA proprietary driver (2x RTX A4500 GA102GL Ampere)
+# Ampere supports kernel-open (Turing+); leaving disabled here to keep the closed-source
+# module stack in use. Flip to `kernel-open` if/when desired.
+x11-drivers/nvidia-drivers -kernel-open modules tools
+media-libs/mesa -video_cards_nouveau
+
+# NetworkManager — no WiFi support needed (wired only)
+net-misc/networkmanager -wifi -wext -bluetooth
+
+# xfce4-screensaver wayland requirement
+gui-libs/libwlembed gtk

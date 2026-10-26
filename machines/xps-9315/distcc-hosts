@@ -1,0 +1,4 @@
+# /etc/distcc/hosts — distcc client host list (as deployed on the XPS 9315)
+# T5810 helper at 192.0.2.125 gets 40 slots with lzo compression; localhost keeps
+# 2 slots for configure-time and small compiles. Links always run locally.
+192.0.2.125/40,lzo localhost/2

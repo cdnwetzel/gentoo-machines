@@ -1,0 +1,27 @@
+# /etc/conf.d/ollama — Ollama daemon environment for XPS 9510 verifier role
+#
+# Bind to LAN; firewall (nftables-ollama.nft) enforces access from T5810/7960 only.
+# Models live on the second NVMe (/data) to keep root partition clean.
+
+# Listen on all interfaces — access control is at the firewall layer
+OLLAMA_HOST="0.0.0.0:11434"
+
+# Model storage on /data (second 990 PRO NVMe, ~1TB free)
+OLLAMA_MODELS="/data/ml-models/ollama"
+
+# Keep loaded model resident in VRAM. Verifier latency matters more than
+# elasticity since only one small model lives here.
+OLLAMA_KEEP_ALIVE="24h"
+
+# 4GB VRAM, ~2.2GB model → headroom for 2 concurrent generation slots
+OLLAMA_NUM_PARALLEL="2"
+OLLAMA_MAX_LOADED_MODELS="1"
+
+# Performance: Flash Attention reduces VRAM use + improves throughput on Ampere
+OLLAMA_FLASH_ATTENTION="1"
+
+# Suppress llama.cpp's verbose perf logs (we have INFERENCE_BASELINE.md for that)
+OLLAMA_DEBUG="0"
+
+# Optional: route NVIDIA visibility — only use the discrete GPU
+CUDA_VISIBLE_DEVICES="0"

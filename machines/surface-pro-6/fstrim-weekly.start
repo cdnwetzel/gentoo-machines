@@ -1,0 +1,5 @@
+#!/bin/bash
+# Weekly fstrim for NVMe SSD health
+# Runs via /etc/local.d on boot; also add to cron if desired
+fstrim -v / 2>/dev/null || true
+fstrim -v /boot 2>/dev/null || true

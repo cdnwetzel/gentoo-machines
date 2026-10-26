@@ -1,0 +1,260 @@
+--- STARTING DEEP HARVEST ---
+
+[1. MODPROBED-DB]
+modprobed-db not installed, skipping.
+
+[2. INPUT/I2C]
+i2c-0	i2c       	i915 gmbus dpc                  	I2C adapter
+i2c-1	i2c       	i915 gmbus dpb                  	I2C adapter
+i2c-2	i2c       	i915 gmbus dpd                  	I2C adapter
+i2c-3	i2c       	AUX C/DDI C/PHY C               	I2C adapter
+i2c-4	i2c       	AUX D/DDI D/PHY D               	I2C adapter
+i2c-5	smbus     	SMBus I801 adapter at 0000:00:1f.4	SMBus adapter
+
+[3. ACTUAL FIRMWARE IN USE]
+No firmware detected via dmesg or journalctl (buffer may have rotated).
+Checking sysfs for firmware requests...
+
+[4. PCI DEVICES]
+00:00.0 Host bridge [0600]: Intel Corporation 10th Gen Core Processor Host Bridge/DRAM Registers [8086:9b63] (rev 03)
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: skl_uncore
+00:02.0 VGA compatible controller [0300]: Intel Corporation CometLake-S GT2 [UHD Graphics 630] [8086:9bc8] (rev 03)
+	DeviceName: Onboard - Video
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: i915
+	Kernel modules: i915
+00:08.0 System peripheral [0880]: Intel Corporation Xeon E3-1200 v5/v6 / E3-1500 v5 / 6th/7th/8th Gen Core Processor Gaussian Mixture Model [8086:1911]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+00:14.0 USB controller [0c03]: Intel Corporation Comet Lake PCH-V USB Controller [8086:a3af]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: xhci_hcd
+	Kernel modules: xhci_pci
+00:14.2 Signal processing controller [1180]: Intel Corporation Comet Lake PCH-V Thermal Subsystem [8086:a3b1]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+00:16.0 Communication controller [0780]: Intel Corporation Comet Lake PCH-V HECI Controller [8086:a3ba]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: mei_me
+	Kernel modules: mei_me
+00:17.0 RAID bus controller [0104]: Intel Corporation Device [8086:a386]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: ahci
+	Kernel modules: ahci
+00:1c.0 PCI bridge [0604]: Intel Corporation Comet Lake PCI Express Root Port #05 [8086:a394] (rev f0)
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: pcieport
+	Kernel modules: shpchp
+00:1f.0 ISA bridge [0601]: Intel Corporation B460 Chipset LPC/eSPI Controller [8086:a3c8]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+00:1f.2 Memory controller [0580]: Intel Corporation Cannon Lake PCH Power Management Controller [8086:a3a1]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+00:1f.3 Audio device [0403]: Intel Corporation Comet Lake PCH-V cAVS [8086:a3f0]
+	DeviceName: Onboard - Sound
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: snd_hda_intel
+	Kernel modules: snd_soc_avs, snd_sof_pci_intel_cnl, snd_hda_intel
+00:1f.4 SMBus [0c05]: Intel Corporation Comet Lake PCH-V SMBus Host Controller [8086:a3a3]
+	DeviceName: Onboard - Other
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: i801_smbus
+	Kernel modules: i2c_i801
+01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 15)
+	Subsystem: Dell Device [1028:09a8]
+	Kernel driver in use: r8169
+	Kernel modules: r8169
+
+[5. LOADED MODULES]
+Module                  Size  Used by
+libfc                 245760  0
+scsi_transport_fc     135168  1 libfc
+iscsi_ibft             16384  0
+dm_crypt               73728  0
+vfat                   24576  0
+fat                   122880  1 vfat
+dm_round_robin         12288  0
+dm_multipath           49152  1 dm_round_robin
+raid10                 86016  0
+raid456               229376  0
+async_raid6_recov      20480  1 raid456
+async_memcpy           16384  2 raid456,async_raid6_recov
+async_pq               20480  2 raid456,async_raid6_recov
+async_xor              16384  3 async_pq,raid456,async_raid6_recov
+async_tx               16384  5 async_pq,async_memcpy,async_xor,raid456,async_raid6_recov
+raid1                  65536  0
+raid0                  32768  0
+uinput                 28672  0
+snd_seq_dummy          12288  0
+snd_hrtimer            12288  2
+nf_conntrack_netbios_ns    12288  1
+nf_conntrack_broadcast    12288  1 nf_conntrack_netbios_ns
+nft_fib_inet           12288  1
+nft_fib_ipv4           12288  1 nft_fib_inet
+nft_fib_ipv6           12288  1 nft_fib_inet
+nft_fib                12288  3 nft_fib_ipv6,nft_fib_ipv4,nft_fib_inet
+nft_reject_inet        12288  10
+nf_reject_ipv4         16384  1 nft_reject_inet
+nf_reject_ipv6         20480  1 nft_reject_inet
+nft_reject             12288  1 nft_reject_inet
+nft_ct                 32768  9
+nft_chain_nat          12288  3
+nf_nat                 65536  1 nft_chain_nat
+nf_conntrack          212992  4 nf_nat,nft_ct,nf_conntrack_netbios_ns,nf_conntrack_broadcast
+nf_defrag_ipv6         24576  1 nf_conntrack
+nf_defrag_ipv4         12288  1 nf_conntrack
+nf_tables             442368  309 nft_ct,nft_reject_inet,nft_fib_ipv6,nft_fib_ipv4,nft_chain_nat,nft_reject,nft_fib,nft_fib_inet
+qrtr                   57344  2
+snd_hda_codec_intelhdmi    28672  1
+snd_ctl_led            32768  0
+snd_hda_codec_alc269   155648  1
+snd_hda_scodec_component    20480  1 snd_hda_codec_alc269
+snd_hda_codec_realtek_lib    65536  1 snd_hda_codec_alc269
+snd_hda_codec_generic   139264  2 snd_hda_codec_realtek_lib,snd_hda_codec_alc269
+snd_hda_intel          73728  2
+snd_sof_pci_intel_cnl    24576  0
+snd_sof_intel_hda_generic    45056  1 snd_sof_pci_intel_cnl
+soundwire_intel       102400  1 snd_sof_intel_hda_generic
+snd_sof_intel_hda_sdw_bpt    24576  1 soundwire_intel
+snd_sof_intel_hda_common   221184  3 snd_sof_intel_hda_sdw_bpt,snd_sof_intel_hda_generic,snd_sof_pci_intel_cnl
+snd_soc_hdac_hda       24576  1 snd_sof_intel_hda_common
+snd_sof_intel_hda_mlink    45056  4 snd_sof_intel_hda_sdw_bpt,soundwire_intel,snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+snd_sof_intel_hda      24576  2 snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+snd_hda_codec_hdmi     65536  1 snd_hda_codec_intelhdmi
+soundwire_cadence      65536  1 soundwire_intel
+snd_sof_pci            24576  2 snd_sof_intel_hda_generic,snd_sof_pci_intel_cnl
+snd_sof_xtensa_dsp     16384  1 snd_sof_intel_hda_generic
+snd_sof               536576  6 snd_sof_intel_hda_sdw_bpt,snd_sof_pci,snd_sof_intel_hda_common,snd_sof_intel_hda_generic,snd_sof_intel_hda,snd_sof_pci_intel_cnl
+snd_sof_utils          16384  1 snd_sof
+snd_soc_acpi_intel_match   147456  2 snd_sof_intel_hda_generic,snd_sof_pci_intel_cnl
+snd_soc_acpi_intel_sdca_quirks    12288  1 snd_soc_acpi_intel_match
+soundwire_generic_allocation    24576  1 soundwire_intel
+snd_soc_sdw_utils     135168  1 snd_sof_intel_hda_generic
+snd_soc_acpi           16384  2 snd_soc_acpi_intel_match,snd_sof_intel_hda_generic
+crc8                   12288  1 soundwire_cadence
+soundwire_bus        1216512  4 soundwire_intel,snd_soc_sdw_utils,soundwire_generic_allocation,soundwire_cadence
+intel_rapl_msr         20480  0
+intel_rapl_common      65536  1 intel_rapl_msr
+snd_soc_sdca          151552  2 snd_soc_acpi_intel_sdca_quirks,soundwire_bus
+intel_uncore_frequency    16384  0
+intel_uncore_frequency_common    16384  1 intel_uncore_frequency
+snd_soc_avs           286720  0
+snd_soc_hda_codec      28672  1 snd_soc_avs
+snd_hda_ext_core       36864  7 snd_sof_intel_hda_sdw_bpt,snd_soc_avs,snd_soc_hda_codec,snd_sof_intel_hda_common,snd_soc_hdac_hda,snd_sof_intel_hda_mlink,snd_sof_intel_hda
+intel_tcc_cooling      12288  0
+snd_hda_codec         229376  10 snd_hda_codec_generic,snd_soc_avs,snd_hda_codec_hdmi,snd_soc_hda_codec,snd_hda_intel,snd_hda_codec_realtek_lib,snd_soc_hdac_hda,snd_hda_codec_alc269,snd_sof_intel_hda,snd_hda_codec_intelhdmi
+x86_pkg_temp_thermal    20480  0
+intel_powerclamp       28672  0
+coretemp               24576  0
+snd_hda_core          159744  13 snd_hda_codec_generic,snd_soc_avs,snd_hda_codec_hdmi,snd_soc_hda_codec,snd_hda_intel,snd_hda_ext_core,snd_hda_codec,snd_sof_intel_hda_common,snd_hda_codec_realtek_lib,snd_soc_hdac_hda,snd_hda_codec_alc269,snd_sof_intel_hda,snd_hda_codec_intelhdmi
+snd_intel_dspcfg       49152  5 snd_soc_avs,snd_hda_intel,snd_sof,snd_sof_intel_hda_common,snd_sof_intel_hda_generic
+kvm_intel             548864  0
+snd_intel_sdw_acpi     16384  2 snd_intel_dspcfg,snd_sof_intel_hda_generic
+snd_hwdep              24576  1 snd_hda_codec
+snd_soc_core          499712  8 snd_soc_avs,snd_soc_hda_codec,soundwire_intel,snd_sof,snd_soc_sdca,snd_sof_intel_hda_common,snd_soc_sdw_utils,snd_soc_hdac_hda
+kvm                  1540096  1 kvm_intel
+platform_profile       20480  0
+snd_compress           36864  2 snd_soc_avs,snd_soc_core
+ac97_bus               12288  1 snd_soc_core
+snd_pcm_dmaengine      20480  1 snd_soc_core
+irqbypass              16384  1 kvm
+snd_seq               143360  13 snd_seq_dummy
+iTCO_wdt               16384  0
+rapl                   20480  0
+mei_hdcp               28672  0
+dell_wmi               32768  0
+mei_pxp                20480  0
+snd_seq_device         16384  1 snd_seq
+intel_pmc_bxt          16384  1 iTCO_wdt
+intel_cstate           20480  0
+snd_pcm               212992  14 snd_soc_avs,snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec,soundwire_intel,snd_sof,snd_soc_sdca,snd_sof_intel_hda_common,snd_compress,snd_sof_intel_hda_generic,snd_soc_core,snd_sof_utils,snd_hda_core,snd_pcm_dmaengine
+intel_uncore          282624  0
+intel_pmc_core        155648  0
+rfkill                 45056  2
+joydev                 32768  0
+dell_smbios            36864  1 dell_wmi
+iTCO_vendor_support    12288  1 iTCO_wdt
+dell_wmi_sysman        61440  0
+dell_smm_hwmon         28672  0
+ee1004                 20480  0
+snd_timer              57344  3 snd_seq,snd_hrtimer,snd_pcm
+mei_me                 65536  2
+pmt_telemetry          16384  1 intel_pmc_core
+dcdbas                 24576  1 dell_smbios
+pmt_discovery          24576  1 pmt_telemetry
+pcspkr                 12288  0
+sparse_keymap          12288  1 dell_wmi
+firmware_attributes_class    12288  1 dell_wmi_sysman
+dell_wmi_descriptor    20480  2 dell_wmi,dell_smbios
+wmi_bmof               12288  0
+snd                   155648  25 snd_ctl_led,snd_hda_codec_generic,snd_seq,snd_seq_device,snd_hda_codec_hdmi,snd_hwdep,snd_hda_intel,snd_hda_codec,snd_sof,snd_soc_sdca,snd_timer,snd_hda_codec_realtek_lib,snd_compress,snd_soc_sdw_utils,snd_hda_codec_alc269,snd_soc_core,snd_pcm
+mei                   217088  5 mei_hdcp,mei_pxp,mei_me
+pmt_class              20480  2 pmt_telemetry,pmt_discovery
+i2c_i801               40960  0
+intel_pmc_ssram_telemetry    16384  1 intel_pmc_core
+soundcore              12288  2 snd_ctl_led,snd
+intel_vsec             28672  2 intel_pmc_ssram_telemetry,pmt_telemetry
+acpi_pad              184320  0
+i2c_smbus              20480  1 i2c_i801
+zram                   73728  1
+lz4hc_compress         20480  1 zram
+lz4_compress           24576  1 zram
+overlay               262144  1
+erofs                 192512  1
+netfs                 626688  1 erofs
+isofs                  69632  1
+i915                 5464064  71
+hid_logitech_hidpp     86016  0
+drm_buddy              28672  1 i915
+ttm                   135168  1 i915
+i2c_algo_bit           24576  1 i915
+r8169                 159744  0
+drm_display_helper    344064  1 i915
+nvme_tcp              102400  0
+uas                    40960  0
+nvme_fabrics           49152  1 nvme_tcp
+realtek                57344  1
+ghash_clmulni_intel    12288  0
+cec                   110592  2 drm_display_helper,i915
+usb_storage            94208  3 uas
+video                  81920  2 dell_wmi,i915
+intel_oc_wdt           12288  0
+nvme_core             278528  2 nvme_tcp,nvme_fabrics
+pinctrl_sunrisepoint    28672  0
+wmi                    36864  7 dell_wmi_sysman,video,dell_wmi,wmi_bmof,dell_smm_hwmon,dell_smbios,dell_wmi_descriptor
+hid_logitech_dj        45056  0
+nvme_keyring           20480  3 nvme_tcp,nvme_core,nvme_fabrics
+nvme_auth              32768  1 nvme_core
+hkdf                   16384  1 nvme_auth
+sunrpc                937984  1
+be2iscsi              233472  0
+bnx2i                  94208  0
+cnic                  102400  1 bnx2i
+uio                    32768  1 cnic
+cxgb4i                 73728  0
+cxgb4                 786432  1 cxgb4i
+tls                   176128  1 cxgb4
+cxgb3i                 53248  0
+cxgb3                 266240  1 cxgb3i
+mdio                   12288  1 cxgb3
+libcxgbi              106496  2 cxgb4i,cxgb3i
+libcxgb                32768  2 libcxgbi,cxgb3i
+qla4xxx               520192  0
+iscsi_boot_sysfs       20480  3 be2iscsi,iscsi_ibft,qla4xxx
+iscsi_tcp              28672  0
+libiscsi_tcp           36864  4 libcxgbi,iscsi_tcp,cxgb4i,cxgb3i
+libiscsi               94208  8 be2iscsi,libiscsi_tcp,bnx2i,libcxgbi,iscsi_tcp,qla4xxx,cxgb4i,cxgb3i
+scsi_transport_iscsi   192512  7 be2iscsi,libiscsi_tcp,bnx2i,libcxgbi,iscsi_tcp,qla4xxx,libiscsi
+loop                   45056  2
+fuse                  294912  3
+i2c_dev                28672  0
+nfnetlink              20480  3 nf_tables
+
+[6. NVIDIA GPU INFO]
+No NVIDIA GPU detected

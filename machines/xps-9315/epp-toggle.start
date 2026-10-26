@@ -1,0 +1,4 @@
+#!/bin/sh
+# /etc/local.d/epp-toggle.start — apply EPP policy once at boot
+# (udev rule 90-epp-power.rules handles AC plug/unplug after that).
+/usr/local/bin/epp-toggle
