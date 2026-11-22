@@ -21,7 +21,8 @@ marked otherwise.
 - Sensors: accelerometer via iio-sensor-proxy (auto-rotate works).
 - Firmware: UEFI 24.103.143, Secure Boot **on**. Surface firmware cannot be updated from Linux (fwupd shows only
   UEFI CA/dbx); a future update needs Windows (e.g. a Windows USB).
-- Battery: 43.7 / 46.5 Wh (94 %), 135 cycles. No charge-limit control from Linux; use UEFI's battery limit if wanted.
+- Battery: full capacity 45.1 / 46.5 Wh design (97 %) on 2026-11-22 (43.7 Wh / 94 % on 2026-11-21; the gauge
+  re-estimates), 135 cycles. No charge-limit control from Linux; use UEFI's battery limit if wanted.
 
 ## Kernel
 
@@ -40,7 +41,7 @@ marked otherwise.
 | Type Cover keyboard/touchpad | ✅ | |
 | Rear camera (ov13858) | ✅ | libcamera SoftISP, 30 fps at 4224x3136; uncalibrated tuning (`uncalibrated.yaml`) |
 | Front camera (ov5693) | ❌ pending upstream | see below |
-| Suspend (s2idle) | ✅ | 98 % HW S0ix residency (141/144 s), ~0.25 s each way, no spurious wakes (2026-11-22) |
+| Suspend (s2idle) | ✅ | ~100 % S0ix residency overnight, ~0.25 s each way, no spurious wakes; ~0.22 %/h drain (see Battery) |
 | Hibernate | ✗ not used | no disk swap; Secure Boot lockdown blocks it anyway |
 | Power modes | ✅ | GNOME power-saver/balanced/performance → tuned → `platform_profile` low-power/balanced/performance |
 | Auto-rotate | ✅ | |
@@ -74,6 +75,26 @@ Scripts (in `~/ai` on the machine): `surface-optimize.sh`, `surface-from-spin.sh
 - Kept as shipped: thermald, intel_lpmd, tuned + tuned-ppd. MGLRU on, THP madvise.
 - Not adopted from the SP6: swappiness 10 (wrong for zram), Marvell Wi-Fi power-save off, TCP buffer sysctls, hibernate.
 
+## Battery (measured 2026-11-21/22, UPower charge history, 45.1 Wh full capacity)
+
+| Condition | Window | Charge | Drain |
+|---|---|---|---|
+| Heavy use: screen on, 3 reboots, kernel/package installs, repeated camera captures | 22:49 → 00:14 (85 min) | 78 % → 62 % | **~11 %/h (~5 W)** |
+| Suspended (s2idle), lid closed | 00:16 → 09:10 (8 h 54 min) | 62 % → 60 % | **~0.22 %/h (~0.1 W)** |
+
+- UPower reports whole percents, so the overnight figure is 0.11–0.34 %/h (2 % ± 1). At that rate a full charge
+  lasts well over a week suspended. Only the lid woke it (`systemd-logind: Lid opened`).
+- S0ix counters disagree on long sleeps: the ACPI LPIT counter
+  (`/sys/devices/system/cpu/cpuidle/low_power_idle_system_residency_us`) rose ~32,000 s over the 32,047 s sleep;
+  `/sys/power/suspend_stats/last_hw_sleep` showed only 1,960 s. The battery result matches LPIT — use LPIT.
+  A 144 s test earlier gave 98 % on both counters.
+- Normal (light) use hasn't been isolated yet; the 11 %/h figure is a worst-ish case, not typical runtime.
+- Charge ceiling: charging has been observed to stop near 80 % (user observation; UPower history doesn't reach back to
+  a full charge). Linux exposes no charge-control interface for this battery (no `charge_control_*` in sysfs), so any cap
+  is firmware-side. Cause not verified.
+- History without root: `gdbus call --system --dest org.freedesktop.UPower --object-path
+  /org/freedesktop/UPower/devices/battery_BAT1 --method org.freedesktop.UPower.Device.GetHistory charge 86400 500`
+
 ## Boot (`systemd-analyze`)
 
 | | firmware | loader | kernel | initrd | userspace | total |
@@ -94,5 +115,4 @@ Loader is GRUB + shim (menu already hidden); initrd grew 0.8 s on the surface ke
 
 ## Open
 
-- Overnight suspend drain not measured yet (SP6 baseline ~1–1.5 %/h).
-- Screen-on idle power not measured (no turbostat run yet).
+- Light-use / screen-on idle drain not isolated yet (no turbostat run; the measured 11 %/h was a heavy session).
