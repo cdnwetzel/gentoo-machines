@@ -16,7 +16,7 @@ Multi-machine Gentoo Linux kernel configurations, portage settings, and automate
 | [Dell XPS 13 9315](machines/xps-9315/) | i5-1230U (Alder Lake) | Intel Iris Xe | **Production** | Dual-boot Win 11 + Gentoo |
 | [MacBook Pro 12,1 (2015)](machines/mbp-2015/) | i7-5557U (Broadwell) | Intel Iris 6100 | Retired (config maintained) | macOS 12 (kids' machine) |
 | [Intel NUC11TNBi5](machines/nuc11/) | i5-1135G7 (Tiger Lake) | Intel Iris Xe | Ready to build | Ubuntu |
-| [Surface Pro 9](machines/surface-pro-9/) | 12th Gen Intel | Intel Iris Xe | Planned | Windows 11 Pro |
+| [Surface Pro 9](machines/surface-pro-9/) | i5-1235U (Alder Lake) | Intel Iris Xe | **Production** | Fedora 45 (linux-surface kernel) |
 | [Dell Precision 7960](machines/precision-7960/) | Xeon W5-3433 (Sapphire Rapids) | RTX 5080 16GB + RTX 5060 Ti OC 16GB (Blackwell) | Reference only | RHEL 10.1 |
 
 NVIDIA machines use **proprietary nvidia-drivers** (`kernel-open` on Turing+). The Precision 7960 stays on RHEL 10.1 for production AI/ML workloads. All production machines track **6.18 LTS** (EOL Dec 2027) via `~amd64` keywords.
@@ -42,7 +42,7 @@ gentoo-machines/
 │   ├── xps-9315/          # Dell XPS 13 9315 (Alder Lake) - Config maintained
 │   ├── nuc11/             # Intel NUC11TNBi5 (Tiger Lake) - Ready to build
 │   ├── precision-7960/    # Dell Precision 7960 / Xeon W5 (Sapphire Rapids) - Reference only
-│   └── surface-pro-9/     # Surface Pro 9 - Planned
+│   └── surface-pro-9/     # Surface Pro 9 (Alder Lake, linux-surface) - PRODUCTION on Fedora 45
 │   # Each production machine directory typically contains:
 │   #   .config, kernel_config.sh, make.conf, HARDWARE.md, world,
 │   #   package.use, package.accept_keywords, package.env,
