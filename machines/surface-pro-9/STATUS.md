@@ -3,7 +3,7 @@
 **Status**: Production — **Fedora 45** (GNOME, Wayland) on the linux-surface kernel. Not Gentoo.
 Windows 11 Pro was removed; the NVMe is Linux-only.
 
-Installed and tuned 2026-11-21/22. Everything below was checked on the running system unless
+Hostname `CWEsp9`. Installed and tuned 2026-11-21/22. Everything below was checked on the running system unless
 marked otherwise.
 
 ## Hardware (from the running install, 2026-11-21)
